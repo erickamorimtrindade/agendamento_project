@@ -9,10 +9,9 @@ __pycache__/
 venv/
 ENV/
 env/
+.env/
 
 # Django
-*.sqlite3
-db.sqlite3
 *.log
 *.pot
 *.pyc
@@ -23,3 +22,7 @@ db.sqlite3
 .vscode/
 .idea/
 *.swp
+
+# System
+.DS_Store
+Thumbs.db
