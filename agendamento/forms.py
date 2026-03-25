@@ -6,6 +6,11 @@ class AgendamentoForm(forms.ModelForm):
         model = Agendamento
         fields = ['data', 'horario', 'descricao']
 
+        widgets = {
+            'data': forms.DateInput(attrs={'type': 'date'}),
+            'horario': forms.TimeInput(attrs={'type': 'time'}),
+        }
+
     def clean(self):
         cleaned_data = super().clean()
         data = cleaned_data.get('data')

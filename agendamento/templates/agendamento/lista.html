@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <title>Agendamentos</title>
+</head>
+<body>
+
+    <h1>Seus agendamentos</h1>
+
+    {% for ag in agendamentos %}
+        <div style="border:1px solid #ccc; margin:10px; padding:10px;">
+            <p><strong>Data: </strong> {{ ag.data }}</p>
+            <p><strong>Horário: </strong> {{ ag.horario }}</p>
+            <p><strong>descrição: </strong> {{ ag.descricao }}</p>
+        </div>
+    {% empty %}
+        <p>Você ainda não tem agendamentos.</p>
+    {% endfor %}
+
+</body>
+</html>

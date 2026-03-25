@@ -8,20 +8,26 @@
 <h2>Criar Agendamento</h2>
 
 {% if erro %}
-<p style="color:red;">{{ erro }}</p>
+    <p style="color:red;">{{ erro }}</p>
+{% endif %}
+
+{% if form.non_field_errors %}
+    {% for error in form.non_field_errors %}
+        <p style="color:red;">{{ error }}</p>
+    {% endfor %}
 {% endif %}
 
 <form method="POST">
     {% csrf_token %}
 
-    <label>Data:</label>
-    <input type="date" name="data"><br><br>
+    <label>Data:</label><br>
+    {{ form.data }}<br><br>
 
-    <label>Horário:</label>
-    <input type="time" name="horario"><br><br>
+    <label>Horário:</label><br>
+    {{ form.horario }}<br><br>
 
-    <label>Descrição:</label>
-    <input type="text" name="descricao"><br><br>
+    <label>Descrição:</label><br>
+    {{ form.descricao }}<br><br>
 
     <button type="submit">Agendar</button>
 </form>

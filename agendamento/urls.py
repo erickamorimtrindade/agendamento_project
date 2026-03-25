@@ -7,5 +7,5 @@ urlpatterns = [
     path('logout/', views.logout_view, name='logout'),
     path('register/', views.register, name='register'),
     path('agendar/', views.criar_agendamento, name='agendar'),
-    path('agendamentos/', views.listar_agendamentos, name='listar_agendamentos'),
+    path('agendamento/', views.listar_agendamentos, name='listar_agendamentos'),
 ]

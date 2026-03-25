@@ -54,7 +54,8 @@ def home(request):
 
 @login_required
 def criar_agendamento(request):
-    cliente = Cliente.objects.get(id_usuario=request.user)
+    cliente, created = Cliente.objects.get_or_create(id_usuario=request.user)
+
 
     if request.method == "POST":
         form = AgendamentoForm(request.POST)
@@ -73,7 +74,7 @@ def criar_agendamento(request):
 
 @login_required
 def listar_agendamentos(request):
-    cliente = Cliente.objects.get(id_usuario=request.user)
+    cliente, created = Cliente.objects.get_or_create(id_usuario=request.user)
     agendamentos = Agendamento.objects.filter(cliente=cliente)
 
     return render(request, 'agendamento/lista.html', {'agendamentos': agendamentos})
