@@ -10,13 +10,38 @@ class AgendamentoForm(forms.ModelForm):
         widgets = {
             'data': forms.DateInput(attrs={
                 'type': 'date',
+                'class': 'form-control',
                 'min': date.today().isoformat(),
                 'onkeydown': 'return false;',
                 'onclick': 'this.showPicker()',
                 'onfocus': 'this.showPicker()',
             }),
-            'horario': forms.HiddenInput()  
+            'horario': forms.HiddenInput(),
+            'descricao': forms.Textarea(attrs={
+                'class': 'form-control',
+                'placeholder': 'Digite uma descrição para o agendamento',
+                'rows': 4,
+            }),
         }
+
+        def __init__(self, *args, **kwargs):
+            super().__init__(*args, **kwargs)
+
+            # remove mensagem padrão do Django
+            self.fields['horario'].required = False
+
+        labels = {
+            'data': 'Data',
+            'descricao': 'Descrição',
+        }
+
+    def clean_horario(self):
+        horario = self.cleaned_data.get('horario')
+
+        if not horario:
+            raise forms.ValidationError('Selecione um horário antes de agendar.')
+
+        return horario
 
     def clean(self):
         cleaned_data = super().clean()
