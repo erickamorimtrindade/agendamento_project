@@ -3,6 +3,7 @@ from django.contrib.auth.models import User
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 from .models import Cliente, Agendamento
+from .forms import AgendamentoForm
 
 
 def register(request):
@@ -18,7 +19,7 @@ def register(request):
             return render(request, 'agendamento/register.html', {'erro': 'Já existe um usuário com este nome!'})
 
         user = User.objects.create_user(username=username, password=password)
-        Cliente.objects.create(usuario=user)
+        Cliente.objects.create(id_usuario=user)
 
         return redirect('login')
 
@@ -53,33 +54,26 @@ def home(request):
 
 @login_required
 def criar_agendamento(request):
+    cliente = Cliente.objects.get(id_usuario=request.user)
+
     if request.method == "POST":
-        data = request.POST.get("data")
-        horario = request.POST.get("horario")
-        descricao = request.POST.get("descricao")
+        form = AgendamentoForm(request.POST)
 
-        cliente = Cliente.objects.get(usuario=request.user)
+        if form.is_valid():
+            agendamento = form.save(commit=False)
+            agendamento.cliente = cliente
+            agendamento.save()
+            return redirect('listar_agendamentos')
 
-        if Agendamento.objects.filter(data=data, horario=horario).exists():
-            return render(request, 'agendamento/agendar.html', {'erro': 'Horário já ocupado!'})
+    else:
+        form = AgendamentoForm()
 
-        Agendamento.objects.create(
-            cliente=cliente,
-            data=data,
-            horario=horario,
-            descricao=descricao
-        )
-
-        return redirect('listar_agendamentos')
-
-    return render(request, 'agendamento/agendar.html')
+    return render(request, 'agendamento/agendar.html', {'form': form})
 
 
 @login_required
 def listar_agendamentos(request):
-    cliente = Cliente.objects.get(usuario=request.user)
+    cliente = Cliente.objects.get(id_usuario=request.user)
     agendamentos = Agendamento.objects.filter(cliente=cliente)
 
     return render(request, 'agendamento/lista.html', {'agendamentos': agendamentos})
-
-# Create your views here.
