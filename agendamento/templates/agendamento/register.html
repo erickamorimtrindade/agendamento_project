@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Cadastro</title>
+</head>
+<body>
+
+<h2>Criar Conta</h2>
+
+{% if erro %}
+<p style="color:red;">{{ erro }}</p>
+{% endif %}
+
+<form method="POST">
+    {% csrf_token %}
+
+    <label>Usuário:</label>
+    <input type="text" name="username"><br><br>
+
+    <label>Senha:</label>
+    <input type="password" name="password"><br><br>
+
+    <label>Confirmar Senha:</label>
+    <input type="password" name="confirm_password"><br><br>
+
+    <button type="submit">Cadastrar</button>
+</form>
+
+<a href="/login/">Voltar para login</a>
+
+</body>
+</html>
