@@ -1,6 +1,8 @@
 from django.db import models
 from django.contrib.auth.models import User
-
+from django.core.exceptions import ValidationError
+from django.utils import timezone
+from datetime import time
 
 class Cliente(models.Model):
     id_usuario = models.OneToOneField(
@@ -21,7 +23,35 @@ class Agendamento(models.Model):
     horario = models.TimeField()
     descricao = models.CharField(max_length=60, blank=True)
 
-    
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields= ['data', 'horario'],
+                name = 'unique_agendamento_data_horario'
+            )
+        ]
+
+    def clean(self):
+        errors = {}
+
+        now = timezone.localtime()
+
+        # Data passada
+        if self.data and self.data < now.date():
+            errors['data'] = 'Não é permitido agendar em datas passadas.'
+
+        # Horário inválido (fora do expediente)
+        if self.horario:
+            if self.horario < time(8,0) or self.horario > time(22,0):
+                errors['horario'] = 'Horário permitido apenas entre 08:00 e 22:00.'
+
+        # Horário inválido (mesmo dia)
+        if self.data == now.date() and self.horario:
+            if self.horario <= now.time():
+                errors['horario'] = 'Não é possível agendar horários que já passaram.'
+        
+        if errors:
+            raise ValidationError(errors)
 
     def __str__(self):
         return f"{self.cliente.id_usuario.username} - {self.data} {self.horario}"

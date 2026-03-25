@@ -5,7 +5,8 @@ from django.contrib.auth.decorators import login_required
 from .models import Cliente, Agendamento
 from .forms import AgendamentoForm
 from datetime import datetime, timedelta
-
+from django.db import IntegrityError
+from django.core.exceptions import ValidationError
 
 def register(request):
     if request.method == "POST":
@@ -28,7 +29,6 @@ def register(request):
     return render(request, 'agendamento/register.html')
 
 #Login
-
 def login_view(request):
     if request.method == "POST":
         username = request.POST.get("username")
@@ -45,13 +45,11 @@ def login_view(request):
     return render(request, 'agendamento/login.html')
 
 #Logout
-
 def logout_view(request):
     logout(request)
     return redirect('login')
 
 #Home
-
 @login_required
 def home(request):
     return render(request, 'agendamento/home.html')
@@ -68,8 +66,7 @@ def gerar_horarios():
 
     return horarios
 
-#criar agendamentos
-
+#Criar agendamentos
 @login_required
 def criar_agendamento(request):
     cliente, _ = Cliente.objects.get_or_create(id_usuario=request.user)
@@ -82,8 +79,17 @@ def criar_agendamento(request):
         if form.is_valid():
             agendamento = form.save(commit=False)
             agendamento.cliente = cliente
-            agendamento.save()
-            return redirect('listar_agendamentos')
+            try:
+                agendamento.full_clean() # chama o clean() do model
+                agendamento.save()
+                return redirect ('listar_agendamentos')
+            except ValidationError as e:
+                for field, errors in e.message_dict_items():
+                    for error in errors:
+                        form.add_error(field, error)
+
+            except IntegrityError:
+                form.add_error(None, "Esse horário acabou de ser ocupado. Tente outro.")
 
     else:
         form = AgendamentoForm()
@@ -94,7 +100,6 @@ def criar_agendamento(request):
     })
 
 #Listar agendamentos
-
 @login_required
 def listar_agendamentos(request):
     cliente, _ = Cliente.objects.get_or_create(id_usuario=request.user)
