@@ -77,7 +77,7 @@ WSGI_APPLICATION = 'agendamento_project.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/6.0/ref/settings/#databases
 
-if os.getenv("USE_SQLITE") == "True":
+if os.getenv("USE_SQLITE", "True") == "True":
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.sqlite3',
@@ -91,8 +91,8 @@ else:
             'NAME': os.getenv('DB_NAME'),
             'USER': os.getenv('DB_USER'),
             'PASSWORD': os.getenv('DB_PASSWORD'),
-            'HOST': os.getenv('DB_HOST'),
-            'PORT': os.getenv('DB_PORT'),
+            'HOST': os.getenv('DB_HOST', 'localhost'),
+            'PORT': os.getenv('DB_PORT', '3306'),
         }
     }
 
