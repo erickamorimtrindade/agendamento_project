@@ -1,38 +1,145 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Agendar</title>
-</head>
-<body>
+{% block title %}Agendar{% endblock %}
 
-<h2>Criar Agendamento</h2>
+{% block content %}
 
-{% if erro %}
-    <p style="color:red;">{{ erro }}</p>
-{% endif %}
+<style>
+/* CARD */
+.card {
+    background: white;
+    padding: 30px;
+    border-radius: 12px;
+    width: 500px;
+    margin: auto;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+}
 
-{% if form.non_field_errors %}
-    {% for error in form.non_field_errors %}
-        <p style="color:red;">{{ error }}</p>
-    {% endfor %}
-{% endif %}
+/* TITULO */
+.card h2 {
+    text-align: center;
+    margin-bottom: 20px;
+}
 
-<form method="POST">
-    {% csrf_token %}
+/* LABEL */
+label {
+    font-weight: bold;
+    display: block;
+    margin-top: 10px;
+}
 
-    <label>Data:</label><br>
-    {{ form.data }}<br><br>
+/* INPUT */
+input[type="date"],
+textarea {
+    width: 100%;
+    padding: 10px;
+    margin-top: 5px;
+    border-radius: 8px;
+    border: 1px solid #ccc;
+}
 
-    <label>Horário:</label><br>
-    {{ form.horario }}<br><br>
+/* GRID HORARIOS */
+.grid-horarios {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+    margin: 15px 0;
+}
 
-    <label>Descrição:</label><br>
-    {{ form.descricao }}<br><br>
+/* BOTÃO HORARIO */
+.horario {
+    padding: 12px;
+    background: #eee;
+    text-align: center;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: 0.3s;
+    font-weight: bold;
+}
 
-    <button type="submit">Agendar</button>
-</form>
+.horario:hover {
+    background: #667eea;
+    color: white;
+}
 
-<a href="/">Voltar</a>
+/* SELECIONADO */
+.horario.ativo {
+    background: #667eea;
+    color: white;
+}
 
-</body>
-</html>
+/* BOTÃO */
+button {
+    width: 100%;
+    padding: 12px;
+    background: #667eea;
+    border: none;
+    color: white;
+    font-size: 16px;
+    border-radius: 8px;
+    cursor: pointer;
+    margin-top: 15px;
+}
+
+button:hover {
+    background: #5a67d8;
+}
+
+/* ERRO */
+.erro {
+    color: red;
+    margin-bottom: 10px;
+    text-align: center;
+}
+</style>
+
+<div class="card">
+
+    <h2>Criar Agendamento</h2>
+
+    {% if form.non_field_errors %}
+        {% for error in form.non_field_errors %}
+            <p class="erro">{{ error }}</p>
+        {% endfor %}
+    {% endif %}
+
+    <form method="POST">
+        {% csrf_token %}
+
+        <!-- DATA -->
+        <label>Data:</label>
+        {{ form.data }}
+
+        <!-- HORARIO ESCONDIDO -->
+        <input type="hidden" name="horario" id="horario">
+
+        <!-- HORARIOS -->
+        <h3 style="margin-top:15px;">Escolha um horário</h3>
+
+        <div class="grid-horarios">
+            {% for h in horarios %}
+                <div class="horario" onclick="selecionarHorario(this, '{{ h }}')">
+                    {{ h }}
+                </div>
+            {% endfor %}
+        </div>
+
+        <!-- DESCRIÇÃO -->
+        <label>Descrição:</label>
+        {{ form.descricao }}
+
+        <button type="submit">Agendar</button>
+    </form>
+
+</div>
+
+<script>
+function selecionarHorario(elemento, horario) {
+    document.querySelectorAll('.horario').forEach(el => {
+        el.classList.remove('ativo');
+    });
+
+    elemento.classList.add('ativo');
+    document.getElementById('horario').value = horario;
+}
+</script>
+
+{% endblock %}

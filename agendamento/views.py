@@ -4,6 +4,7 @@ from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 from .models import Cliente, Agendamento
 from .forms import AgendamentoForm
+from datetime import datetime, timedelta
 
 
 def register(request):
@@ -16,15 +17,17 @@ def register(request):
             return render(request, 'agendamento/register.html', {'erro': 'As senhas não coincidem!'})
 
         if User.objects.filter(username=username).exists():
-            return render(request, 'agendamento/register.html', {'erro': 'Já existe um usuário com este nome!'})
+            return render(request, 'agendamento/register.html', {'erro': 'Usuário já existe!'})
 
         user = User.objects.create_user(username=username, password=password)
-        Cliente.objects.create(id_usuario=user)
+        # cria cliente automaticamente
+        Cliente.objects.get_or_create(id_usuario=user)
 
         return redirect('login')
 
     return render(request, 'agendamento/register.html')
 
+#Login
 
 def login_view(request):
     if request.method == "POST":
@@ -41,20 +44,36 @@ def login_view(request):
 
     return render(request, 'agendamento/login.html')
 
+#Logout
 
 def logout_view(request):
     logout(request)
     return redirect('login')
 
+#Home
 
 @login_required
 def home(request):
     return render(request, 'agendamento/home.html')
 
+# GERAR HORÁRIOS (08:00 até 22:00 de 30 em 30 min)
+def gerar_horarios():
+    horarios = []
+    inicio = datetime.strptime("08:00", "%H:%M")
+    fim = datetime.strptime("22:00", "%H:%M")
+
+    while inicio <= fim:
+        horarios.append(inicio.strftime("%H:%M"))
+        inicio += timedelta(minutes=30)
+
+    return horarios
+
+#criar agendamentos
 
 @login_required
 def criar_agendamento(request):
-    cliente, created = Cliente.objects.get_or_create(id_usuario=request.user)
+    cliente, _ = Cliente.objects.get_or_create(id_usuario=request.user)
+    horarios = gerar_horarios()
 
 
     if request.method == "POST":
@@ -69,12 +88,18 @@ def criar_agendamento(request):
     else:
         form = AgendamentoForm()
 
-    return render(request, 'agendamento/agendar.html', {'form': form})
+    return render(request, 'agendamento/agendar.html', {
+        'form': form,
+        'horarios': horarios
+    })
 
+#Listar agendamentos
 
 @login_required
 def listar_agendamentos(request):
-    cliente, created = Cliente.objects.get_or_create(id_usuario=request.user)
+    cliente, _ = Cliente.objects.get_or_create(id_usuario=request.user)
     agendamentos = Agendamento.objects.filter(cliente=cliente)
 
-    return render(request, 'agendamento/lista.html', {'agendamentos': agendamentos})
+    return render(request, 'agendamento/lista.html', {
+        'agendamentos': agendamentos
+    })
