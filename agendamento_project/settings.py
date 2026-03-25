@@ -11,6 +11,10 @@ https://docs.djangoproject.com/en/6.0/ref/settings/
 """
 
 from pathlib import Path
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -72,15 +76,14 @@ WSGI_APPLICATION = 'agendamento_project.wsgi.application'
 
 # Database
 # https://docs.djangoproject.com/en/6.0/ref/settings/#databases
-
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'agendamento_db',      
-        'USER': 'root',                
-        'PASSWORD': 'sua_senha',       
-        'HOST': 'localhost',
-        'PORT': '3306',
+        'NAME': os.getenv('agendamento_db'),
+        'USER': os.getenv('root'),
+        'PASSWORD': os.getenv('DB_PASSWORD'),
+        'HOST': os.getenv('localhost'),
+        'PORT': os.getenv('3306'),
     }
 }
 
