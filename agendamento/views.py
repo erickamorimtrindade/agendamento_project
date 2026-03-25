@@ -3,6 +3,7 @@ from django.contrib.auth.models import User
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 from .models import Cliente, Agendamento
+from .forms import AgendamentoForm
 
 def register(request):
     if request.method == "POST":
@@ -49,26 +50,21 @@ def home(request):
 
 @login_required
 def criar_agendamento(request):
+    cliente = Cliente.objects.get(id_usuario=request.user)
+
     if request.method == "POST":
-        data = request.POST.get("data")
-        horario = request.POST.get("horario")
-        descricao = request.POST.get("descricao")
+        form = AgendamentoForm(request.POST)
+        
+        if form.is_valid():
+            agendamento = form.save(commit=False)
+            agendamento.cliente = cliente
+            agendamento.save()
 
-        cliente = Cliente.objects.get(id_usuario=request.user)
+            return redirect('listar_agendamentos')
+        return render(request, 'agendar.html', {'form': form})
 
-        if Agendamento.objects.filter(data=data, horario=horario).exists():
-            return render(request, 'agendar.html', {'erro': 'Horário já ocupado!'})
-
-        Agendamento.objects.create(
-            cliente=cliente,
-            data=data,
-            horario=horario,
-            descricao=descricao
-        )
-
-        return redirect('listar_agendamentos')
-
-    return render(request, 'agendar.html')
+    form = AgendamentoForm()
+    return render(request, 'agendar.html', {'form': form})
 
 @login_required
 def listar_agendamentos(request):
