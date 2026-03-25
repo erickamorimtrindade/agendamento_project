@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Agendar</title>
+</head>
+<body>
+
+<h2>Criar Agendamento</h2>
+
+{% if erro %}
+<p style="color:red;">{{ erro }}</p>
+{% endif %}
+
+<form method="POST">
+    {% csrf_token %}
+
+    <label>Data:</label>
+    <input type="date" name="data"><br><br>
+
+    <label>Horário:</label>
+    <input type="time" name="horario"><br><br>
+
+    <label>Descrição:</label>
+    <input type="text" name="descricao"><br><br>
+
+    <button type="submit">Agendar</button>
+</form>
+
+<a href="/">Voltar</a>
+
+</body>
+</html>
