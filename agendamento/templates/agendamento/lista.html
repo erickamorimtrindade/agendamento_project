@@ -155,6 +155,7 @@
                                     <p class="schedule-info">
                                         <span class="schedule-label">Descrição:</span> {{ ag.descricao }}
                                     </p>
+                                    <a href="{% url 'confirmar_exclusao' ag.id %}">Excluir</a>
                                 </div>
                             {% endfor %}
                         </div>

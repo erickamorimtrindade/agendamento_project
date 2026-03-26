@@ -1,4 +1,4 @@
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.models import User
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
@@ -107,4 +107,19 @@ def listar_agendamentos(request):
 
     return render(request, 'agendamento/lista.html', {
         'agendamentos': agendamentos
+    })
+
+@login_required
+def excluir_agendamento(request, id):
+    cliente, _ = Cliente.objects.get_or_create(id_usuario=request.user)
+
+    # Impede usuário deletar agendamento de outro
+    agendamento = get_object_or_404(Agendamento, id=id, cliente=cliente)
+
+    if request.method == 'POST':
+        agendamento.delete()
+        return redirect('listar_agendamentos')
+    
+    return render (request, 'agendamento/confirmar_exclusao.html', {
+        'agendamento': agendamento
     })
