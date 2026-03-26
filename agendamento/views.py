@@ -84,7 +84,7 @@ def criar_agendamento(request):
                 agendamento.save()
                 return redirect ('listar_agendamentos')
             except ValidationError as e:
-                for field, errors in e.message_dict_items():
+                for field, errors in e.message_dict.items():
                     for error in errors:
                         form.add_error(field, error)
 
