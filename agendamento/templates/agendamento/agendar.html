@@ -8,13 +8,23 @@
 <style>
     body {
         min-height: 100vh;
-        background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+        margin: 0;
+        background: linear-gradient(135deg, #807f7f, #f2f5f7);
         font-family: Arial, sans-serif;
     }
 
     .page-wrapper {
         min-height: 100vh;
-        padding: 20px 0;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        padding: 20px;
+    }
+
+    .page-container {
+        width: 100%;
+        display: flex;
+        justify-content: center;
     }
 
     .schedule-card {
@@ -22,6 +32,12 @@
         max-width: 650px;
         border: none;
         border-radius: 20px;
+        margin: 0 auto;
+    }
+
+    .mobile-content {
+        width: 100%;
+        margin: 0 auto;
     }
 
     .brand-icon {
@@ -168,14 +184,14 @@
 
         .schedule-card {
             max-width: 100%;
-            border-radius: 0;
             min-height: 100vh;
+            border-radius: 0;
         }
 
         .mobile-content {
-            width: 100%;
             max-width: 380px;
-            margin: auto;
+            width: 100%;
+            margin: 0 auto;
         }
 
         .grid-horarios {
@@ -190,83 +206,81 @@
     }
 </style>
 
-<div class="container-fluid">
-    <div class="row justify-content-center page-wrapper">
-        <div class="col-12 col-sm-11 col-md-10 col-lg-8 col-xl-6">
-            <div class="card shadow-lg schedule-card p-4 p-md-5">
-                <div class="mobile-content">
+<div class="page-wrapper">
+    <div class="page-container">
+        <div class="card shadow-lg schedule-card p-4 p-md-5">
+            <div class="mobile-content">
 
-                    <div class="text-center mb-4">
-                        <div class="brand-icon">
-                            <i class="bi bi-calendar-plus"></i>
+                <div class="text-center mb-4">
+                    <div class="brand-icon">
+                        <i class="bi bi-calendar-plus"></i>
+                    </div>
+                    <h1 class="page-title mb-2">Criar Agendamento</h1>
+                    <p class="page-subtitle mb-0">
+                        Escolha a data, horário e preencha a descrição
+                    </p>
+                </div>
+
+                <div class="helper-box">
+                    <p>Selecione um horário disponível e finalize seu agendamento de forma rápida.</p>
+                </div>
+
+                {% if form.non_field_errors %}
+                    {% for error in form.non_field_errors %}
+                        <div class="alert alert-danger text-center error-box" role="alert">
+                            {{ error }}
                         </div>
-                        <h1 class="page-title mb-2">Criar Agendamento</h1>
-                        <p class="page-subtitle mb-0">
-                            Escolha a data, horário e preencha a descrição
-                        </p>
+                    {% endfor %}
+                {% endif %}
+
+                <form method="POST">
+                    {% csrf_token %}
+
+                    <div class="mb-4">
+                        <label class="form-label">Data</label>
+                        {{ form.data }}
                     </div>
 
-                    <div class="helper-box">
-                        <p>Selecione um horário disponível e finalize seu agendamento de forma rápida.</p>
-                    </div>
-
-                    {% if form.non_field_errors %}
-                        {% for error in form.non_field_errors %}
-                            <div class="alert alert-danger text-center error-box" role="alert">
-                                {{ error }}
-                            </div>
-                        {% endfor %}
-                    {% endif %}
-
-                    <form method="POST">
-                        {% csrf_token %}
-
-                        <div class="mb-4">
-                            <label class="form-label">Data</label>
-                            {{ form.data }}
-                        </div>
-
-                        <input type="hidden" name="horario" id="horario">
-
-                        {% if form.horario.errors %}
+                    <input type="hidden" name="horario" id="horario">
+                    
+                    {% if form.horario.errors %}
                             <div class="alert alert-danger text-center mt-2 error-box" role="alert">
                                 {% for error in form.horario.errors %}
                                     {{ error }}
                                 {% endfor %}
                             </div>
                         {% endif %}
+                    </div>
 
-                        <div class="mb-4">
-                            <h3 class="section-title">Escolha um horário</h3>
+                    <div class="mb-4">
+                        <h3 class="section-title">Escolha um horário</h3>
 
-                            <div class="grid-horarios">
-                                {% for h in horarios %}
-                                    <div class="horario" onclick="selecionarHorario(this, '{{ h }}')">
-                                        {{ h }}
-                                    </div>
-                                {% endfor %}
-                            </div>
+                        <div class="grid-horarios">
+                            {% for h in horarios %}
+                                <div class="horario" onclick="selecionarHorario(this, '{{ h }}')">
+                                    {{ h }}
+                                </div>
+                            {% endfor %}
                         </div>
 
-                        <div class="mb-4">
-                            <label class="form-label">Descrição</label>
-                            {{ form.descricao }}
-                        </div>
+                    <div class="mb-4">
+                        <label class="form-label">Descrição</label>
+                        {{ form.descricao }}
+                    </div>
 
-                        <div class="d-grid gap-2">
-                            <button type="submit" class="btn btn-primary btn-main">
-                                <i class="bi bi-check-circle"></i>
-                                Agendar
-                            </button>
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-primary btn-main">
+                            <i class="bi bi-check-circle"></i>
+                            Agendar
+                        </button>
 
-                            <a href="/" class="btn btn-outline-secondary btn-main">
-                                <i class="bi bi-house-door"></i>
-                                Voltar para Pagina Inicial
-                            </a>
-                        </div>
-                    </form>
+                        <a href="/" class="btn btn-outline-secondary btn-main">
+                            <i class="bi bi-house-door"></i>
+                            Voltar para Página Inicial
+                        </a>
+                    </div>
+                </form>
 
-                </div>
             </div>
         </div>
     </div>

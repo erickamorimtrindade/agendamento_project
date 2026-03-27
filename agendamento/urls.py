@@ -8,5 +8,5 @@ urlpatterns = [
     path('register/', views.register, name='register'),
     path('agendar/', views.criar_agendamento, name='agendar'),
     path('agendamento/', views.listar_agendamentos, name='listar_agendamentos'),
-    path('agendamento/excluir/<int:id>', views.excluir_agendamento, name='excluir_agendamento'),
+    path('agendamento/excluir/<int:id>', views.excluir_agendamento, name='confirmar_exclusao'),
 ]
