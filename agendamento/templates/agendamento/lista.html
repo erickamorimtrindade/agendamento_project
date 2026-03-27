@@ -52,10 +52,10 @@
         }
 
         .schedule-card {
-            border: 1px solid #e9ecef;
+            border: 2px solid #dadbdd;
             border-radius: 16px;
             padding: 18px;
-            background-color: #ffffff;
+            background-color: #eeeeee;
             transition: 0.2s ease;
         }
 
@@ -155,7 +155,9 @@
                                     <p class="schedule-info">
                                         <span class="schedule-label">Descrição:</span> {{ ag.descricao }}
                                     </p>
-                                    <a href="{% url 'confirmar_exclusao' ag.id %}">Excluir</a>
+                                    <a href="{% url 'confirmar_exclusao' ag.id %}"class="btn btn-danger btn-lg w-100 rounded-4 d-flex align-items-center justify-content-center gap-2">
+                                        <i class="bi bi-trash"></i>
+                                        Excluir</a>
                                 </div>
                             {% endfor %}
                         </div>
