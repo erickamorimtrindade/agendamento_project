@@ -11,7 +11,7 @@ class Cliente(models.Model):
         primary_key=True
     )
     telefone = models.CharField(max_length=20,)
-    endereco = models.CharField(max_length=200,)
+    endereco = models.CharField(max_length=60,)
 
     def __str__(self):
         return self.id_usuario.username
@@ -21,7 +21,7 @@ class Agendamento(models.Model):
     cliente = models.ForeignKey(Cliente, on_delete=models.CASCADE)
     data = models.DateField()
     horario = models.TimeField()
-    descricao = models.CharField(max_length=60, blank=True)
+    descricao = models.CharField(max_length=100, blank=True)
 
     class Meta:
         constraints = [

@@ -242,6 +242,15 @@
                     </div>
 
                     <input type="hidden" name="horario" id="horario">
+                    
+                    {% if form.horario.errors %}
+                            <div class="alert alert-danger text-center mt-2 error-box" role="alert">
+                                {% for error in form.horario.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
 
                     <div class="mb-4">
                         <h3 class="section-title">Escolha um horário</h3>
@@ -253,15 +262,6 @@
                                 </div>
                             {% endfor %}
                         </div>
-
-                        {% if form.horario.errors %}
-                            <div class="alert alert-danger text-center mt-2 error-box" role="alert">
-                                {% for error in form.horario.errors %}
-                                    {{ error }}
-                                {% endfor %}
-                            </div>
-                        {% endif %}
-                    </div>
 
                     <div class="mb-4">
                         <label class="form-label">Descrição</label>

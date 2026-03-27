@@ -4,7 +4,7 @@ from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 from .models import Cliente, Agendamento
 from .forms import AgendamentoForm
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, date
 from django.db import IntegrityError
 from django.core.exceptions import ValidationError
 
@@ -123,3 +123,16 @@ def excluir_agendamento(request, id):
     return render (request, 'agendamento/confirmar_exclusao.html', {
         'agendamento': agendamento
     })
+
+#Limpa os agendamentos que ja passaram o horario quando o cliente abre o site
+def limpar_agendamentos_vencidos():
+    hoje = date.today()
+    agora = datetime.now().time()
+
+    Agendamento.objects.filter(data__lt=hoje).delete()
+    Agendamento.objects.filter(data=hoje, horario__lt=agora).delete()
+
+def listar_agendamentos(request):
+    limpar_agendamentos_vencidos()
+    agendamentos = Agendamento.objects.all().order_by('data', 'horario')
+    return render(request, 'agendamento/lista.html', {'agendamentos': agendamentos})
