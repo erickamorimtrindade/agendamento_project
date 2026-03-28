@@ -1,6 +1,6 @@
 from django import forms
 from .models import Agendamento
-from datetime import date, time
+from datetime import date, time, datetime
 
 class AgendamentoForm(forms.ModelForm):
     class Meta:
@@ -9,12 +9,10 @@ class AgendamentoForm(forms.ModelForm):
 
         widgets = {
             'data': forms.DateInput(attrs={
-                'type': 'date',
+                'type': 'text',
                 'class': 'form-control',
+                'id' : 'data',
                 'min': date.today().isoformat(),
-                'onkeydown': 'return false;',
-                'onclick': 'this.showPicker()',
-                'onfocus': 'this.showPicker()',
             }),
             'horario': forms.HiddenInput(),
             'descricao': forms.Textarea(attrs={
@@ -23,6 +21,16 @@ class AgendamentoForm(forms.ModelForm):
                 'rows': 4,
             }),
         }
+        
+        def clean_data(self):
+            data = self.cleaned_data.get('data')
+
+            try:
+                data_convertida = datetime.strptime(data, '%d/%m/%Y')
+            except:
+                raise forms.ValidationError("Digite a data no formato dd/mm/aaaa")
+
+            return data_convertida
 
         def __init__(self, *args, **kwargs):
             super().__init__(*args, **kwargs)
