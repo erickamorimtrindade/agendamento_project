@@ -6,12 +6,12 @@ class AgendamentoForm(forms.ModelForm):
     class Meta:
         model = Agendamento
         fields = ['data', 'horario', 'descricao']
-
         widgets = {
             'data': forms.DateInput(attrs={
                 'type': 'text',
+                'onchange': 'this.form.submit()',
                 'class': 'form-control',
-                'id' : 'data',
+                'id': 'data',
                 'min': date.today().isoformat(),
             }),
             'horario': forms.HiddenInput(),
@@ -21,27 +21,20 @@ class AgendamentoForm(forms.ModelForm):
                 'rows': 4,
             }),
         }
-        
-        def clean_data(self):
-            data = self.cleaned_data.get('data')
-
-            try:
-                data_convertida = datetime.strptime(data, '%d/%m/%Y')
-            except:
-                raise forms.ValidationError("Digite a data no formato dd/mm/aaaa")
-
-            return data_convertida
-
-        def __init__(self, *args, **kwargs):
-            super().__init__(*args, **kwargs)
-
-            # remove mensagem padrão do Django
-            self.fields['horario'].required = False
-
         labels = {
             'data': 'Data',
             'descricao': 'Descrição',
         }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['horario'].required = False
+
+    def clean_data(self):
+        data = self.cleaned_data.get('data')
+        if not data:
+            raise forms.ValidationError("Selecione uma data.")
+        return data
 
     def clean_horario(self):
         horario = self.cleaned_data.get('horario')
@@ -59,13 +52,11 @@ class AgendamentoForm(forms.ModelForm):
         if data and data < date.today():
             raise forms.ValidationError("Não é possível agendar em datas passadas.")
 
-        
         if horario:
             if horario < time(8, 0) or horario > time(22, 0):
                 raise forms.ValidationError("Horário permitido apenas entre 08:00 e 22:00.")
 
-        
         if data and horario and Agendamento.objects.filter(data=data, horario=horario).exists():
             raise forms.ValidationError("Este horário já está ocupado.")
-        
+
         return cleaned_data

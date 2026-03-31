@@ -107,7 +107,7 @@
         margin-bottom: 12px;
     }
 
-    .grid-horarios {
+    .horarios-grid {
         display: grid;
         grid-template-columns: repeat(4, 1fr);
         gap: 12px;
@@ -115,31 +115,50 @@
         margin-bottom: 20px;
     }
 
-    .horario {
-        padding: 12px 10px;
-        background: #f8f9fa;
-        border: 1px solid #dee2e6;
-        text-align: center;
-        border-radius: 12px;
+
+    .horario-card {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        border-radius: 16px;
+        overflow: hidden;
         cursor: pointer;
-        transition: all 0.2s ease;
-        font-weight: 600;
-        color: #212529;
-        user-select: none;
     }
 
-    .horario:hover {
-        background: #e7f1ff;
-        border-color: #0d6efd;
-        color: #0d6efd;
+    /* o botão de verdade */
+    .horario-card span {
+        width: 100%;
+        padding: 22px;
+        background: #e3ffdd;
+        border: 2px solid #b2fc9b;
+        font-size: 18px;
+        font-weight: 600;
+        text-align: center;
+        transition: 0.2s ease;
+    }
+
+    /* hover */
+    .horario-card:hover span {
+        background: #88ff88;
+        border-color: #15ff00;
+        color: #ffffff;
         transform: translateY(-1px);
     }
 
-    .horario.ativo {
-        background: #0d6efd;
+    /* 🔵 quando selecionado */
+    .horario-card input:checked + span {
+        background: #26ff38;
         color: white;
-        border-color: #0d6efd;
+        border-color: #1eff00;
         box-shadow: 0 6px 16px rgba(13, 110, 253, 0.25);
+    }
+
+    /* 🔴 ocupado */
+    .horario-card.ocupado span {
+        background: #ff3247;
+        color: white;
+        border-color: #ff0019;
+        cursor: not-allowed;
     }
 
     .btn-main {
@@ -229,23 +248,17 @@
                     <p>Selecione um horário disponível e finalize seu agendamento de forma rápida.</p>
                 </div>
 
-                {% if form.non_field_errors %}
-                    {% for error in form.non_field_errors %}
-                        <div class="alert alert-danger text-center error-box" role="alert">
-                            {{ error }}
-                        </div>
-                    {% endfor %}
-                {% endif %}
-
-                <form method="POST">
-                    {% csrf_token %}
-
+                <form method="get">
                     <div class="mb-4">
                         <label class="form-label">Data</label>
                         {{ form.data }}
                     </div>
+                </form>
 
-                    <input type="hidden" name="horario" id="horario">
+                <form method="POST">
+                    {% csrf_token %}
+
+                    <input type="hidden" name="data" value="{{ data_selecionada }}">
                     
                     {% if form.horario.errors %}
                             <div class="alert alert-danger text-center mt-2 error-box" role="alert">
@@ -259,11 +272,22 @@
                     <div class="mb-4">
                         <h3 class="section-title">Escolha um horário</h3>
 
-                        <div class="grid-horarios">
-                            {% for h in horarios %}
-                                <div class="horario" onclick="selecionarHorario(this, '{{ h }}')">
-                                    {{ h }}
-                                </div>
+                        <div class="horarios-grid">
+                            {% for horario in horarios %}
+                                <label class="horario-card {% if horario in horarios_ocupados %}ocupado{% endif %}">
+                                    <input 
+                                        type="radio"
+                                        name="horario"
+                                        value="{{ horario }}"
+                                        hidden
+                                        {% if horario in horarios_ocupados %}disabled{% endif %}
+                                    >
+                                    <span>{{ horario }}
+                                        {% if horario in horarios_ocupados %}
+                                            <i class="bi bi-lock-fill"></i>
+                                        {% endif %}
+                                    </span>
+                                </label>
                             {% endfor %}
                         </div>
 

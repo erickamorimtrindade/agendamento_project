@@ -71,32 +71,63 @@ def gerar_horarios():
 def criar_agendamento(request):
     cliente, _ = Cliente.objects.get_or_create(id_usuario=request.user)
     horarios = gerar_horarios()
+    horarios_ocupados = []
 
+    data_selecionada = request.GET.get("data") or request.POST.get("data")
+    data_convertida = None
+
+    if data_selecionada:
+        try:
+            data_convertida = datetime.strptime(data_selecionada, "%d/%m/%Y").date()
+        except ValueError:
+            try:
+                data_convertida = datetime.strptime(data_selecionada, "%Y-%m-%d").date()
+            except ValueError:
+                data_convertida = None
+
+    if data_convertida:
+        agendamentos_do_dia = Agendamento.objects.filter(data=data_convertida)
+        horarios_ocupados = [
+            ag.horario.strftime("%H:%M") for ag in agendamentos_do_dia
+        ]
 
     if request.method == "POST":
         form = AgendamentoForm(request.POST)
+        horario_selecionado = request.POST.get("horario")
 
-        if form.is_valid():
+        ja_existe = False
+        if data_convertida and horario_selecionado:
+            ja_existe = Agendamento.objects.filter(
+                data=data_convertida,
+                horario=horario_selecionado
+            ).exists()
+
+        if ja_existe:
+            form.add_error("horario", "Esse horário já está ocupado para essa data.")
+        elif form.is_valid():
             agendamento = form.save(commit=False)
             agendamento.cliente = cliente
+
             try:
-                agendamento.full_clean() # chama o clean() do model
+                agendamento.full_clean()
                 agendamento.save()
-                return redirect ('listar_agendamentos')
+                return redirect('listar_agendamentos')
+
             except ValidationError as e:
                 for field, errors in e.message_dict.items():
                     for error in errors:
                         form.add_error(field, error)
 
             except IntegrityError:
-                form.add_error(None, "Esse horário acabou de ser ocupado. Tente outro.")
-
+                form.add_error("horario", "Esse horário acabou de ser ocupado. Tente outro.")
     else:
-        form = AgendamentoForm()
+        form = AgendamentoForm(initial={"data": data_selecionada})
 
     return render(request, 'agendamento/agendar.html', {
         'form': form,
-        'horarios': horarios
+        'horarios': horarios,
+        'horarios_ocupados': horarios_ocupados,
+        'data_selecionada': data_selecionada,
     })
 
 #Listar agendamentos

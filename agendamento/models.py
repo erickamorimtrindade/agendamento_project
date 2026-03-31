@@ -48,7 +48,7 @@ class Agendamento(models.Model):
         # Horário inválido (mesmo dia)
         if self.data == now.date() and self.horario:
             if self.horario <= now.time():
-                errors['horario'] = 'Não é possível agendar horários que já passaram.'
+                errors['horario'] = 'Não é possível agendar horários anteriores ao horário atual.'
         
         if errors:
             raise ValidationError(errors)
@@ -56,5 +56,3 @@ class Agendamento(models.Model):
     def __str__(self):
         return f"{self.cliente.id_usuario.username} - {self.data} {self.horario}"
 
-
-# Create your models here.
