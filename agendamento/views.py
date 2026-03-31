@@ -2,7 +2,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.models import User
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
-from .models import Cliente, Agendamento
+from .models import Cliente, Agendamento, Servico
 from .forms import AgendamentoForm
 from datetime import datetime, timedelta, date
 from django.db import IntegrityError
@@ -70,6 +70,17 @@ def gerar_horarios():
 @login_required
 def criar_agendamento(request):
     cliente, _ = Cliente.objects.get_or_create(id_usuario=request.user)
+
+    # NOVO: pega o serviço escolhido antes
+    servico_id = request.session.get("servico_id")
+
+    # NOVO: se o usuário não escolheu serviço, volta pra página de serviços
+    if not servico_id:
+        return redirect("escolher_servico")
+
+    # NOVO: busca o serviço no banco
+    servico = get_object_or_404(Servico, id=servico_id, ativo=True)
+
     horarios = gerar_horarios()
     horarios_ocupados = []
 
@@ -107,10 +118,16 @@ def criar_agendamento(request):
         elif form.is_valid():
             agendamento = form.save(commit=False)
             agendamento.cliente = cliente
+            # NOVO: salva o serviço no agendamento
+            agendamento.servico = servico
 
             try:
                 agendamento.full_clean()
                 agendamento.save()
+
+                # OPCIONAL: limpa a sessão depois de agendar
+                request.session.pop("servico_id", None)
+
                 return redirect('listar_agendamentos')
 
             except ValidationError as e:
@@ -128,6 +145,7 @@ def criar_agendamento(request):
         'horarios': horarios,
         'horarios_ocupados': horarios_ocupados,
         'data_selecionada': data_selecionada,
+        'servico': servico,  # NOVO: manda o serviço pra tela
     })
 
 #Listar agendamentos
@@ -167,3 +185,23 @@ def listar_agendamentos(request):
     limpar_agendamentos_vencidos()
     agendamentos = Agendamento.objects.all().order_by('data', 'horario')
     return render(request, 'agendamento/lista.html', {'agendamentos': agendamentos})
+
+
+@login_required
+def escolher_servico(request):
+    servicos = Servico.objects.filter(ativo=True)
+    erro = None
+    
+    if request.method == "POST":
+        servico_id = request.POST.get("servico")
+
+        if not servico_id:
+            erro = "Selecione um serviço para continuar."
+        else:
+            request.session["servico_id"] = servico_id
+            return redirect("criar_agendamento")
+
+    return render(request, "agendamento/servicos.html", {
+        "servicos": servicos,
+        "erro": erro,
+    })

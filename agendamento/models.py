@@ -19,6 +19,7 @@ class Cliente(models.Model):
 
 class Agendamento(models.Model):
     cliente = models.ForeignKey(Cliente, on_delete=models.CASCADE)
+    servico = models.ForeignKey('Servico', on_delete=models.CASCADE, null=True, blank=True)
     data = models.DateField()
     horario = models.TimeField()
     descricao = models.CharField(max_length=100, blank=True)
@@ -56,3 +57,11 @@ class Agendamento(models.Model):
     def __str__(self):
         return f"{self.cliente.id_usuario.username} - {self.data} {self.horario}"
 
+#Mostra servicos disponiveis
+class Servico(models.Model):
+    nome = models.CharField(max_length=100)
+    descricao = models.CharField(max_length=200, blank=True)
+    ativo = models.BooleanField(default=True)
+
+    def __str__(self):
+        return self.nome
