@@ -1,0 +1,357 @@
+{% block title %}{% endblock %}
+
+{% block content %}
+
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<script src="https://npmcdn.com/flatpickr/dist/l10n/pt.js"></script>
+
+<style>
+    body {
+        min-height: 100vh;
+        margin: 0;
+        background: linear-gradient(135deg, #807f7f, #f2f5f7);
+        font-family: Arial, sans-serif;
+    }
+
+    .page-wrapper {
+        min-height: 100vh;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        padding: 20px;
+    }
+
+    .page-container {
+        width: 100%;
+        display: flex;
+        justify-content: center;
+    }
+
+    .schedule-card {
+        width: 100%;
+        max-width: 650px;
+        border: none;
+        border-radius: 20px;
+        margin: 0 auto;
+    }
+
+    .mobile-content {
+        width: 100%;
+        margin: 0 auto;
+    }
+
+    .brand-icon {
+        width: 70px;
+        height: 70px;
+        background-color: #0d6efd;
+        color: white;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 28px;
+        margin: 0 auto 15px;
+    }
+
+    .page-title {
+        font-size: 1.8rem;
+        font-weight: 700;
+        color: #212529;
+    }
+
+    .page-subtitle {
+        font-size: 0.95rem;
+        color: #6c757d;
+    }
+
+    .form-label {
+        font-weight: 600;
+        margin-bottom: 8px;
+        color: #212529;
+    }
+
+    input[type="date"],
+    textarea,
+    select,
+    input[type="text"] {
+        width: 100%;
+        padding: 12px 14px;
+        border: 1px solid #ced4da;
+        border-radius: 12px;
+        outline: none;
+        transition: 0.2s;
+        background-color: #fff;
+    }
+
+    input[type="date"]:focus,
+    textarea:focus,
+    select:focus,
+    input[type="text"]:focus {
+        border-color: #86b7fe;
+        box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.15);
+    }
+
+    textarea {
+        min-height: 120px;
+        resize: vertical;
+    }
+
+    .section-title {
+        font-size: 1rem;
+        font-weight: 700;
+        color: #212529;
+        margin-bottom: 12px;
+    }
+
+    .horarios-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 12px;
+        margin-top: 10px;
+        margin-bottom: 20px;
+    }
+
+
+    .horario-card {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        border-radius: 16px;
+        overflow: hidden;
+        cursor: pointer;
+    }
+
+    /* o botão de verdade */
+    .horario-card span {
+        width: 100%;
+        padding: 22px;
+        background: #e3ffdd;
+        border: 2px solid #b2fc9b;
+        font-size: 18px;
+        font-weight: 600;
+        text-align: center;
+        transition: 0.2s ease;
+    }
+
+    /* hover */
+    .horario-card:hover span {
+        background: #88ff88;
+        border-color: #15ff00;
+        color: #ffffff;
+        transform: translateY(-1px);
+    }
+
+    /* 🔵 quando selecionado */
+    .horario-card input:checked + span {
+        background: #26ff38;
+        color: white;
+        border-color: #1eff00;
+        box-shadow: 0 6px 16px rgba(13, 110, 253, 0.25);
+    }
+
+    /* 🔴 ocupado */
+    .horario-card.ocupado span {
+        background: #ff3247;
+        color: white;
+        border-color: #ff0019;
+        cursor: not-allowed;
+    }
+
+    .btn-main {
+        height: 50px;
+        border-radius: 12px;
+        font-weight: 600;
+        font-size: 1rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+    }
+
+    .error-box {
+        border-radius: 12px;
+    }
+
+    .helper-box {
+        background-color: #f8f9fa;
+        border-radius: 14px;
+        padding: 14px;
+        margin-bottom: 20px;
+        text-align: center;
+    }
+
+    .helper-box p {
+        margin: 0;
+        color: #6c757d;
+        font-size: 0.95rem;
+    }
+
+    @media (max-width: 768px) {
+        .grid-horarios {
+            grid-template-columns: repeat(3, 1fr);
+        }
+    }
+
+    @media (max-width: 576px) {
+        body {
+            background: #ffffff;
+        }
+
+        .page-wrapper {
+            padding: 0;
+        }
+
+        .schedule-card {
+            max-width: 100%;
+            min-height: 100vh;
+            border-radius: 0;
+        }
+
+        .mobile-content {
+            max-width: 380px;
+            width: 100%;
+            margin: 0 auto;
+        }
+
+        .grid-horarios {
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+        }
+
+        .horario {
+            padding: 14px 8px;
+            font-size: 0.95rem;
+        }
+    }
+</style>
+
+<div class="page-wrapper">
+    <div class="page-container">
+        <div class="card shadow-lg schedule-card p-4 p-md-5">
+            <div class="mobile-content">
+
+                <div class="text-center mb-4">
+                    <div class="brand-icon">
+                        <i class="bi bi-calendar-plus"></i>
+                    </div>
+                    <h1 class="page-title mb-2">Criar Agendamento</h1>
+                    <p class="page-subtitle mb-0">
+                        Escolha a data, horário e preencha a descrição
+                    </p>
+                </div>
+
+                <div class="helper-box">
+                    <p>Selecione um horário disponível e finalize seu agendamento de forma rápida.</p>
+                </div>
+
+                <form method="get">
+                    <div class="mb-4">
+                        <label class="form-label">Data</label>
+                        {{ form.data }}
+                    </div>
+                </form>
+
+                <form method="POST">
+                    {% csrf_token %}
+
+                    <input type="hidden" name="data" value="{{ data_selecionada }}">
+                    
+                    {% if form.horario.errors %}
+                            <div class="alert alert-danger text-center mt-2 error-box" role="alert">
+                                {% for error in form.horario.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <div class="mb-4">
+                        <h3 class="section-title">Escolha um horário</h3>
+
+                        <div class="horarios-grid">
+                            {% for horario in horarios %}
+                                <label class="horario-card {% if horario in horarios_ocupados %}ocupado{% endif %}">
+                                    <input 
+                                        type="radio"
+                                        name="horario"
+                                        value="{{ horario }}"
+                                        hidden
+                                        {% if horario in horarios_ocupados %}disabled{% endif %}
+                                    >
+                                    <span>{{ horario }}
+                                        {% if horario in horarios_ocupados %}
+                                            <i class="bi bi-lock-fill"></i>
+                                        {% endif %}
+                                    </span>
+                                </label>
+                            {% endfor %}
+                        </div>
+
+                    <div class="mb-4">
+                        <label class="form-label">Descrição</label>
+                        {{ form.descricao }}
+                    </div>
+
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-primary btn-main">
+                            <i class="bi bi-check-circle"></i>
+                            Agendar
+                        </button>
+
+                        <a href="/" class="btn btn-outline-secondary btn-main">
+                            <i class="bi bi-house-door"></i>
+                            Voltar para Página Inicial
+                        </a>
+                    </div>
+                </form>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function selecionarHorario(elemento, horario) {
+        document.querySelectorAll('.horario').forEach(el => {
+            el.classList.remove('ativo');
+        });
+
+        elemento.classList.add('ativo');
+        document.getElementById('horario').value = horario;
+    }
+
+    
+    document.addEventListener("DOMContentLoaded", function () {
+        const campoData = document.getElementById("data");
+
+        flatpickr(campoData, {
+            dateFormat: "d/m/Y",
+            allowInput: true,
+            minDate: "today",
+            locale: "pt",
+            clickOpens: true
+        });
+
+        campoData.addEventListener("input", function (e) {
+            let valor = e.target.value.replace(/\D/g, '');
+
+            if (valor.length > 8) {
+                valor = valor.slice(0, 8);
+            }
+
+            if (valor.length > 4) {
+                valor = valor.replace(/(\d{2})(\d{2})(\d{1,4})/, '$1/$2/$3');
+            } else if (valor.length > 2) {
+                valor = valor.replace(/(\d{2})(\d{1,2})/, '$1/$2');
+            }
+
+            e.target.value = valor;
+        });
+    });
+</script>
+
+{% endblock %}  
