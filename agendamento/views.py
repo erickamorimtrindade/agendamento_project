@@ -2,7 +2,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.models import User
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
-from .models import Cliente, Agendamento
+from .models import Cliente, Agendamento, Servico
 from .forms import AgendamentoForm
 from datetime import datetime, timedelta, date
 from django.db import IntegrityError
@@ -70,33 +70,82 @@ def gerar_horarios():
 @login_required
 def criar_agendamento(request):
     cliente, _ = Cliente.objects.get_or_create(id_usuario=request.user)
-    horarios = gerar_horarios()
 
+    # NOVO: pega o serviço escolhido antes
+    servico_id = request.session.get("servico_id")
+
+    # NOVO: se o usuário não escolheu serviço, volta pra página de serviços
+    if not servico_id:
+        return redirect("escolher_servico")
+
+    # NOVO: busca o serviço no banco
+    servico = get_object_or_404(Servico, id=servico_id, ativo=True)
+
+    horarios = gerar_horarios()
+    horarios_ocupados = []
+
+    data_selecionada = request.GET.get("data") or request.POST.get("data")
+    data_convertida = None
+
+    if data_selecionada:
+        try:
+            data_convertida = datetime.strptime(data_selecionada, "%d/%m/%Y").date()
+        except ValueError:
+            try:
+                data_convertida = datetime.strptime(data_selecionada, "%Y-%m-%d").date()
+            except ValueError:
+                data_convertida = None
+
+    if data_convertida:
+        agendamentos_do_dia = Agendamento.objects.filter(data=data_convertida)
+        horarios_ocupados = [
+            ag.horario.strftime("%H:%M") for ag in agendamentos_do_dia
+        ]
 
     if request.method == "POST":
         form = AgendamentoForm(request.POST)
+        horario_selecionado = request.POST.get("horario")
 
-        if form.is_valid():
+        ja_existe = False
+        if data_convertida and horario_selecionado:
+            ja_existe = Agendamento.objects.filter(
+                data=data_convertida,
+                horario=horario_selecionado
+            ).exists()
+
+        if ja_existe:
+            form.add_error("horario", "Esse horário já está ocupado para essa data.")
+        elif form.is_valid():
             agendamento = form.save(commit=False)
             agendamento.cliente = cliente
+            # NOVO: salva o serviço no agendamento
+            agendamento.servico = servico
+
             try:
-                agendamento.full_clean() # chama o clean() do model
+                agendamento.full_clean()
                 agendamento.save()
-                return redirect ('listar_agendamentos')
+
+                # OPCIONAL: limpa a sessão depois de agendar
+                request.session.pop("servico_id", None)
+
+                return redirect('listar_agendamentos')
+
             except ValidationError as e:
                 for field, errors in e.message_dict.items():
                     for error in errors:
                         form.add_error(field, error)
 
             except IntegrityError:
-                form.add_error(None, "Esse horário acabou de ser ocupado. Tente outro.")
-
+                form.add_error("horario", "Esse horário acabou de ser ocupado. Tente outro.")
     else:
-        form = AgendamentoForm()
+        form = AgendamentoForm(initial={"data": data_selecionada})
 
     return render(request, 'agendamento/agendar.html', {
         'form': form,
-        'horarios': horarios
+        'horarios': horarios,
+        'horarios_ocupados': horarios_ocupados,
+        'data_selecionada': data_selecionada,
+        'servico': servico,  # NOVO: manda o serviço pra tela
     })
 
 #Listar agendamentos
@@ -136,3 +185,23 @@ def listar_agendamentos(request):
     limpar_agendamentos_vencidos()
     agendamentos = Agendamento.objects.all().order_by('data', 'horario')
     return render(request, 'agendamento/lista.html', {'agendamentos': agendamentos})
+
+
+@login_required
+def escolher_servico(request):
+    servicos = Servico.objects.filter(ativo=True)
+    erro = None
+    
+    if request.method == "POST":
+        servico_id = request.POST.get("servico")
+
+        if not servico_id:
+            erro = "Selecione um serviço para continuar."
+        else:
+            request.session["servico_id"] = servico_id
+            return redirect("criar_agendamento")
+
+    return render(request, "agendamento/servicos.html", {
+        "servicos": servicos,
+        "erro": erro,
+    })
