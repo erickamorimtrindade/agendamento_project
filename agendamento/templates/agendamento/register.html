@@ -131,6 +131,11 @@
                         </div>
 
                         <div class="mb-3">
+                            <label for="telefone" class="form-label fw-semibold">Telefone</label>
+                            <input type="text" id="telefone" name="telefone" class="form-control" placeholder="(83) 99999-9999" required>
+                        </div>
+
+                        <div class="mb-3">
                             <label for="password" class="form-label fw-semibold">Senha</label>
                             <div class="input-group">
                                 <input type="password" id="password" name="password" class="form-control" placeholder="Crie sua senha" required>
@@ -181,6 +186,22 @@
             eyeIcon.classList.add("bi-eye");
         }
     }
+
+    const telefoneInput = document.getElementById("telefone");
+
+    telefoneInput.addEventListener("input", function(e) {
+        let value = e.target.value.replace(/\D/g, "");
+
+        if (value.length > 11) value = value.slice(0, 11);
+
+        if (value.length > 6) {
+            value = value.replace(/(\d{2})(\d{5})(\d+)/, "($1) $2-$3");
+        } else if (value.length > 2) {
+            value = value.replace(/(\d{2})(\d+)/, "($1) $2");
+        }
+
+        e.target.value = value;
+    });
 </script>
 
 </body>
