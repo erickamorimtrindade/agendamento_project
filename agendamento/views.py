@@ -11,6 +11,7 @@ from django.core.exceptions import ValidationError
 def register(request):
     if request.method == "POST":
         username = request.POST.get("username")
+        telefone = request.POST.get("telefone")
         password = request.POST.get("password")
         confirm_password = request.POST.get("confirm_password")
 
