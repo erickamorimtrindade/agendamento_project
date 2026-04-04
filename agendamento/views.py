@@ -23,7 +23,9 @@ def register(request):
 
         user = User.objects.create_user(username=username, password=password)
         # cria cliente automaticamente
-        Cliente.objects.get_or_create(id_usuario=user)
+        cliente, _ = Cliente.objects.get_or_create(id_usuario=user)
+        cliente.telefone = telefone
+        cliente.save()
 
         return redirect('login')
 
@@ -152,8 +154,11 @@ def criar_agendamento(request):
 #Listar agendamentos
 @login_required
 def listar_agendamentos(request):
+    limpar_agendamentos_vencidos()
+
     cliente, _ = Cliente.objects.get_or_create(id_usuario=request.user)
-    agendamentos = Agendamento.objects.filter(cliente=cliente)
+
+    agendamentos = Agendamento.objects.filter(cliente=cliente).order_by('data', 'horario')
 
     return render(request, 'agendamento/lista.html', {
         'agendamentos': agendamentos
@@ -182,12 +187,6 @@ def limpar_agendamentos_vencidos():
     Agendamento.objects.filter(data__lt=hoje).delete()
     Agendamento.objects.filter(data=hoje, horario__lt=agora).delete()
 
-def listar_agendamentos(request):
-    limpar_agendamentos_vencidos()
-    agendamentos = Agendamento.objects.all().order_by('data', 'horario')
-    return render(request, 'agendamento/lista.html', {'agendamentos': agendamentos})
-
-
 @login_required
 def escolher_servico(request):
     servicos = Servico.objects.filter(ativo=True)
@@ -200,7 +199,7 @@ def escolher_servico(request):
             erro = "Selecione um serviço para continuar."
         else:
             request.session["servico_id"] = servico_id
-            return redirect("criar_agendamento")
+            return redirect("agendar")
 
     return render(request, "agendamento/servicos.html", {
         "servicos": servicos,
