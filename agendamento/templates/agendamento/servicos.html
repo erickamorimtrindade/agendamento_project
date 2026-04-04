@@ -213,6 +213,9 @@
                                     <div class="service-card-content">
                                         <i class="bi bi-briefcase service-icon"></i>
                                         <div class="service-title">{{ servico.nome }}</div>
+                                        <p class="text-success fw-bold mt-2">
+                                        R$ {{ servico.preco }}
+                                        </p>
 
                                         {% if servico.descricao %}
                                             <p class="service-description">{{ servico.descricao }}</p>

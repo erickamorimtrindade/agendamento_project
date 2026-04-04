@@ -7,6 +7,105 @@ from .forms import AgendamentoForm
 from datetime import datetime, timedelta, date
 from django.db import IntegrityError
 from django.core.exceptions import ValidationError
+from django.contrib.admin.views.decorators import staff_member_required
+
+
+#painel do dono --------
+
+@staff_member_required
+def criar_servico(request):
+    if request.method == "POST":
+        nome = request.POST.get("nome")
+        descricao = request.POST.get("descricao")
+        preco = request.POST.get("preco")
+
+        Servico.objects.create(
+            nome=nome,
+            descricao=descricao,
+            preco=preco
+        )
+
+        return redirect("listar_servicos")
+
+    return render(request, "agendamento/criar_servico.html")
+
+
+@staff_member_required
+def listar_servicos(request):
+    servicos = Servico.objects.all()
+    return render(request, "agendamento/listar_servicos.html", {"servicos": servicos})
+
+
+
+@staff_member_required
+def editar_servico(request, id):
+    servico = get_object_or_404(Servico, id=id)
+
+    if request.method == "POST":
+        servico.nome = request.POST.get("nome")
+        servico.descricao = request.POST.get("descricao")
+        servico.preco = request.POST.get("preco")
+        servico.save()
+
+        return redirect("listar_servicos")
+
+    return render(request, "agendamento/editar_servico.html", {"servico": servico})
+
+
+@staff_member_required
+def excluir_servico(request, id):
+    servico = get_object_or_404(Servico, id=id)
+
+    if request.method == "POST":
+        servico.delete()
+        return redirect("listar_servicos")
+
+    return render(request, "agendamento/confirmar_exclusao_servico.html", {"servico": servico})
+
+
+
+from datetime import date
+
+@staff_member_required
+def agendamentos_hoje(request):
+    hoje = date.today()
+    agendamentos = Agendamento.objects.filter(data=hoje)
+
+    return render(request, "agendamento/relatorio_hoje.html", {
+        "agendamentos": agendamentos
+    })
+
+
+
+from datetime import timedelta
+
+@staff_member_required
+def relatorio_31_dias(request):
+    hoje = date.today()
+    inicio = hoje - timedelta(days=31)
+
+    agendamentos = Agendamento.objects.filter(
+        data__range=[inicio, hoje]
+    ).order_by('data', 'horario')
+
+    
+    total = sum([ag.servico.preco for ag in agendamentos])
+
+    return render(request, "agendamento/relatorio_31.html", {
+        "agendamentos": agendamentos,
+        "total": total
+    })
+
+
+from django.contrib.admin.views.decorators import staff_member_required
+
+@staff_member_required
+def painel_dono(request):
+    return render(request, 'agendamento/painel_dono.html')
+
+#--------------------------------------------------------------------------------------------------------
+
+#painel do usuario
 
 def register(request):
     if request.method == "POST":
@@ -41,7 +140,11 @@ def login_view(request):
 
         if user:
             login(request, user)
-            return redirect('home')
+
+            if user.is_staff:
+                return redirect('painel_dono')  
+            else:
+                return redirect('home')
 
         return render(request, 'agendamento/login.html', {'erro': 'Login inválido'})
 

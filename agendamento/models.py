@@ -62,6 +62,8 @@ class Servico(models.Model):
     nome = models.CharField(max_length=100)
     descricao = models.CharField(max_length=200, blank=True)
     ativo = models.BooleanField(default=True)
+    preco = models.DecimalField(max_digits=8, decimal_places=2, default=0)
 
     def __str__(self):
-        return self.nome
+        return f"{self.nome} - {self.preco}"
+    
