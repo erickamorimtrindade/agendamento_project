@@ -147,10 +147,19 @@
                             {% for ag in agendamentos %}
                                 <div class="schedule-card">
                                     <p class="schedule-info">
+                                        <span class="schedule-label">Servico:</span> {{ ag.servico.nome }}
+                                    </p>
+                                    <p class="schedule-info">
+                                        <span class="schedule-label">Valor:</span> R$ {{ ag.servico.preco }}
+                                    </p>
+                                    <p class="schedule-info">
                                         <span class="schedule-label">Data:</span> {{ ag.data }}
                                     </p>
                                     <p class="schedule-info">
                                         <span class="schedule-label">Horário:</span> {{ ag.horario }}
+                                    </p>
+                                    <p class="schedule-info">
+                                        <span class="schedule-label">Telefone:</span> {{ ag.cliente.telefone }}
                                     </p>
                                     <p class="schedule-info">
                                         <span class="schedule-label">Descrição:</span> {{ ag.descricao }}
