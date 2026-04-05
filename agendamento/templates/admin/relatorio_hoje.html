@@ -73,6 +73,30 @@ body {
                         <p><strong>📝 Observação:</strong> {{ ag.descricao }}</p>
                     {% endif %}
 
+                    <div class="mt-2 d-flex gap-2">
+
+                    {% if ag.status == 'pendente' %}
+                        <a href="{% url 'atualizar_status' ag.id 'presente' %}" 
+                        class="btn btn-success btn-sm">
+                            ✅ Presente
+                        </a>
+
+                        <a href="{% url 'atualizar_status' ag.id 'ausente' %}" 
+                        class="btn btn-danger btn-sm">
+                            ❌ Ausente
+                        </a>
+
+                    {% elif ag.status == 'presente' %}
+                    <span class="badge bg-success p-2">✔ Presente</span>
+
+                    {% elif ag.status == 'ausente' %}
+                    <span class="badge bg-danger p-2">✖ Ausente</span>
+                    {% endif %}
+
+                    
+
+                    </div>
+
                 </div>
             {% endfor %}
 

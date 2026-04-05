@@ -8,6 +8,8 @@ from datetime import datetime, timedelta, date
 from django.db import IntegrityError
 from django.core.exceptions import ValidationError
 from django.contrib.admin.views.decorators import staff_member_required
+from collections import defaultdict
+import json
 
 
 #painel do dono --------
@@ -76,21 +78,113 @@ def relatorio_31_dias(request):
     inicio = hoje - timedelta(days=31)
 
     agendamentos = Agendamento.objects.filter(
-        data__range=[inicio, hoje]
-    ).order_by('data', 'horario')
+        data__range=[inicio, hoje],
+        status='presente'
+    ).order_by('data')
 
-    
-    total = sum([ag.servico.preco for ag in agendamentos])
+    # 💰 TOTAL
+    total = sum(float(ag.servico.preco) for ag in agendamentos)
+
+    # 📈 FATURAMENTO POR DIA
+    faturamento_por_dia = defaultdict(float)
+
+    for ag in agendamentos:
+        faturamento_por_dia[str(ag.data)] += float(ag.servico.preco)
+
+    datas_ordenadas = sorted(faturamento_por_dia.keys())
+    valores_ordenados = [faturamento_por_dia[d] for d in datas_ordenadas]
+
+    # 🍩 SERVIÇOS
+    servicos = Servico.objects.all()
+    servicos_dict = {s.nome: 0 for s in servicos}
+
+    for ag in agendamentos:
+        servicos_dict[ag.servico.nome] += float(ag.servico.preco)
+
+    # remove serviços zerados (corrige bug do gráfico)
+    servicos_dict = {k: v for k, v in servicos_dict.items() if v > 0}
+
+    servicos_labels = list(servicos_dict.keys())
+    servicos_valores = list(servicos_dict.values())
+
+    # 📊 DIAS DA SEMANA
+    dias_semana = {
+        "Monday": 0,
+        "Tuesday": 0,
+        "Wednesday": 0,
+        "Thursday": 0,
+        "Friday": 0,
+        "Saturday": 0,
+        "Sunday": 0,
+    }
+
+    for ag in agendamentos:
+        dia = ag.data.strftime("%A")
+        dias_semana[dia] += 1
+
+    traducao = {
+        "Monday": "Seg",
+        "Tuesday": "Ter",
+        "Wednesday": "Qua",
+        "Thursday": "Qui",
+        "Friday": "Sex",
+        "Saturday": "Sáb",
+        "Sunday": "Dom",
+    }
+
+    dias_labels = []
+    dias_valores = []
+
+    for dia, valor in dias_semana.items():
+        dias_labels.append(traducao[dia])
+        dias_valores.append(valor)
+
+    # 🏆 SERVIÇO TOP
+    servico_top = max(servicos_dict, key=servicos_dict.get) if servicos_dict else "Nenhum"
+
+    # TOTAL DE AGENDAMENTOS (inclui presentes + ausentes)
+    total_agendamentos = Agendamento.objects.filter(
+    data__range=[inicio, hoje]
+    ).count()
+
+# AUSENTES
+    total_ausentes = Agendamento.objects.filter(
+    data__range=[inicio, hoje],
+    status='ausente'
+    ).count()
+
+# TAXA DE AUSÊNCIA (%)
+    taxa_ausencia = 0
+    if total_agendamentos > 0:
+        taxa_ausencia = (total_ausentes / total_agendamentos) * 100
 
     return render(request, "admin/relatorio_31.html", {
         "agendamentos": agendamentos,
-        "total": total
+        "total": total,
+        "datas": json.dumps(datas_ordenadas),
+        "valores": json.dumps(valores_ordenados),
+        "servicos_labels": json.dumps(servicos_labels),
+        "servicos_valores": json.dumps(servicos_valores),
+        "dias_labels": json.dumps(dias_labels),
+        "dias_valores": json.dumps(dias_valores),
+        "servico_top": servico_top,
+        "total_agendamentos": total_agendamentos,
+        "taxa_ausencia": round(taxa_ausencia, 1)
     })
 
 
 @staff_member_required
 def painel_admin(request):
     return render(request, 'admin/painel_admin.html')
+
+@staff_member_required
+def atualizar_status(request, id, status):
+    ag = get_object_or_404(Agendamento, id=id)
+
+    ag.status = status
+    ag.save()
+
+    return redirect('agendamentos_hoje')
 
 #--------------------------------------------------------------------------------------------------------
 

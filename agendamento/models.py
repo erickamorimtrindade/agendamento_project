@@ -23,6 +23,15 @@ class Agendamento(models.Model):
     data = models.DateField()
     horario = models.TimeField()
     descricao = models.CharField(max_length=100, blank=True)
+    status = models.CharField(
+    max_length=10,
+    choices=[
+        ('pendente', 'Pendente'),
+        ('presente', 'Presente'),
+        ('ausente', 'Ausente')
+    ],
+    default='pendente'
+)
 
     class Meta:
         constraints = [
