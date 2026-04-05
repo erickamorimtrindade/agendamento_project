@@ -27,14 +27,13 @@ def criar_servico(request):
 
         return redirect("listar_servicos")
 
-    return render(request, "agendamento/criar_servico.html")
+    return render(request, "admin/criar_servico.html")
 
 
 @staff_member_required
 def listar_servicos(request):
     servicos = Servico.objects.all()
-    return render(request, "agendamento/listar_servicos.html", {"servicos": servicos})
-
+    return render(request, "admin/listar_servicos.html", {"servicos": servicos})
 
 
 @staff_member_required
@@ -49,7 +48,7 @@ def editar_servico(request, id):
 
         return redirect("listar_servicos")
 
-    return render(request, "agendamento/editar_servico.html", {"servico": servico})
+    return render(request, "admin/editar_servico.html", {"servico": servico})
 
 
 @staff_member_required
@@ -60,24 +59,16 @@ def excluir_servico(request, id):
         servico.delete()
         return redirect("listar_servicos")
 
-    return render(request, "agendamento/confirmar_exclusao_servico.html", {"servico": servico})
-
-
-
-from datetime import date
+    return render(request, "admin/confirmar_exclusao_servico.html", {"servico": servico})
 
 @staff_member_required
 def agendamentos_hoje(request):
     hoje = date.today()
     agendamentos = Agendamento.objects.filter(data=hoje)
 
-    return render(request, "agendamento/relatorio_hoje.html", {
+    return render(request, "admin/relatorio_hoje.html", {
         "agendamentos": agendamentos
     })
-
-
-
-from datetime import timedelta
 
 @staff_member_required
 def relatorio_31_dias(request):
@@ -91,17 +82,15 @@ def relatorio_31_dias(request):
     
     total = sum([ag.servico.preco for ag in agendamentos])
 
-    return render(request, "agendamento/relatorio_31.html", {
+    return render(request, "admin/relatorio_31.html", {
         "agendamentos": agendamentos,
         "total": total
     })
 
 
-from django.contrib.admin.views.decorators import staff_member_required
-
 @staff_member_required
-def painel_dono(request):
-    return render(request, 'agendamento/painel_dono.html')
+def painel_admin(request):
+    return render(request, 'admin/painel_admin.html')
 
 #--------------------------------------------------------------------------------------------------------
 
@@ -115,10 +104,10 @@ def register(request):
         confirm_password = request.POST.get("confirm_password")
 
         if password != confirm_password:
-            return render(request, 'agendamento/register.html', {'erro': 'As senhas não coincidem!'})
+            return render(request, 'clients/register.html', {'erro': 'As senhas não coincidem!'})
 
         if User.objects.filter(username=username).exists():
-            return render(request, 'agendamento/register.html', {'erro': 'Usuário já existe!'})
+            return render(request, 'clients/register.html', {'erro': 'Usuário já existe!'})
 
         user = User.objects.create_user(username=username, password=password)
         # cria cliente automaticamente
@@ -128,7 +117,7 @@ def register(request):
 
         return redirect('login')
 
-    return render(request, 'agendamento/register.html')
+    return render(request, 'clients/register.html')
 
 #Login
 def login_view(request):
@@ -142,13 +131,13 @@ def login_view(request):
             login(request, user)
 
             if user.is_staff:
-                return redirect('painel_dono')  
+                return redirect('painel_admin')  
             else:
                 return redirect('home')
 
-        return render(request, 'agendamento/login.html', {'erro': 'Login inválido'})
+        return render(request, 'clients/login.html', {'erro': 'Login inválido'})
 
-    return render(request, 'agendamento/login.html')
+    return render(request, 'clients/login.html')
 
 #Logout
 def logout_view(request):
@@ -158,7 +147,7 @@ def logout_view(request):
 #Home
 @login_required
 def home(request):
-    return render(request, 'agendamento/home.html')
+    return render(request, 'clients/home.html')
 
 # GERAR HORÁRIOS (08:00 até 22:00 de 30 em 30 min)
 def gerar_horarios():
@@ -246,7 +235,7 @@ def criar_agendamento(request):
     else:
         form = AgendamentoForm(initial={"data": data_selecionada})
 
-    return render(request, 'agendamento/agendar.html', {
+    return render(request, 'clients/agendar.html', {
         'form': form,
         'horarios': horarios,
         'horarios_ocupados': horarios_ocupados,
@@ -263,7 +252,7 @@ def listar_agendamentos(request):
 
     agendamentos = Agendamento.objects.filter(cliente=cliente).order_by('data', 'horario')
 
-    return render(request, 'agendamento/lista.html', {
+    return render(request, 'clients/lista.html', {
         'agendamentos': agendamentos
     })
 
@@ -278,7 +267,7 @@ def excluir_agendamento(request, id):
         agendamento.delete()
         return redirect('listar_agendamentos')
     
-    return render (request, 'agendamento/confirmar_exclusao.html', {
+    return render (request, 'clients/confirmar_exclusao.html', {
         'agendamento': agendamento
     })
 
@@ -304,7 +293,7 @@ def escolher_servico(request):
             request.session["servico_id"] = servico_id
             return redirect("agendar")
 
-    return render(request, "agendamento/servicos.html", {
+    return render(request, "clients/servicos.html", {
         "servicos": servicos,
         "erro": erro,
     })
