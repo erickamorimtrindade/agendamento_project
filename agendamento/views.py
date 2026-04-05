@@ -76,7 +76,8 @@ def relatorio_31_dias(request):
     inicio = hoje - timedelta(days=31)
 
     agendamentos = Agendamento.objects.filter(
-        data__range=[inicio, hoje]
+    data__range=[inicio, hoje],
+    status='presente'
     ).order_by('data', 'horario')
 
     
@@ -91,6 +92,15 @@ def relatorio_31_dias(request):
 @staff_member_required
 def painel_admin(request):
     return render(request, 'admin/painel_admin.html')
+
+@staff_member_required
+def atualizar_status(request, id, status):
+    ag = get_object_or_404(Agendamento, id=id)
+
+    ag.status = status
+    ag.save()
+
+    return redirect('agendamentos_hoje')
 
 #--------------------------------------------------------------------------------------------------------
 
