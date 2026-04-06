@@ -18,4 +18,5 @@ urlpatterns = [
     path('painel/relatorio/hoje/', views.agendamentos_hoje, name='agendamentos_hoje'),
     path('painel/relatorio/31dias/', views.relatorio_31_dias, name='relatorio_31_dias'),
     path('painel/agendamento/status/<int:id>/<str:status>/', views.atualizar_status, name='atualizar_status'),
+    path('painel/proximos-agendamentos/', views.proximos_agendamentos, name='proximos_agendamentos'),
 ]
