@@ -75,7 +75,7 @@ def agendamentos_hoje(request):
 @staff_member_required
 def relatorio_31_dias(request):
     hoje = date.today()
-    inicio = hoje - timedelta(days=31)
+    inicio = hoje - timedelta(days=30)  # 🔥 31 dias contando hoje
 
     agendamentos = Agendamento.objects.filter(
         data__range=[inicio, hoje],
@@ -91,8 +91,16 @@ def relatorio_31_dias(request):
     for ag in agendamentos:
         faturamento_por_dia[str(ag.data)] += float(ag.servico.preco)
 
-    datas_ordenadas = sorted(faturamento_por_dia.keys())
-    valores_ordenados = [faturamento_por_dia[d] for d in datas_ordenadas]
+    # 🔥 AQUI ESTÁ A CORREÇÃO PRINCIPAL
+    datas_ordenadas = []
+    valores_ordenados = []
+
+    for i in range(31):
+        dia = inicio + timedelta(days=i)
+        dia_str = str(dia)
+
+        datas_ordenadas.append(dia.strftime("%d/%m"))
+        valores_ordenados.append(faturamento_por_dia.get(dia_str, 0))
 
     # 🍩 SERVIÇOS
     servicos = Servico.objects.all()
@@ -101,7 +109,6 @@ def relatorio_31_dias(request):
     for ag in agendamentos:
         servicos_dict[ag.servico.nome] += float(ag.servico.preco)
 
-    # remove serviços zerados (corrige bug do gráfico)
     servicos_dict = {k: v for k, v in servicos_dict.items() if v > 0}
 
     servicos_labels = list(servicos_dict.keys())
@@ -142,18 +149,18 @@ def relatorio_31_dias(request):
     # 🏆 SERVIÇO TOP
     servico_top = max(servicos_dict, key=servicos_dict.get) if servicos_dict else "Nenhum"
 
-    # TOTAL DE AGENDAMENTOS (inclui presentes + ausentes)
+    # TOTAL DE AGENDAMENTOS
     total_agendamentos = Agendamento.objects.filter(
-    data__range=[inicio, hoje]
+        data__range=[inicio, hoje]
     ).count()
 
-# AUSENTES
+    # AUSENTES
     total_ausentes = Agendamento.objects.filter(
-    data__range=[inicio, hoje],
-    status='ausente'
+        data__range=[inicio, hoje],
+        status='ausente'
     ).count()
 
-# TAXA DE AUSÊNCIA (%)
+    # TAXA DE AUSÊNCIA
     taxa_ausencia = 0
     if total_agendamentos > 0:
         taxa_ausencia = (total_ausentes / total_agendamentos) * 100
@@ -161,7 +168,7 @@ def relatorio_31_dias(request):
     return render(request, "admin/relatorio_31.html", {
         "agendamentos": agendamentos,
         "total": total,
-        "datas": json.dumps(datas_ordenadas),
+        "datas": json.dumps(datas_ordenadas),  # 🔥 já formatado
         "valores": json.dumps(valores_ordenados),
         "servicos_labels": json.dumps(servicos_labels),
         "servicos_valores": json.dumps(servicos_valores),
@@ -171,7 +178,6 @@ def relatorio_31_dias(request):
         "total_agendamentos": total_agendamentos,
         "taxa_ausencia": round(taxa_ausencia, 1)
     })
-
 
 @staff_member_required
 def painel_admin(request):
@@ -186,6 +192,26 @@ def atualizar_status(request, id, status):
 
     return redirect('agendamentos_hoje')
 
+@staff_member_required
+def proximos_agendamentos(request):
+    hoje = date.today()
+    limite = hoje + timedelta(days=30)
+
+    data_filtro = request.GET.get("data")
+
+    if data_filtro:
+        agendamentos = Agendamento.objects.filter(
+            data=data_filtro
+        ).order_by('horario')
+    else:
+        agendamentos = Agendamento.objects.filter(
+            data__range=[hoje, limite]
+        ).order_by('data', 'horario')
+
+    return render(request, "admin/proximos_agendamentos.html", {
+        "agendamentos": agendamentos,
+        "data_filtro": data_filtro
+    })
 #--------------------------------------------------------------------------------------------------------
 
 #painel do usuario
