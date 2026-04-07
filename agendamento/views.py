@@ -7,6 +7,214 @@ from .forms import AgendamentoForm
 from datetime import datetime, timedelta, date
 from django.db import IntegrityError
 from django.core.exceptions import ValidationError
+from django.contrib.admin.views.decorators import staff_member_required
+from collections import defaultdict
+import json
+
+
+#painel do dono --------
+
+@staff_member_required
+def criar_servico(request):
+    if request.method == "POST":
+        nome = request.POST.get("nome")
+        descricao = request.POST.get("descricao")
+        preco = request.POST.get("preco")
+
+        Servico.objects.create(
+            nome=nome,
+            descricao=descricao,
+            preco=preco
+        )
+
+        return redirect("listar_servicos")
+
+    return render(request, "admin/criar_servico.html")
+
+
+@staff_member_required
+def listar_servicos(request):
+    servicos = Servico.objects.all()
+    return render(request, "admin/listar_servicos.html", {"servicos": servicos})
+
+
+@staff_member_required
+def editar_servico(request, id):
+    servico = get_object_or_404(Servico, id=id)
+
+    if request.method == "POST":
+        servico.nome = request.POST.get("nome")
+        servico.descricao = request.POST.get("descricao")
+        servico.preco = request.POST.get("preco")
+        servico.save()
+
+        return redirect("listar_servicos")
+
+    return render(request, "admin/editar_servico.html", {"servico": servico})
+
+
+@staff_member_required
+def excluir_servico(request, id):
+    servico = get_object_or_404(Servico, id=id)
+
+    if request.method == "POST":
+        servico.delete()
+        return redirect("listar_servicos")
+
+    return render(request, "admin/confirmar_exclusao_servico.html", {"servico": servico})
+
+@staff_member_required
+def agendamentos_hoje(request):
+    hoje = date.today()
+    agendamentos = Agendamento.objects.filter(data=hoje)
+
+    return render(request, "admin/relatorio_hoje.html", {
+        "agendamentos": agendamentos
+    })
+
+@staff_member_required
+def relatorio_31_dias(request):
+    hoje = date.today()
+    inicio = hoje - timedelta(days=30)  # 🔥 31 dias contando hoje
+
+    agendamentos = Agendamento.objects.filter(
+        data__range=[inicio, hoje],
+        status='presente'
+    ).order_by('data')
+
+    # 💰 TOTAL
+    total = sum(float(ag.servico.preco) for ag in agendamentos)
+
+    # 📈 FATURAMENTO POR DIA
+    faturamento_por_dia = defaultdict(float)
+
+    for ag in agendamentos:
+        faturamento_por_dia[str(ag.data)] += float(ag.servico.preco)
+
+    # 🔥 AQUI ESTÁ A CORREÇÃO PRINCIPAL
+    datas_ordenadas = []
+    valores_ordenados = []
+
+    for i in range(31):
+        dia = inicio + timedelta(days=i)
+        dia_str = str(dia)
+
+        datas_ordenadas.append(dia.strftime("%d/%m"))
+        valores_ordenados.append(faturamento_por_dia.get(dia_str, 0))
+
+    # 🍩 SERVIÇOS
+    servicos = Servico.objects.all()
+    servicos_dict = {s.nome: 0 for s in servicos}
+
+    for ag in agendamentos:
+        servicos_dict[ag.servico.nome] += float(ag.servico.preco)
+
+    servicos_dict = {k: v for k, v in servicos_dict.items() if v > 0}
+
+    servicos_labels = list(servicos_dict.keys())
+    servicos_valores = list(servicos_dict.values())
+
+    # 📊 DIAS DA SEMANA
+    dias_semana = {
+        "Monday": 0,
+        "Tuesday": 0,
+        "Wednesday": 0,
+        "Thursday": 0,
+        "Friday": 0,
+        "Saturday": 0,
+        "Sunday": 0,
+    }
+
+    for ag in agendamentos:
+        dia = ag.data.strftime("%A")
+        dias_semana[dia] += 1
+
+    traducao = {
+        "Monday": "Seg",
+        "Tuesday": "Ter",
+        "Wednesday": "Qua",
+        "Thursday": "Qui",
+        "Friday": "Sex",
+        "Saturday": "Sáb",
+        "Sunday": "Dom",
+    }
+
+    dias_labels = []
+    dias_valores = []
+
+    for dia, valor in dias_semana.items():
+        dias_labels.append(traducao[dia])
+        dias_valores.append(valor)
+
+    # 🏆 SERVIÇO TOP
+    servico_top = max(servicos_dict, key=servicos_dict.get) if servicos_dict else "Nenhum"
+
+    # TOTAL DE AGENDAMENTOS
+    total_agendamentos = Agendamento.objects.filter(
+        data__range=[inicio, hoje]
+    ).count()
+
+    # AUSENTES
+    total_ausentes = Agendamento.objects.filter(
+        data__range=[inicio, hoje],
+        status='ausente'
+    ).count()
+
+    # TAXA DE AUSÊNCIA
+    taxa_ausencia = 0
+    if total_agendamentos > 0:
+        taxa_ausencia = (total_ausentes / total_agendamentos) * 100
+
+    return render(request, "admin/relatorio_31.html", {
+        "agendamentos": agendamentos,
+        "total": total,
+        "datas": json.dumps(datas_ordenadas),  # 🔥 já formatado
+        "valores": json.dumps(valores_ordenados),
+        "servicos_labels": json.dumps(servicos_labels),
+        "servicos_valores": json.dumps(servicos_valores),
+        "dias_labels": json.dumps(dias_labels),
+        "dias_valores": json.dumps(dias_valores),
+        "servico_top": servico_top,
+        "total_agendamentos": total_agendamentos,
+        "taxa_ausencia": round(taxa_ausencia, 1)
+    })
+
+@staff_member_required
+def painel_admin(request):
+    return render(request, 'admin/painel_admin.html')
+
+@staff_member_required
+def atualizar_status(request, id, status):
+    ag = get_object_or_404(Agendamento, id=id)
+
+    ag.status = status
+    ag.save()
+
+    return redirect('agendamentos_hoje')
+
+@staff_member_required
+def proximos_agendamentos(request):
+    hoje = date.today()
+    limite = hoje + timedelta(days=30)
+
+    data_filtro = request.GET.get("data")
+
+    if data_filtro:
+        agendamentos = Agendamento.objects.filter(
+            data=data_filtro
+        ).order_by('horario')
+    else:
+        agendamentos = Agendamento.objects.filter(
+            data__range=[hoje, limite]
+        ).order_by('data', 'horario')
+
+    return render(request, "admin/proximos_agendamentos.html", {
+        "agendamentos": agendamentos,
+        "data_filtro": data_filtro
+    })
+#--------------------------------------------------------------------------------------------------------
+
+#painel do usuario
 
 def register(request):
     if request.method == "POST":
@@ -16,18 +224,20 @@ def register(request):
         confirm_password = request.POST.get("confirm_password")
 
         if password != confirm_password:
-            return render(request, 'agendamento/register.html', {'erro': 'As senhas não coincidem!'})
+            return render(request, 'clients/register.html', {'erro': 'As senhas não coincidem!'})
 
         if User.objects.filter(username=username).exists():
-            return render(request, 'agendamento/register.html', {'erro': 'Usuário já existe!'})
+            return render(request, 'clients/register.html', {'erro': 'Usuário já existe!'})
 
         user = User.objects.create_user(username=username, password=password)
         # cria cliente automaticamente
-        Cliente.objects.get_or_create(id_usuario=user)
+        cliente, _ = Cliente.objects.get_or_create(id_usuario=user)
+        cliente.telefone = telefone
+        cliente.save()
 
         return redirect('login')
 
-    return render(request, 'agendamento/register.html')
+    return render(request, 'clients/register.html')
 
 #Login
 def login_view(request):
@@ -39,11 +249,15 @@ def login_view(request):
 
         if user:
             login(request, user)
-            return redirect('home')
 
-        return render(request, 'agendamento/login.html', {'erro': 'Login inválido'})
+            if user.is_staff:
+                return redirect('painel_admin')  
+            else:
+                return redirect('home')
 
-    return render(request, 'agendamento/login.html')
+        return render(request, 'clients/login.html', {'erro': 'Login inválido'})
+
+    return render(request, 'clients/login.html')
 
 #Logout
 def logout_view(request):
@@ -53,7 +267,7 @@ def logout_view(request):
 #Home
 @login_required
 def home(request):
-    return render(request, 'agendamento/home.html')
+    return render(request, 'clients/home.html')
 
 # GERAR HORÁRIOS (08:00 até 22:00 de 30 em 30 min)
 def gerar_horarios():
@@ -141,7 +355,7 @@ def criar_agendamento(request):
     else:
         form = AgendamentoForm(initial={"data": data_selecionada})
 
-    return render(request, 'agendamento/agendar.html', {
+    return render(request, 'clients/agendar.html', {
         'form': form,
         'horarios': horarios,
         'horarios_ocupados': horarios_ocupados,
@@ -152,10 +366,13 @@ def criar_agendamento(request):
 #Listar agendamentos
 @login_required
 def listar_agendamentos(request):
-    cliente, _ = Cliente.objects.get_or_create(id_usuario=request.user)
-    agendamentos = Agendamento.objects.filter(cliente=cliente)
+    limpar_agendamentos_vencidos()
 
-    return render(request, 'agendamento/lista.html', {
+    cliente, _ = Cliente.objects.get_or_create(id_usuario=request.user)
+
+    agendamentos = Agendamento.objects.filter(cliente=cliente).order_by('data', 'horario')
+
+    return render(request, 'clients/lista.html', {
         'agendamentos': agendamentos
     })
 
@@ -170,7 +387,7 @@ def excluir_agendamento(request, id):
         agendamento.delete()
         return redirect('listar_agendamentos')
     
-    return render (request, 'agendamento/confirmar_exclusao.html', {
+    return render (request, 'clients/confirmar_exclusao.html', {
         'agendamento': agendamento
     })
 
@@ -181,12 +398,6 @@ def limpar_agendamentos_vencidos():
 
     Agendamento.objects.filter(data__lt=hoje).delete()
     Agendamento.objects.filter(data=hoje, horario__lt=agora).delete()
-
-def listar_agendamentos(request):
-    limpar_agendamentos_vencidos()
-    agendamentos = Agendamento.objects.all().order_by('data', 'horario')
-    return render(request, 'agendamento/lista.html', {'agendamentos': agendamentos})
-
 
 @login_required
 def escolher_servico(request):
@@ -200,9 +411,9 @@ def escolher_servico(request):
             erro = "Selecione um serviço para continuar."
         else:
             request.session["servico_id"] = servico_id
-            return redirect("criar_agendamento")
+            return redirect("agendar")
 
-    return render(request, "agendamento/servicos.html", {
+    return render(request, "clients/servicos.html", {
         "servicos": servicos,
         "erro": erro,
     })

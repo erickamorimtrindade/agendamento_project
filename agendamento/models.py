@@ -23,6 +23,15 @@ class Agendamento(models.Model):
     data = models.DateField()
     horario = models.TimeField()
     descricao = models.CharField(max_length=100, blank=True)
+    status = models.CharField(
+    max_length=10,
+    choices=[
+        ('pendente', 'Pendente'),
+        ('presente', 'Presente'),
+        ('ausente', 'Ausente')
+    ],
+    default='pendente'
+)
 
     class Meta:
         constraints = [
@@ -62,6 +71,8 @@ class Servico(models.Model):
     nome = models.CharField(max_length=100)
     descricao = models.CharField(max_length=200, blank=True)
     ativo = models.BooleanField(default=True)
+    preco = models.DecimalField(max_digits=8, decimal_places=2, default=0)
 
     def __str__(self):
-        return self.nome
+        return f"{self.nome} - {self.preco}"
+    
