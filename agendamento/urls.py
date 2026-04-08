@@ -19,4 +19,11 @@ urlpatterns = [
     path('painel/relatorio/31dias/', views.relatorio_31_dias, name='relatorio_31_dias'),
     path('painel/agendamento/status/<int:id>/<str:status>/', views.atualizar_status, name='atualizar_status'),
     path('painel/proximos-agendamentos/', views.proximos_agendamentos, name='proximos_agendamentos'),
+    path('gerenciar-horarios/', views.gerenciar_horarios, name='gerenciar_horarios'),
+    path('bloquear-horario/', views.bloquear_horario, name='bloquear_horario'),
+    path('desbloquear-horario/', views.desbloquear_horario, name='desbloquear_horario'),
+    path('bloquear-dia/', views.bloquear_dia, name='bloquear_dia'),
+    path('desbloquear-dia/', views.desbloquear_dia, name='desbloquear_dia'),
+    path('liberar-horario/', views.liberar_horario, name='liberar_horario'),
+
 ]
