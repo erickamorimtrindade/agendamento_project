@@ -123,6 +123,27 @@
         justify-content: center;
         gap: 8px;
     }
+    .btn-edit {
+        background-color: #e7f1ff;
+        border: 1px solid #9ec0f6;
+        color: #0d6efd;
+    }
+
+    .btn-edit:hover {
+        background-color: #d0e2ff;
+        color: #0a58ca;
+    }
+
+    .btn-delete {
+        background-color: #ffe5e7;
+        color: #dc3545;
+        border: 1px solid #f9a8a8;
+    }
+
+    .btn-delete:hover {
+        background-color: #ffc9cf;
+        color: #b02a37;
+}
 
     .empty-message {
         text-align: center;
@@ -225,12 +246,12 @@
                         </div>
 
                         <div class="btn-group-custom">
-                            <a href="{% url 'editar_servico' servico.id %}" class="btn btn-primary">
+                            <a href="{% url 'editar_servico' servico.id %}" class="btn btn-edit">
                                 <i class="bi bi-pencil-square"></i>
                                 Editar
                             </a>
 
-                            <a href="{% url 'excluir_servico' servico.id %}" class="btn btn-danger">
+                            <a href="{% url 'excluir_servico' servico.id %}" class="btn btn-delete">
                                 <i class="bi bi-trash"></i>
                                 Excluir
                             </a>
