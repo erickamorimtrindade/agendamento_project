@@ -384,7 +384,31 @@ document.addEventListener("DOMContentLoaded", function () {
                     fill: false
                 }]
             },
-            options: commonOptions
+            options: {
+                scales: {
+                    x: {
+                        ticks: {
+                             autoSkip: false
+                     }
+                },
+        y: {
+            ticks: {
+                callback: function(value) {
+                    return Number(value).toFixed(2);
+                }
+            }
+        }
+    },
+    plugins: {
+        tooltip: {
+            callbacks: {
+                label: function(context) {
+                    return 'R$ ' + Number(context.raw).toFixed(2);
+                }
+            }
+        }
+    }
+}
         });
     }
 

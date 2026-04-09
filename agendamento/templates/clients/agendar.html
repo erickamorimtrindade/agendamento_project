@@ -273,23 +273,25 @@
                         <h3 class="section-title">Escolha um horário</h3>
 
                         <div class="horarios-grid">
-                            {% for horario in horarios %}
-                                <label class="horario-card {% if horario in horarios_ocupados %}ocupado{% endif %}">
-                                    <input 
-                                        type="radio"
-                                        name="horario"
-                                        value="{{ horario }}"
-                                        hidden
-                                        {% if horario in horarios_ocupados %}disabled{% endif %}
-                                    >
-                                    <span>{{ horario }}
-                                        {% if horario in horarios_ocupados %}
-                                            <i class="bi bi-lock-fill"></i>
-                                        {% endif %}
-                                    </span>
-                                </label>
-                            {% endfor %}
-                        </div>
+    {% for horario in horarios %}
+        <label class="horario-card 
+            {% if horario in horarios_ocupados or horario in bloqueados %}ocupado{% endif %}
+        ">
+            <input 
+                type="radio"
+                name="horario"
+                value="{{ horario }}"
+                hidden
+                {% if horario in horarios_ocupados or horario in bloqueados %}disabled{% endif %}
+            >
+            <span>{{ horario }}
+                {% if horario in horarios_ocupados or horario in bloqueados %}
+                    <i class="bi bi-lock-fill"></i>
+                {% endif %}
+            </span>
+        </label>
+    {% endfor %}
+</div>
 
                     <div class="mb-4">
                         <label class="form-label">Descrição</label>
@@ -354,4 +356,4 @@
     });
 </script>
 
-{% endblock %}  
+{% endblock %}

@@ -1,0 +1,285 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8">
+<title>Gerenciar Horários</title>
+
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+
+<style>
+
+body {
+    background: linear-gradient(135deg, #eef2f7, #f8f9fa);
+    font-family: 'Segoe UI', sans-serif;
+}
+
+/* HEADER */
+.header {
+    text-align: center;
+    margin-bottom: 30px;
+}
+
+.header h3 {
+    font-weight: 600;
+}
+
+/* CARD PRINCIPAL */
+.main-card {
+    background: white;
+    border-radius: 20px;
+    padding: 30px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+}
+
+/* INPUT DATA */
+.date-input {
+    max-width: 300px;
+    margin: auto;
+}
+
+/* BOTÃO DIA */
+.btn-dia {
+    border-radius: 12px;
+    padding: 10px 20px;
+    font-weight: 500;
+}
+
+/* GRID HORÁRIOS */
+.grid-horarios {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+    gap: 15px;
+}
+
+/* CARD HORÁRIO */
+.horario-card {
+    border-radius: 14px;
+    padding: 15px;
+    text-align: center;
+    transition: 0.2s;
+    border: 1px solid #dee2e6;
+}
+
+/* DISPONÍVEL */
+.disponivel {
+    background: #f1f3f5;
+}
+
+.disponivel:hover {
+    background: #e9ecef;
+}
+
+/* BLOQUEADO */
+.bloqueado {
+    background: #ffe3e3;
+    border-color: #ff6b6b;
+}
+
+/* LIBERADO (exceção) */
+.liberado {
+    background: #d3f9d8;
+    border-color: #51cf66;
+}
+
+/* TEXTO */
+.horario {
+    font-weight: 600;
+    font-size: 16px;
+}
+
+/* BOTÕES */
+.btn-acao {
+    border-radius: 10px;
+    padding: 5px 10px;
+    font-size: 12px;
+}
+
+/* ALERTA */
+.alert-custom {
+    border-radius: 12px;
+    text-align: center;
+    font-weight: 500;
+}
+
+.btn-voltar {
+    border-radius: 12px;
+    padding: 8px 18px;
+    font-weight: 500;
+    background: #6c757d;
+    border: none;
+    transition: 0.2s;
+}
+
+.btn-voltar:hover {
+    background: #5a6268;
+}
+
+</style>
+</head>
+
+<body class="container mt-5">
+
+<<div class="d-flex justify-content-between align-items-center mb-4">
+
+    <h3 class="m-0">Gerenciar Horários</h3>
+
+    <a href="{% url 'painel_admin' %}" class="btn btn-secondary btn-voltar">
+    ← Voltar
+    </a>
+
+</div>
+
+<div class="main-card">
+
+    <!-- DATA -->
+    <form method="GET" class="mb-4 text-center">
+        <input
+            type="text"
+            name="data"
+            id="data"
+            class="form-control date-input"
+            placeholder="Selecione a data"
+            value="{{ data|default:'' }}"
+        >
+    </form>
+
+    {% if data %}
+
+    <!-- BOTÃO DIA -->
+    <div class="text-center mb-4">
+        {% if dia_bloqueado %}
+            <form method="POST" action="{% url 'desbloquear_dia' %}">
+                {% csrf_token %}
+                <input type="hidden" name="data" value="{{ data }}">
+                <button class="btn btn-success btn-dia">
+                    Desbloquear dia inteiro
+                </button>
+            </form>
+        {% else %}
+            <form method="POST" action="{% url 'bloquear_dia' %}">
+                {% csrf_token %}
+                <input type="hidden" name="data" value="{{ data }}">
+                <button class="btn btn-danger btn-dia">
+                    Bloquear dia inteiro
+                </button>
+            </form>
+        {% endif %}
+    </div>
+
+    {% if dia_bloqueado %}
+        <div class="alert alert-danger alert-custom">
+            Dia totalmente bloqueado (exceto horários liberados manualmente)
+        </div>
+    {% endif %}
+
+    <!-- HORÁRIOS -->
+    <div class="grid-horarios mt-4">
+
+        {% for h in horarios %}
+
+            {% comment %}
+            LÓGICA:
+            - bloqueado se dia bloqueado E não estiver liberado
+            - liberado se tiver exceção
+            {% endcomment %}
+
+                <div class="horario-card 
+                {% if h in horarios_liberados %}
+                    liberado
+                {% elif dia_bloqueado or h in bloqueados %}
+                    bloqueado
+                {% else %}
+                    disponivel
+                {% endif %}
+                ">
+                <div class="horario">{{ h }}</div>
+
+                <!-- FORM -->
+                <form method="POST"
+                    action="
+                    {% if h in horarios_liberados %}
+                        {% url 'bloquear_horario' %}
+                    {% elif dia_bloqueado %}
+                        {% url 'liberar_horario' %}
+                    {% elif h in bloqueados %}
+                        {% url 'desbloquear_horario' %}
+                    {% else %}
+                        {% url 'bloquear_horario' %}
+                    {% endif %}
+                    ">
+
+                    {% csrf_token %}
+                    <input type="hidden" name="data" value="{{ data }}">
+                    <input type="hidden" name="horario" value="{{ h }}">
+
+                    <button class="btn btn-sm mt-2 btn-acao
+                        {% if h in horarios_liberados %}
+                            btn-danger
+                        {% elif dia_bloqueado %}
+                            btn-success
+                        {% elif h in bloqueados %}
+                            btn-success
+                        {% else %}
+                            btn-danger
+                        {% endif %}
+                    "
+                    onclick="return confirm('Tem certeza que deseja alterar este horário?')">
+
+                        {% if h in horarios_liberados %}
+                            Bloquear
+                        {% elif dia_bloqueado %}
+                            Liberar
+                        {% elif h in bloqueados %}
+                            Desbloquear
+                        {% else %}
+                            Bloquear
+                        {% endif %}
+
+                    </button>
+
+                </form>
+
+            </div>
+
+        {% endfor %}
+
+    </div>
+
+    {% endif %}
+
+</div>
+
+<script>
+flatpickr("#data", {
+    dateFormat: "d-m-Y",
+    allowInput: true,
+    minDate: "today", // 🔥 BLOQUEIA PASSADO
+    defaultDate: "{{ data|default:'' }}",
+    onChange: function(selectedDates, dateStr) {
+        window.location.href = "?data=" + dateStr;
+    }
+});
+</script>
+
+<script>
+const inputData = document.getElementById("data");
+
+inputData.addEventListener("input", function(e) {
+    let value = e.target.value.replace(/\D/g, ""); // só números
+
+    if (value.length > 2 && value.length <= 4) {
+        value = value.slice(0,2) + "/" + value.slice(2);
+    } 
+    else if (value.length > 4) {
+        value = value.slice(0,2) + "/" + value.slice(2,4) + "/" + value.slice(4,8);
+    }
+
+    e.target.value = value;
+});
+</script>
+
+</body>
+</html>
