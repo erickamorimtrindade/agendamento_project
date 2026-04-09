@@ -1,131 +1,144 @@
-<!DOCTYPE html>
-<html lang="pt-br">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Meus Agendamentos - Agendamento Online</title>
+{% extends 'clients/base_clients.html' %}
 
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+{% block title %}Meus Agendamentos - Agendamento Online{% endblock %}
 
-    <style>
+{% block extra_css %}
+<style>
+    body {
+        min-height: 100vh;
+        background: linear-gradient(135deg, #807f7f, #f2f5f7);
+        font-family: Arial, sans-serif;
+    }
+
+    .page-wrapper {
+        min-height: 100vh;
+        padding: 20px 12px;
+    }
+
+    .page-card {
+        width: 100%;
+        max-width: 700px;
+        border: none;
+        border-radius: 20px;
+    }
+
+    .brand-icon {
+        width: 70px;
+        height: 70px;
+        background-color: #0d6efd;
+        color: white;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 28px;
+        margin: 0 auto 15px;
+    }
+
+    .page-title {
+        font-size: 1.8rem;
+        font-weight: 700;
+        color: #212529;
+    }
+
+    .page-subtitle {
+        font-size: 0.95rem;
+        color: #6c757d;
+    }
+
+    .schedule-card {
+        border: 2px solid #dadbdd;
+        border-radius: 16px;
+        padding: 18px;
+        background-color: #eeeeee;
+        transition: 0.2s ease;
+    }
+
+    .schedule-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.06);
+    }
+
+    .schedule-info {
+        margin-bottom: 8px;
+        font-size: 0.98rem;
+        color: #212529;
+        word-break: break-word;
+    }
+
+    .schedule-info:last-child {
+        margin-bottom: 0;
+    }
+
+    .schedule-label {
+        font-weight: 700;
+    }
+
+    .empty-box {
+        background-color: #f8f9fa;
+        border-radius: 16px;
+        padding: 30px 20px;
+        text-align: center;
+    }
+
+    .empty-box i {
+        font-size: 2.2rem;
+        color: #6c757d;
+        margin-bottom: 12px;
+    }
+
+    .action-btn {
+        min-height: 50px;
+        border-radius: 12px;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        text-align: center;
+    }
+
+    .delete-btn {
+        min-height: 48px;
+        border-radius: 14px;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        margin-top: 14px;
+    }
+
+    @media (max-width: 576px) {
         body {
-            min-height: 100vh;
-            background: linear-gradient(135deg, #807f7f, #f2f5f7);
-            font-family: Arial, sans-serif;
+            background: #ffffff;
         }
 
         .page-wrapper {
-            min-height: 100vh;
-            padding: 20px 0;
+            padding: 0;
         }
 
         .page-card {
-            width: 100%;
-            max-width: 700px;
-            border: none;
-            border-radius: 20px;
+            max-width: 100%;
+            border-radius: 0;
+            min-height: 100vh;
+            box-shadow: none !important;
         }
 
-        .brand-icon {
-            width: 70px;
-            height: 70px;
-            background-color: #0d6efd;
-            color: white;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 28px;
-            margin: 0 auto 15px;
+        .mobile-content {
+            width: 100%;
+            max-width: 380px;
+            margin: auto;
         }
 
         .page-title {
-            font-size: 1.8rem;
-            font-weight: 700;
-            color: #212529;
+            font-size: 1.5rem;
         }
+    }
+</style>
+{% endblock %}
 
-        .page-subtitle {
-            font-size: 0.95rem;
-            color: #6c757d;
-        }
-
-        .schedule-card {
-            border: 2px solid #dadbdd;
-            border-radius: 16px;
-            padding: 18px;
-            background-color: #eeeeee;
-            transition: 0.2s ease;
-        }
-
-        .schedule-card:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.06);
-        }
-
-        .schedule-info {
-            margin-bottom: 8px;
-            font-size: 0.98rem;
-            color: #212529;
-        }
-
-        .schedule-info:last-child {
-            margin-bottom: 0;
-        }
-
-        .schedule-label {
-            font-weight: 700;
-        }
-
-        .empty-box {
-            background-color: #f8f9fa;
-            border-radius: 16px;
-            padding: 30px 20px;
-            text-align: center;
-        }
-
-        .empty-box i {
-            font-size: 2.2rem;
-            color: #6c757d;
-            margin-bottom: 12px;
-        }
-
-        .action-btn {
-            height: 50px;
-            border-radius: 12px;
-            font-weight: 600;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-        }
-
-        @media (max-width: 576px) {
-            body {
-                background: #ffffff;
-            }
-
-            .page-wrapper {
-                padding: 0;
-            }
-
-            .page-card {
-                max-width: 100%;
-                border-radius: 0;
-                min-height: 100vh;
-            }
-
-            .mobile-content {
-                width: 100%;
-                max-width: 380px;
-                margin: auto;
-            }
-        }
-    </style>
-</head>
-<body>
-
+{% block content %}
 <div class="container-fluid">
     <div class="row justify-content-center page-wrapper">
         <div class="col-12 col-sm-11 col-md-10 col-lg-8 col-xl-6">
@@ -147,7 +160,7 @@
                             {% for ag in agendamentos %}
                                 <div class="schedule-card">
                                     <p class="schedule-info">
-                                        <span class="schedule-label">Servico:</span> {{ ag.servico.nome }}
+                                        <span class="schedule-label">Serviço:</span> {{ ag.servico.nome }}
                                     </p>
                                     <p class="schedule-info">
                                         <span class="schedule-label">Valor:</span> R$ {{ ag.servico.preco }}
@@ -164,9 +177,11 @@
                                     <p class="schedule-info">
                                         <span class="schedule-label">Descrição:</span> {{ ag.descricao }}
                                     </p>
-                                    <a href="{% url 'confirmar_exclusao' ag.id %}"class="btn btn-danger btn-lg w-100 rounded-4 d-flex align-items-center justify-content-center gap-2">
+
+                                    <a href="{% url 'confirmar_exclusao' ag.id %}" class="btn btn-danger w-100 delete-btn">
                                         <i class="bi bi-trash"></i>
-                                        Excluir</a>
+                                        <span>Excluir</span>
+                                    </a>
                                 </div>
                             {% endfor %}
                         </div>
@@ -183,12 +198,12 @@
                     <div class="d-grid gap-2">
                         <a href="/agendar/" class="btn btn-primary action-btn">
                             <i class="bi bi-calendar-plus"></i>
-                            Criar Novo Agendamento
+                            <span>Criar Novo Agendamento</span>
                         </a>
 
                         <a href="/" class="btn btn-outline-secondary action-btn">
                             <i class="bi bi-house-door"></i>
-                            Voltar para Pagina Inicial
+                            <span>Voltar para Página Inicial</span>
                         </a>
                     </div>
 
@@ -197,6 +212,4 @@
         </div>
     </div>
 </div>
-
-</body>
-</html>
+{% endblock %}
