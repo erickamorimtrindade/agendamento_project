@@ -25,5 +25,8 @@ urlpatterns = [
     path('bloquear-dia/', views.bloquear_dia, name='bloquear_dia'),
     path('desbloquear-dia/', views.desbloquear_dia, name='desbloquear_dia'),
     path('liberar-horario/', views.liberar_horario, name='liberar_horario'),
+    path('perfil/', views.perfil, name='perfil'),
+    path('sobre/', views.sobre, name='sobre'),
+    path('suporte/', views.suporte, name='suporte')
 
 ]

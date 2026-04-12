@@ -20,6 +20,10 @@
         max-width: 500px;
         border: none;
         border-radius: 20px;
+        padding: 30px 25px !important;
+
+        display: flex;
+        flex-direction: column; /* 🔥 chave */
     }
 
     .brand-icon {
@@ -32,7 +36,7 @@
         align-items: center;
         justify-content: center;
         font-size: 28px;
-        margin: 0 auto 15px;
+        margin: 0 auto 10px;
     }
 
     .home-title {
@@ -49,80 +53,76 @@
     .welcome-box {
         background-color: #f8f9fa;
         border-radius: 16px;
-        padding: 16px;
+        padding: 14px;
         text-align: center;
-        margin-bottom: 25px;
+        margin-bottom: 15px;
     }
 
     .welcome-box h2 {
-        font-size: 1.3rem;
-        margin-bottom: 6px;
-        color: #212529;
+        font-size: 1.2rem;
+        margin-bottom: 4px;
     }
 
     .welcome-box p {
         margin: 0;
+        font-size: 0.9rem;
         color: #6c757d;
-        font-size: 0.95rem;
     }
 
     .menu-btn {
         min-height: 56px;
         border-radius: 14px;
         font-weight: 600;
-        font-size: 1rem;
         display: flex;
         align-items: center;
         justify-content: center;
         gap: 10px;
-        text-decoration: none;
         width: 100%;
     }
 
     .menu-group {
         display: grid;
-        gap: 14px;
+        gap: 10px;
+        margin-bottom: 10px;
     }
 
-    .logout-btn {
-        margin-top: 8px;
+    /* 🔥 FOOTER PERFEITO */
+    .footer-card {
+        margin-top: auto; /* empurra pra baixo */
+        border-top: 1px solid #dee2e6;
+        padding-top: 12px;
+    }
+
+    .footer-icon {
+        font-size: 26px;
+        display: block;
+    }
+
+    .footer-card a {
+        display: block;
+        padding: 6px;
+        border-radius: 10px;
+        transition: all 0.2s ease;
+    }
+
+    .footer-card a:hover {
+        background: rgba(0,0,0,0.05);
+        transform: translateY(-3px);
+    }
+
+    .footer-card a:hover i {
+        color: #0d6efd;
     }
 
     @media (max-width: 576px) {
         body {
-            background: #ffffff;
-        }
-
-        .home-wrapper {
-            padding: 0;
+            background: #fff;
         }
 
         .home-card {
-            max-width: 100%;
             min-height: 100vh;
             border-radius: 0;
             box-shadow: none !important;
-            padding: 24px 18px !important;
-            display: flex;
-            justify-content: center;
-        }
-
-        .mobile-content {
-            width: 100%;
-            max-width: 380px;
-            margin: auto;
-        }
-
-        .home-title {
-            font-size: 1.5rem;
-        }
-
-        .welcome-box h2 {
-            font-size: 1.15rem;
-        }
-
-        .menu-btn {
-            font-size: 0.95rem;
         }
     }
 </style>
@@ -132,41 +132,68 @@
 <div class="container-fluid">
     <div class="row justify-content-center align-items-center home-wrapper">
         <div class="col-12 col-sm-10 col-md-8 col-lg-5 col-xl-4">
-            <div class="card shadow-lg home-card p-4 p-md-5">
-                <div class="mobile-content">
-                    <div class="text-center mb-4">
-                        <div class="brand-icon">
-                            <i class="bi bi-house-door"></i>
+
+            <div class="card shadow-lg home-card">
+
+                <div class="text-center mb-3">
+                    <div class="brand-icon">
+                        <i class="bi bi-house-door"></i>
+                    </div>
+                    <h1 class="home-title mb-1">Agendamento Online</h1>
+                    <p class="home-subtitle mb-0">
+                        Gerencie seus agendamentos de forma simples
+                    </p>
+                </div>
+
+                <div class="welcome-box">
+                    <h2>Bem-vindo(a), {{ request.user.username }}</h2>
+                    <p>Escolha uma opção abaixo para continuar</p>
+                </div>
+
+                <div class="menu-group">
+                    <a href="/agendar/" class="btn btn-primary menu-btn">
+                        <i class="bi bi-calendar-plus"></i>
+                        Agendar horário
+                    </a>
+                </div>
+
+                <!-- 🔥 FOOTER FINAL PERFEITO -->
+                <div class="footer-card">
+                    <div class="row text-center">
+
+                        <div class="col">
+                            <a href="{% url 'perfil' %}" class="text-dark text-decoration-none">
+                                <i class="bi bi-person-circle footer-icon"></i>
+                                <small>Perfil</small>
+                            </a>
                         </div>
-                        <h1 class="home-title mb-2">Agendamento Online</h1>
-                        <p class="home-subtitle mb-0">
-                            Gerencie seus agendamentos de forma simples
-                        </p>
-                    </div>
 
-                    <div class="welcome-box">
-                        <h2>Bem-vindo(a), {{ request.user.username }}!</h2>
-                        <p>Escolha uma opção abaixo para continuar</p>
-                    </div>
+                        <div class="col">
+                            <a href="{% url 'sobre' %}" class="text-dark text-decoration-none">
+                                <i class="bi bi-info-circle footer-icon"></i>
+                                <small>Sobre</small>
+                            </a>
+                        </div>
 
-                    <div class="menu-group">
-                        <a href="/agendar/" class="btn btn-primary menu-btn">
-                            <i class="bi bi-calendar-plus"></i>
-                            Criar Agendamento
-                        </a>
+                        <div class="col">
+                            <a href="{% url 'listar_agendamentos' %}" class="text-dark text-decoration-none">
+                                <i class="bi bi-calendar-check footer-icon"></i>
+                                <small>Agendamentos</small>
+                            </a>
+                        </div>
 
-                        <a href="/agendamento/" class="btn btn-outline-primary menu-btn">
-                            <i class="bi bi-calendar-week"></i>
-                            Ver Agendamentos
-                        </a>
+                        <div class="col">
+                            <a href="{% url 'suporte' %}" class="text-dark text-decoration-none">
+                                <i class="bi bi-question-circle footer-icon"></i>
+                                <small>Suporte</small>
+                            </a>
+                        </div>
 
-                        <a href="/logout/" class="btn btn-outline-danger menu-btn logout-btn">
-                            <i class="bi bi-box-arrow-right"></i>
-                            Sair
-                        </a>
                     </div>
                 </div>
+
             </div>
+
         </div>
     </div>
 </div>
