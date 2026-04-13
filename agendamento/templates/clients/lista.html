@@ -1,214 +1,698 @@
 {% extends 'clients/base_clients.html' %}
 
-{% block title %}Meus Agendamentos - Agendamento Online{% endblock %}
+{% block title %}Meus Agendamentos{% endblock %}
 
 {% block extra_css %}
 <style>
     body {
         min-height: 100vh;
         background: linear-gradient(135deg, #807f7f, #f2f5f7);
-        font-family: Arial, sans-serif;
     }
 
-    .page-wrapper {
-        min-height: 100vh;
-        padding: 20px 12px;
+    .agenda-page {
+        padding: 32px 12px 48px;
     }
 
-    .page-card {
-        width: 100%;
-        max-width: 700px;
-        border: none;
-        border-radius: 20px;
+    .agenda-wrapper {
+        max-width: 1050px;
+        margin: 0 auto;
+        background: #ffffff;
+        border-radius: 26px;
+        box-shadow: 0 16px 40px rgba(0, 0, 0, 0.10);
+        overflow: hidden;
     }
 
-    .brand-icon {
-        width: 70px;
-        height: 70px;
-        background-color: #0d6efd;
-        color: white;
-        border-radius: 50%;
+    .agenda-header {
+        padding: 30px 32px 22px;
+        border-bottom: 1px solid #edf0f3;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 18px;
+        flex-wrap: wrap;
+    }
+
+    .agenda-title-wrap {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+    }
+
+    .agenda-icon {
+        width: 58px;
+        height: 58px;
+        border-radius: 18px;
+        background: rgba(13, 110, 253, 0.10);
+        color: #0d6efd;
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 28px;
-        margin: 0 auto 15px;
+        font-size: 1.45rem;
+        flex-shrink: 0;
     }
 
-    .page-title {
-        font-size: 1.8rem;
-        font-weight: 700;
+    .agenda-title-wrap h1 {
+        margin: 0;
+        font-size: 1.9rem;
+        font-weight: 800;
         color: #212529;
     }
 
-    .page-subtitle {
+    .agenda-title-wrap p {
+        margin: 4px 0 0;
+        color: #6c757d;
+        font-size: 0.96rem;
+    }
+
+    .agenda-header-actions {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+    }
+
+    .btn-voltar {
+        background: #6c757d;
+        color: #fff;
+        padding: 10px 18px;
+        border-radius: 12px;
         font-size: 0.95rem;
-        color: #6c757d;
+        font-weight: 600;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        transition: all 0.2s ease;
     }
 
-    .schedule-card {
-        border: 2px solid #dadbdd;
-        border-radius: 16px;
-        padding: 18px;
-        background-color: #eeeeee;
-        transition: 0.2s ease;
+    .btn-voltar:hover {
+        background: #5a6268;
+        color: #fff;
+        transform: translateY(-1px);
     }
 
-    .schedule-card:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.06);
+    .btn-novo {
+        background: #0d6efd;
+        color: #fff;
+        padding: 10px 18px;
+        border-radius: 12px;
+        font-size: 0.95rem;
+        font-weight: 600;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        transition: all 0.2s ease;
     }
 
-    .schedule-info {
-        margin-bottom: 8px;
-        font-size: 0.98rem;
+    .btn-novo:hover {
+        background: #0b5ed7;
+        color: #fff;
+        transform: translateY(-1px);
+    }
+
+    .agenda-body {
+        padding: 28px 32px 34px;
+    }
+
+    .agenda-hero {
+        background: linear-gradient(135deg, #f8fbff, #eef5ff);
+        border: 1px solid #dbe9ff;
+        border-radius: 22px;
+        padding: 24px;
+        margin-bottom: 26px;
+        display: grid;
+        grid-template-columns: 1.2fr 0.8fr;
+        gap: 22px;
+        align-items: center;
+    }
+
+    .agenda-hero h2 {
+        margin: 0 0 10px;
+        font-size: 1.45rem;
+        font-weight: 800;
         color: #212529;
-        word-break: break-word;
     }
 
-    .schedule-info:last-child {
-        margin-bottom: 0;
+    .agenda-hero p {
+        margin: 0;
+        color: #5f6b76;
+        line-height: 1.7;
+        font-size: 0.97rem;
     }
 
-    .schedule-label {
+    .agenda-hero-info {
+        display: grid;
+        gap: 12px;
+    }
+
+    .agenda-highlight {
+        background: #ffffff;
+        border: 1px solid #e8eff8;
+        border-radius: 18px;
+        padding: 16px 18px;
+        box-shadow: 0 8px 20px rgba(13, 110, 253, 0.06);
+    }
+
+    .agenda-highlight-label {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 0.82rem;
         font-weight: 700;
-    }
-
-    .empty-box {
-        background-color: #f8f9fa;
-        border-radius: 16px;
-        padding: 30px 20px;
-        text-align: center;
-    }
-
-    .empty-box i {
-        font-size: 2.2rem;
-        color: #6c757d;
+        color: #0d6efd;
+        background: rgba(13, 110, 253, 0.08);
+        border-radius: 999px;
+        padding: 6px 12px;
         margin-bottom: 12px;
     }
 
-    .action-btn {
-        min-height: 50px;
-        border-radius: 12px;
-        font-weight: 600;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 8px;
-        text-align: center;
+    .agenda-highlight strong {
+        display: block;
+        color: #212529;
+        font-size: 1rem;
+        margin-bottom: 6px;
     }
 
-    .delete-btn {
-        min-height: 48px;
+    .agenda-highlight span {
+        color: #6c757d;
+        font-size: 0.93rem;
+        display: block;
+        line-height: 1.6;
+    }
+
+    .summary-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 16px;
+        margin-bottom: 26px;
+    }
+
+    .summary-card {
+        background: #f8f9fa;
+        border: 1px solid #edf0f3;
+        border-radius: 18px;
+        padding: 18px;
+    }
+
+    .summary-card .summary-top {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 12px;
+    }
+
+    .summary-card .summary-top i {
+        width: 42px;
+        height: 42px;
         border-radius: 14px;
-        font-weight: 600;
+        background: rgba(13, 110, 253, 0.10);
+        color: #0d6efd;
         display: flex;
         align-items: center;
         justify-content: center;
+        font-size: 1.1rem;
+    }
+
+    .summary-card h3 {
+        margin: 0;
+        font-size: 1.8rem;
+        font-weight: 800;
+        color: #212529;
+    }
+
+    .summary-card p {
+        margin: 0;
+        color: #6c757d;
+        font-size: 0.93rem;
+    }
+
+    .list-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 16px;
+        margin-bottom: 16px;
+        flex-wrap: wrap;
+    }
+
+    .list-header h2 {
+        margin: 0;
+        font-size: 1.28rem;
+        font-weight: 700;
+        color: #212529;
+    }
+
+    .list-header p {
+        margin: 4px 0 0;
+        color: #6c757d;
+        font-size: 0.94rem;
+    }
+
+    .agenda-list {
+        display: grid;
+        gap: 16px;
+    }
+
+    .agendamento-card {
+        border: 1px solid #ebeff3;
+        border-radius: 20px;
+        padding: 20px;
+        background: #ffffff;
+        transition: all 0.2s ease;
+        box-shadow: 0 8px 22px rgba(0, 0, 0, 0.04);
+    }
+
+    .agendamento-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 14px 28px rgba(0, 0, 0, 0.08);
+    }
+
+    .agendamento-top {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 14px;
+        margin-bottom: 14px;
+        flex-wrap: wrap;
+    }
+
+    .agendamento-main {
+        display: flex;
+        gap: 14px;
+        align-items: flex-start;
+    }
+
+    .agendamento-date-box {
+        min-width: 74px;
+        text-align: center;
+        background: linear-gradient(135deg, #0d6efd, #0b5ed7);
+        color: #fff;
+        border-radius: 18px;
+        padding: 12px 10px;
+        box-shadow: 0 10px 20px rgba(13, 110, 253, 0.24);
+    }
+
+    .agendamento-date-box .dia {
+        font-size: 1.45rem;
+        font-weight: 800;
+        line-height: 1;
+        display: block;
+    }
+
+    .agendamento-date-box .mes {
+        font-size: 0.78rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        opacity: 0.95;
+        margin-top: 6px;
+        display: block;
+    }
+
+    .agendamento-info h3 {
+        margin: 0 0 6px;
+        font-size: 1.12rem;
+        font-weight: 700;
+        color: #212529;
+    }
+
+    .agendamento-meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px 14px;
+        color: #6c757d;
+        font-size: 0.92rem;
+    }
+
+    .agendamento-meta span {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    .badge-status {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        border-radius: 999px;
+        padding: 8px 12px;
+        font-size: 0.82rem;
+        font-weight: 700;
+        white-space: nowrap;
+    }
+
+    .badge-confirmado {
+        background: rgba(25, 135, 84, 0.10);
+        color: #198754;
+    }
+
+    .badge-hoje {
+        background: rgba(13, 110, 253, 0.10);
+        color: #0d6efd;
+    }
+
+    .badge-passado {
+        background: rgba(108, 117, 125, 0.12);
+        color: #6c757d;
+    }
+
+    .agendamento-desc {
+        margin-top: 8px;
+        color: #5f6b76;
+        line-height: 1.7;
+        font-size: 0.95rem;
+        padding-top: 14px;
+        border-top: 1px solid #eff2f5;
+    }
+
+    .agendamento-footer {
+        margin-top: 16px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 14px;
+        flex-wrap: wrap;
+    }
+
+    .agendamento-footer small {
+        color: #6c757d;
+    }
+
+    .action-group {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+    }
+
+    .btn-card {
+        min-height: 42px;
+        padding: 0 14px;
+        border-radius: 12px;
+        font-weight: 600;
+        font-size: 0.92rem;
+        display: inline-flex;
+        align-items: center;
         gap: 8px;
-        margin-top: 14px;
+        text-decoration: none;
+        transition: all 0.2s ease;
+    }
+
+    .btn-card:hover {
+        transform: translateY(-1px);
+    }
+
+    .btn-outline-primary.btn-card {
+        border-width: 1px;
+    }
+
+    .btn-outline-danger.btn-card {
+        border-width: 1px;
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 46px 24px;
+        border: 1px dashed #d6dce2;
+        border-radius: 24px;
+        background: linear-gradient(135deg, #fbfcfd, #f5f7fa);
+    }
+
+    .empty-state-icon {
+        width: 84px;
+        height: 84px;
+        margin: 0 auto 18px;
+        border-radius: 24px;
+        background: rgba(13, 110, 253, 0.10);
+        color: #0d6efd;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 2rem;
+    }
+
+    .empty-state h3 {
+        margin: 0 0 10px;
+        font-size: 1.35rem;
+        font-weight: 800;
+        color: #212529;
+    }
+
+    .empty-state p {
+        margin: 0 auto 20px;
+        max-width: 520px;
+        color: #6c757d;
+        line-height: 1.7;
+    }
+
+    @media (max-width: 992px) {
+        .agenda-hero,
+        .summary-grid {
+            grid-template-columns: 1fr;
+        }
     }
 
     @media (max-width: 576px) {
-        body {
-            background: #ffffff;
-        }
-
-        .page-wrapper {
+        .agenda-page {
             padding: 0;
         }
 
-        .page-card {
-            max-width: 100%;
+        .agenda-wrapper {
             border-radius: 0;
-            min-height: 100vh;
-            box-shadow: none !important;
+            box-shadow: none;
         }
 
-        .mobile-content {
+        .agenda-header,
+        .agenda-body {
+            padding-left: 18px;
+            padding-right: 18px;
+        }
+
+        .agenda-header {
+            padding-top: 22px;
+        }
+
+        .agenda-title-wrap h1 {
+            font-size: 1.45rem;
+        }
+
+        .agenda-hero {
+            padding: 18px;
+            border-radius: 18px;
+        }
+
+        .summary-card,
+        .agendamento-card {
+            border-radius: 18px;
+        }
+
+        .agendamento-main {
+            flex-direction: column;
+        }
+
+        .agendamento-date-box {
+            width: 78px;
+        }
+
+        .btn-voltar,
+        .btn-novo {
+            justify-content: center;
             width: 100%;
-            max-width: 380px;
-            margin: auto;
         }
 
-        .page-title {
-            font-size: 1.5rem;
+        .agenda-header-actions {
+            width: 100%;
+        }
+
+        .agenda-header-actions a {
+            flex: 1;
         }
     }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="container-fluid">
-    <div class="row justify-content-center page-wrapper">
-        <div class="col-12 col-sm-11 col-md-10 col-lg-8 col-xl-6">
-            <div class="card shadow-lg page-card p-4 p-md-5">
-                <div class="mobile-content">
+<div class="agenda-page">
+    <div class="agenda-wrapper">
 
-                    <div class="text-center mb-4">
-                        <div class="brand-icon">
-                            <i class="bi bi-calendar-week"></i>
-                        </div>
-                        <h1 class="page-title mb-2">Seus Agendamentos</h1>
-                        <p class="page-subtitle mb-0">
-                            Acompanhe todos os horários marcados
-                        </p>
-                    </div>
-
-                    {% if agendamentos %}
-                        <div class="d-grid gap-3 mb-4">
-                            {% for ag in agendamentos %}
-                                <div class="schedule-card">
-                                    <p class="schedule-info">
-                                        <span class="schedule-label">Serviço:</span> {{ ag.servico.nome }}
-                                    </p>
-                                    <p class="schedule-info">
-                                        <span class="schedule-label">Valor:</span> R$ {{ ag.servico.preco }}
-                                    </p>
-                                    <p class="schedule-info">
-                                        <span class="schedule-label">Data:</span> {{ ag.data }}
-                                    </p>
-                                    <p class="schedule-info">
-                                        <span class="schedule-label">Horário:</span> {{ ag.horario }}
-                                    </p>
-                                    <p class="schedule-info">
-                                        <span class="schedule-label">Telefone:</span> {{ ag.cliente.telefone }}
-                                    </p>
-                                    <p class="schedule-info">
-                                        <span class="schedule-label">Descrição:</span> {{ ag.descricao }}
-                                    </p>
-
-                                    <a href="{% url 'confirmar_exclusao' ag.id %}" class="btn btn-danger w-100 delete-btn">
-                                        <i class="bi bi-trash"></i>
-                                        <span>Excluir</span>
-                                    </a>
-                                </div>
-                            {% endfor %}
-                        </div>
-                    {% else %}
-                        <div class="empty-box mb-4">
-                            <i class="bi bi-calendar-x"></i>
-                            <h5 class="mb-2">Nenhum agendamento encontrado</h5>
-                            <p class="text-muted mb-0">
-                                Você ainda não tem agendamentos cadastrados.
-                            </p>
-                        </div>
-                    {% endif %}
-
-                    <div class="d-grid gap-2">
-                        <a href="/servicos/" class="btn btn-primary action-btn">
-                            <i class="bi bi-calendar-plus"></i>
-                            <span>Criar Novo Agendamento</span>
-                        </a>
-
-                        <a href="/" class="btn btn-outline-secondary action-btn">
-                            <i class="bi bi-house-door"></i>
-                            <span>Voltar para Página Inicial</span>
-                        </a>
-                    </div>
-
+        <div class="agenda-header">
+            <div class="agenda-title-wrap">
+                <div class="agenda-icon">
+                    <i class="bi bi-calendar-check"></i>
+                </div>
+                <div>
+                    <h1>Meus Agendamentos</h1>
+                    <p>Acompanhe seus horários marcados de forma simples, organizada e profissional.</p>
                 </div>
             </div>
+
+            <div class="agenda-header-actions">
+                <a href="{% url 'home' %}" class="btn-voltar">
+                    <i class="bi bi-arrow-left"></i>
+                    Voltar
+                </a>
+
+                <a href="{% url 'agendar' %}" class="btn-novo">
+                    <i class="bi bi-calendar-plus"></i>
+                    Novo agendamento
+                </a>
+            </div>
+        </div>
+
+        <div class="agenda-body">
+
+            <section class="agenda-hero">
+                <div>
+                    <p>
+                        Visualize seus agendamentos com clareza e acompanhe seus horários de forma simples e organizada.
+                    </p>
+                </div>
+
+                <div class="agenda-hero-info">
+                    <div class="agenda-highlight">
+                        <div class="agenda-highlight-label">
+                            <i class="bi bi-stars"></i>
+                            Próximo atendimento
+                        </div>
+                        <strong>
+                            {% if agendamentos %}
+                                {{ agendamentos.0.data|date:"d/m/Y" }} às {{ agendamentos.0.horario|time:"H:i" }}
+                            {% else %}
+                                Nenhum horário agendado
+                            {% endif %}
+                        </strong>
+                        <span>
+                            {% if agendamentos %}
+                                Acompanhe abaixo todos os detalhes dos seus horários marcados.
+                            {% else %}
+                                Faça seu primeiro agendamento e acompanhe tudo por aqui.
+                            {% endif %}
+                        </span>
+                    </div>
+                </div>
+            </section>
+
+            <section class="summary-grid">
+                <div class="summary-card">
+                    <div class="summary-top">
+                        <div>
+                            <h3>{{ agendamentos|length }}</h3>
+                            <p>Total de agendamentos</p>
+                        </div>
+                        <i class="bi bi-journal-check"></i>
+                    </div>
+                </div>
+
+                
+
+                <div class="summary-card">
+                    <div class="summary-top">
+                        <div>
+                            <h3>Cancelamento</h3>
+                                <p>Cancele seus agendamentos de forma rápida e prática</p>
+                        </div>
+                        <i class="bi bi-phone"></i>
+                    </div>
+                </div>
+            </section>
+
+            <section>
+                <div class="list-header">
+                    <div>
+                        <h2>Lista de agendamentos</h2>
+                        <p>Consulte os horários já marcados e gerencie cada compromisso com facilidade.</p>
+                    </div>
+                </div>
+
+                {% if agendamentos %}
+                    <div class="agenda-list">
+                        {% for agendamento in agendamentos %}
+                            <div class="agendamento-card">
+                                <div class="agendamento-top">
+                                    <div class="agendamento-main">
+                                        <div class="agendamento-date-box">
+                                            <span class="dia">{{ agendamento.data|date:"d" }}</span>
+                                            <span class="mes">{{ agendamento.data|date:"M" }}</span>
+                                        </div>
+
+                                        <div class="agendamento-info">
+                                            <h3>
+                                                {% if agendamento.servico %}
+                                                    {{ agendamento.servico.nome }}
+                                                {% else %}
+                                                    Agendamento realizado
+                                                {% endif %}
+                                            </h3>
+
+                                            <div class="agendamento-meta">
+                                                <span>
+                                                    <i class="bi bi-calendar3"></i>
+                                                    {{ agendamento.data|date:"d/m/Y" }}
+                                                </span>
+
+                                                <span>
+                                                    <i class="bi bi-clock"></i>
+                                                    {{ agendamento.horario|time:"H:i" }}
+                                                </span>
+
+                                                {% if agendamento.servico and agendamento.servico.preco %}
+                                                    <span>
+                                                        <i class="bi bi-cash-stack"></i>
+                                                        R$ {{ agendamento.servico.preco }}
+                                                    </span>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div>
+                                        <span class="badge-status badge-confirmado">
+                                            <i class="bi bi-check-circle-fill"></i>
+                                            Confirmado
+                                        </span>
+                                    </div>
+                                </div>
+
+                                {% if agendamento.descricao %}
+                                    <div class="agendamento-desc">
+                                        {{ agendamento.descricao }}
+                                    </div>
+                                {% endif %}
+
+                                <div class="agendamento-footer">
+                                    <small>
+                                        Agendamento registrado no sistema para acompanhamento rápido.
+                                    </small>
+
+                                    <div class="action-group">
+                                        <a href="{% url 'confirmar_exclusao' agendamento.id %}" class="btn btn-outline-danger btn-card">
+                                            <i class="bi bi-trash3"></i>
+                                            Cancelar
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="empty-state">
+                        <div class="empty-state-icon">
+                            <i class="bi bi-calendar-x"></i>
+                        </div>
+
+                        <h3>Nenhum agendamento encontrado</h3>
+                        <p>
+                            Você ainda não possui horários marcados. Assim que realizar um agendamento,
+                            ele aparecerá aqui de forma organizada para facilitar o acompanhamento.
+                        </p>
+
+                        <a href="{% url 'agendar' %}" class="btn-novo">
+                            <i class="bi bi-calendar-plus"></i>
+                            Fazer meu primeiro agendamento
+                        </a>
+                    </div>
+                {% endif %}
+            </section>
+
         </div>
     </div>
 </div>

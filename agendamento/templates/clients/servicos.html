@@ -1,262 +1,263 @@
 {% extends 'clients/base_clients.html' %}
 
-{% block title %}Escolher Serviço{% endblock %}
+{% block title %}Serviços{% endblock %}
 
 {% block extra_css %}
+
 <style>
-    body {
-        background: linear-gradient(135deg, #807f7f, #f2f5f7);
-        font-family: Arial, sans-serif;
-        margin: 0;
-        padding: 0;
+
+body {
+    min-height: 100vh;
+    background: linear-gradient(135deg, #6f6f6f, #eef2f6);
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+
+/* CONTAINER */
+.servicos-page {
+    display: flex;
+    justify-content: center;
+    padding: 60px 15px;
+}
+
+.servicos-wrapper {
+    width: 100%;
+    max-width: 950px;
+}
+
+/* HEADER */
+.servicos-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 35px;
+}
+
+.servicos-title {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.servicos-title i {
+    font-size: 2rem;
+    color: #0d6efd;
+    padding-bottom: 12px;
+}
+
+.servicos-title h1 {
+    font-size: 1.9rem;
+    font-weight: 800;
+}
+
+/* BOTÃO VOLTAR */
+.btn-voltar {
+    background: rgba(0,0,0,0.1);
+    backdrop-filter: blur(8px);
+    color: #212529;
+    padding: 10px 18px;
+    border-radius: 14px;
+    text-decoration: none;
+    transition: 0.2s;
+}
+
+.btn-voltar:hover {
+    background: rgba(0,0,0,0.2);
+    transform: translateY(-2px);
+}
+
+/* HERO */
+.servicos-hero {
+    background: linear-gradient(135deg, #0d6efd, #0b5ed7);
+    border-radius: 26px;
+    padding: 30px;
+    color: white;
+    margin-bottom: 30px;
+    box-shadow: 0 20px 45px rgba(13,110,253,0.35);
+}
+
+.servicos-hero h2 {
+    font-size: 1.6rem;
+    font-weight: 800;
+}
+
+.servicos-hero p {
+    font-size: 0.95rem;
+    opacity: 0.9;
+}
+
+/* LISTA */
+.servicos-list {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+/* CARD SUPER PREMIUM */
+.servico-card {
+    position: relative;
+    background: rgba(255,255,255,0.92);
+    backdrop-filter: blur(14px);
+    border-radius: 22px;
+    padding: 22px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    transition: 0.3s;
+    overflow: hidden;
+    box-shadow: 0 12px 30px rgba(0,0,0,0.08);
+}
+
+/* LINHA PREMIUM LATERAL */
+.servico-card::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 0;
+    height: 100%;
+    width: 5px;
+    background: linear-gradient(180deg, #0d6efd, #0b5ed7);
+}
+
+/* HOVER INSANO */
+.servico-card:hover {
+    transform: translateY(-8px) scale(1.01);
+    box-shadow: 0 25px 60px rgba(0,0,0,0.15);
+}
+
+/* ESQUERDA */
+.servico-info {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.servico-nome {
+    font-size: 1.3rem;
+    font-weight: 800;
+}
+
+.servico-desc {
+    font-size: 0.9rem;
+    color: #6c757d;
+}
+
+.servico-meta {
+    font-size: 0.8rem;
+    color: #495057;
+}
+
+/* DIREITA */
+.servico-right {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 12px;
+}
+
+/* PREÇO */
+.servico-preco {
+    font-size: 1.5rem;
+    font-weight: 900;
+    color: #0d6efd;
+}
+
+/* BOTÃO INSANO */
+.btn-agendar {
+    background: linear-gradient(135deg, #0d6efd, #0b5ed7);
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 14px;
+    font-weight: 700;
+    text-decoration: none;
+    transition: 0.25s;
+    box-shadow: 0 10px 25px rgba(13,110,253,0.3);
+}
+
+.btn-agendar:hover {
+    transform: translateY(-3px) scale(1.06);
+    box-shadow: 0 18px 40px rgba(13,110,253,0.4);
+}
+
+/* MOBILE */
+@media (max-width: 768px) {
+
+    .servico-card {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 14px;
     }
 
-    .page-wrapper {
-        min-height: 100vh;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        padding: 30px 15px;
-    }
-
-    .main-card {
-        background: #fff;
-        border-radius: 28px;
-        padding: 40px 30px;
-        box-shadow: 0 20px 50px rgba(0, 0, 0, 0.12);
+    .servico-right {
         width: 100%;
-        max-width: 900px;
+        align-items: stretch;
     }
 
-    .icon-circle {
-        width: 90px;
-        height: 90px;
-        border-radius: 50%;
-        background: #0d6efd;
-        color: white;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 36px;
-        margin: 0 auto 20px;
-    }
-
-    .title {
-        font-size: 2rem;
-        font-weight: bold;
-        text-align: center;
-        color: #212529;
-        margin-bottom: 10px;
-    }
-
-    .subtitle {
-        text-align: center;
-        color: #6c757d;
-        font-size: 1rem;
-        margin-bottom: 30px;
-    }
-
-    .service-card {
-        display: block;
-        cursor: pointer;
-        height: 100%;
-    }
-
-    .service-card-content {
-        border: 2px solid #e9ecef;
-        border-radius: 20px;
-        padding: 25px 20px;
-        text-align: center;
-        background-color: #fff;
-        transition: all 0.25s ease;
-        height: 100%;
-    }
-
-    .service-card-content:hover {
-        border-color: #0d6efd;
-        transform: translateY(-4px);
-        box-shadow: 0 12px 25px rgba(0, 0, 0, 0.08);
-    }
-
-    .service-card input[type="radio"]:checked + .service-card-content {
-        border-color: #0d6efd;
-        background: #f0f7ff;
-        box-shadow: 0 10px 25px rgba(13, 110, 253, 0.14);
-    }
-
-    .service-icon {
-        font-size: 32px;
-        color: #0d6efd;
-        margin-bottom: 12px;
-        display: block;
-    }
-
-    .service-title {
-        font-size: 1.15rem;
-        font-weight: 600;
-        color: #212529;
-        margin-bottom: 8px;
-    }
-
-    .service-description {
-        font-size: 0.95rem;
-        color: #6c757d;
-        margin-bottom: 0;
-    }
-
-    .btn-main {
-        border-radius: 14px;
-        padding: 12px;
-        font-weight: 600;
-        font-size: 1rem;
-    }
-
-    .empty-box {
-        border: 2px dashed #ced4da;
-        border-radius: 20px;
-        padding: 30px 20px;
-        text-align: center;
-        color: #6c757d;
-        background: #fafafa;
-    }
-
-    .back-card {
-        display: block;
-        text-decoration: none;
-        margin-top: 20px;
-    }
-
-    .back-card-content {
-        background: #ffd8d8;
-        border: 2px solid #ff757554;
-        border-radius: 18px;
-        padding: 18px;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        font-weight: 700;
-        color: #212529;
-        transition: all 0.25s ease;
+    .btn-agendar {
+        width: 100%;
         text-align: center;
     }
 
-    .back-card-content:hover {
-        background: #ff09094b;
-        border-color: #ff7575;
-        transform: translateY(-2px);
-        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
-    }
+}
 
-    @media (max-width: 768px) {
-        body {
-            background: #ffffff;
-        }
-
-        .main-card {
-            padding: 30px 20px;
-            border-radius: 22px;
-            box-shadow: none;
-        }
-
-        .title {
-            font-size: 1.6rem;
-        }
-
-        .subtitle {
-            font-size: 0.95rem;
-        }
-
-        .service-card-content {
-            padding: 22px 16px;
-        }
-    }
 </style>
+
 {% endblock %}
 
 {% block content %}
-<div class="page-wrapper">
-    <div class="main-card">
 
-        <div class="icon-circle">
-            <i class="bi bi-grid"></i>
+<div class="servicos-page">
+    <div class="servicos-wrapper">
+
+    <div class="servicos-header">
+        <div class="servicos-title">
+            <i class="bi bi-clipboard-data-fill"></i>
+            <h1>Serviços</h1>
         </div>
 
-        <h1 class="title">Escolha um serviço</h1>
-        <p class="subtitle">
-            Selecione abaixo o serviço desejado para continuar com o agendamento.
-        </p>
-
-        <form method="POST">
-            {% csrf_token %}
-
-            {% if erro %}
-                <div class="alert alert-danger text-center mb-4">
-                    {{ erro }}
-                </div>
-            {% endif %}
-
-            {% if servicos %}
-                <div class="row g-3 mb-4">
-                    {% for servico in servicos %}
-                        <div class="col-12 col-md-6">
-                            <label class="service-card w-100">
-                                <input
-                                    type="radio"
-                                    name="servico"
-                                    value="{{ servico.id }}"
-                                    hidden
-                                    required
-                                >
-
-                                <div class="service-card-content">
-                                    <i class="bi bi-briefcase service-icon"></i>
-
-                                    <div class="service-title">
-                                        {{ servico.nome }}
-                                    </div>
-
-                                    <p class="text-success fw-bold mt-2 mb-2">
-                                        R$ {{ servico.preco }}
-                                    </p>
-
-                                    {% if servico.descricao %}
-                                        <p class="service-description">
-                                            {{ servico.descricao }}
-                                        </p>
-                                    {% else %}
-                                        <p class="service-description">
-                                            Serviço disponível para agendamento.
-                                        </p>
-                                    {% endif %}
-                                </div>
-                            </label>
-                        </div>
-                    {% endfor %}
-                </div>
-
-                <div class="d-grid">
-                    <button type="submit" class="btn btn-primary btn-main">
-                        <i class="bi bi-arrow-right-circle me-2"></i>
-                        Continuar para agendamento
-                    </button>
-                </div>
-            {% else %}
-                <div class="empty-box">
-                    <i class="bi bi-exclamation-circle fs-1 d-block mb-3"></i>
-                    <h5 class="mb-2">Nenhum serviço disponível</h5>
-                    <p class="mb-0">
-                        Cadastre serviços no sistema para que eles apareçam aqui.
-                    </p>
-                </div>
-            {% endif %}
-
-            <a href="{% url 'home' %}" class="back-card">
-                <div class="back-card-content">
-                    Voltar para início
-                </div>
-            </a>
-
-        </form>
+        <a href="{% url 'home' %}" class="btn-voltar">
+            <i class="bi bi-arrow-left"></i>
+        </a>
     </div>
+
+    <div class="servicos-hero">
+        <h2>Escolha seu serviço</h2>
+        <p>Selecione o atendimento ideal e agende em poucos segundos.</p>
+    </div>
+
+    <div class="servicos-list">
+
+        {% for servico in servicos %}
+        <div class="servico-card">
+
+            <div class="servico-info">
+                <div class="servico-nome">{{ servico.nome }}</div>
+                <div class="servico-desc">{{ servico.descricao }}</div>
+                <div class="servico-meta">
+                    <i class="bi bi-clock"></i> {{ servico.duracao }} min
+                </div>
+            </div>
+
+            <div class="servico-right">
+                <div class="servico-preco">R$ {{ servico.preco }}</div>
+
+                <form method="POST" action="{% url 'escolher_servico' %}">
+                    {% csrf_token %}
+                    <input type="hidden" name="servico" value="{{ servico.id }}">
+
+                    <button type="submit" class="btn-agendar">
+                        Agendar
+                    </button>
+                </form>
+            </div>
+
+        </div>
+        {% endfor %}
+
+    </div>
+
 </div>
+
+</div>
+
 {% endblock %}

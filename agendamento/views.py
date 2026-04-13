@@ -700,3 +700,13 @@ def escolher_servico(request):
         "servicos": servicos,
         "erro": erro,
     })
+
+
+def perfil(request):
+    return render(request, 'clients/perfil.html')
+
+def sobre(request):
+    return render(request, 'clients/sobre.html')
+
+def suporte(request):
+    return render(request, 'clients/suporte.html')
