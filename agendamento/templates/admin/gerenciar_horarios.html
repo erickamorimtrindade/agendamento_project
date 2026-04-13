@@ -250,6 +250,7 @@
     flatpickr("#data", {
         dateFormat: "d-m-Y",
         allowInput: true,
+        disableMobile: true,
         minDate: "today",
         defaultDate: "{{ data|default:'' }}",
         onChange: function(selectedDates, dateStr) {
