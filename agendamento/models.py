@@ -76,3 +76,15 @@ class Servico(models.Model):
     def __str__(self):
         return f"{self.nome} - {self.preco}"
     
+
+class HorarioBloqueado(models.Model):
+    data = models.DateField()
+    horario = models.TimeField(null=True, blank=True)
+
+    tipo = models.CharField(max_length=10, choices=[
+        ('bloqueio', 'Bloqueio'),
+        ('liberado', 'Liberado')
+    ])
+
+    class Meta:
+        unique_together = ['data', 'horario', 'tipo']

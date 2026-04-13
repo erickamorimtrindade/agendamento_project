@@ -168,7 +168,9 @@
             max-width: 260px;
             padding: 13px 20px;
         }
+        
     }
+
 </style>
 {% endblock %}
 
@@ -232,6 +234,17 @@
                     </div>
                 </a>
             </div>
+            <div class="col-12 col-sm-6 col-lg-3">
+                <a href="{% url 'gerenciar_horarios' %}" class="dashboard-link">
+                    <div class="dashboard-box">
+                        <div class="dashboard-box-icon">
+                            <i class="bi bi-clock-history"></i>
+                    </div>      
+                    <div class="dashboard-box-title">Gerenciar Horários</div>
+                    <p class="dashboard-box-subtitle">Bloquear e liberar horários</p>
+                </div>
+            </a>
+        </div>
 
         </div>
 

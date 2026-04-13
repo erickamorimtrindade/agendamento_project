@@ -1,0 +1,700 @@
+{% extends 'clients/base_clients.html' %}
+
+{% block title %}Sobre{% endblock %}
+
+{% block extra_css %}
+<style>
+    body {
+        min-height: 100vh;
+        background: linear-gradient(135deg, #807f7f, #f2f5f7);
+    }
+
+    .sobre-page {
+        padding: 32px 12px 48px;
+    }
+
+    .sobre-wrapper {
+        max-width: 1100px;
+        margin: 0 auto;
+    }
+
+    .topbar-sobre {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 16px;
+        margin-bottom: 24px;
+    }
+
+    .topbar-title {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        color: #212529;
+    }
+
+    .topbar-icon {
+        width: 48px;
+        height: 48px;
+        border-radius: 14px;
+        background: rgba(13, 110, 253, 0.12);
+        color: #0d6efd;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.35rem;
+    }
+
+    .topbar-title h1 {
+        margin: 0;
+        font-size: 1.9rem;
+        font-weight: 700;
+    }
+
+    .topbar-title p {
+        margin: 2px 0 0;
+        color: #6c757d;
+        font-size: 0.96rem;
+    }
+
+    .btn-voltar {
+        background: #6c757d;
+        color: #fff;
+        padding: 10px 18px;
+        border-radius: 12px;
+        font-size: 0.95rem;
+        font-weight: 600;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        transition: all 0.2s ease;
+        border: none;
+    }
+
+    .btn-voltar:hover {
+        background: #5a6268;
+        color: #fff;
+        transform: translateY(-1px);
+    }
+
+    .hero-sobre {
+        background: rgba(255, 255, 255, 0.94);
+        border-radius: 24px;
+        padding: 36px;
+        box-shadow: 0 14px 35px rgba(0, 0, 0, 0.10);
+        margin-bottom: 24px;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .hero-sobre::before {
+        content: "";
+        position: absolute;
+        top: -80px;
+        right: -80px;
+        width: 220px;
+        height: 220px;
+        background: radial-gradient(circle, rgba(13,110,253,0.14) 0%, rgba(13,110,253,0) 70%);
+        pointer-events: none;
+    }
+
+    .hero-grid {
+        display: grid;
+        grid-template-columns: 1.2fr 0.8fr;
+        gap: 28px;
+        align-items: center;
+    }
+
+    .hero-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        background: rgba(13, 110, 253, 0.10);
+        color: #0d6efd;
+        border-radius: 999px;
+        padding: 8px 14px;
+        font-size: 0.88rem;
+        font-weight: 600;
+        margin-bottom: 16px;
+    }
+
+    .hero-title {
+        font-size: 2.25rem;
+        font-weight: 800;
+        color: #212529;
+        line-height: 1.1;
+        margin-bottom: 14px;
+    }
+
+    .hero-text {
+        font-size: 1rem;
+        color: #5c6670;
+        line-height: 1.7;
+        margin-bottom: 22px;
+        max-width: 640px;
+    }
+
+    .hero-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+    }
+
+    .btn-acao {
+        min-height: 48px;
+        border-radius: 14px;
+        padding: 0 18px;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        font-weight: 600;
+        text-decoration: none;
+        transition: all 0.2s ease;
+    }
+
+    .btn-acao:hover {
+        transform: translateY(-1px);
+    }
+
+    .hero-side {
+        display: grid;
+        gap: 14px;
+    }
+
+    .hero-mini-card {
+        background: #f8f9fa;
+        border: 1px solid #eef1f4;
+        border-radius: 18px;
+        padding: 18px;
+    }
+
+    .hero-mini-card h3 {
+        font-size: 1rem;
+        font-weight: 700;
+        color: #212529;
+        margin-bottom: 8px;
+    }
+
+    .hero-mini-card p {
+        margin: 0;
+        color: #6c757d;
+        line-height: 1.6;
+        font-size: 0.94rem;
+    }
+
+    .section-card {
+        background: rgba(255, 255, 255, 0.96);
+        border-radius: 22px;
+        padding: 28px;
+        box-shadow: 0 10px 28px rgba(0, 0, 0, 0.08);
+        margin-bottom: 22px;
+    }
+
+    .section-header {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 18px;
+    }
+
+    .section-header .icon-box {
+        width: 44px;
+        height: 44px;
+        border-radius: 14px;
+        background: rgba(13, 110, 253, 0.10);
+        color: #0d6efd;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.2rem;
+    }
+
+    .section-header h2 {
+        margin: 0;
+        font-size: 1.35rem;
+        font-weight: 700;
+        color: #212529;
+    }
+
+    .section-header p {
+        margin: 2px 0 0;
+        color: #6c757d;
+        font-size: 0.94rem;
+    }
+
+    .diferenciais-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 16px;
+    }
+
+    .diferencial-item {
+        background: #f8f9fa;
+        border: 1px solid #edf0f3;
+        border-radius: 18px;
+        padding: 18px;
+        height: 100%;
+        transition: all 0.2s ease;
+    }
+
+    .diferencial-item:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 10px 24px rgba(0,0,0,0.07);
+    }
+
+    .diferencial-item i {
+        font-size: 1.3rem;
+        color: #0d6efd;
+        margin-bottom: 10px;
+        display: inline-block;
+    }
+
+    .diferencial-item h3 {
+        font-size: 1rem;
+        font-weight: 700;
+        margin-bottom: 8px;
+        color: #212529;
+    }
+
+    .diferencial-item p {
+        margin: 0;
+        font-size: 0.93rem;
+        line-height: 1.6;
+        color: #6c757d;
+    }
+
+    .info-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 22px;
+    }
+
+    .info-box {
+        background: #f8f9fa;
+        border: 1px solid #edf0f3;
+        border-radius: 18px;
+        padding: 20px;
+        height: 100%;
+    }
+
+    .info-list {
+        display: grid;
+        gap: 14px;
+    }
+
+    .info-item {
+        display: flex;
+        gap: 12px;
+        align-items: flex-start;
+    }
+
+    .info-item i {
+        font-size: 1.05rem;
+        color: #0d6efd;
+        margin-top: 2px;
+    }
+
+    .info-item strong {
+        display: block;
+        font-size: 0.96rem;
+        color: #212529;
+        margin-bottom: 2px;
+    }
+
+    .info-item span {
+        color: #6c757d;
+        font-size: 0.94rem;
+        line-height: 1.5;
+    }
+
+    .mapa-box iframe {
+        width: 100%;
+        height: 100%;
+        min-height: 280px;
+        border: 0;
+        border-radius: 18px;
+    }
+
+    .horarios-card {
+        background: #f8f9fa;
+        border: 1px solid #edf0f3;
+        border-radius: 18px;
+        padding: 20px;
+    }
+
+    .horarios-header {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-weight: 700;
+        font-size: 1.05rem;
+        color: #212529;
+        margin-bottom: 14px;
+    }
+
+    .horarios-header i {
+        width: 38px;
+        height: 38px;
+        border-radius: 12px;
+        background: rgba(13, 110, 253, 0.12);
+        color: #0d6efd;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1rem;
+    }
+
+    .horario-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 14px;
+        padding: 13px 0;
+        border-bottom: 1px solid #e9ecef;
+        font-size: 0.96rem;
+    }
+
+    .horario-item:last-child {
+        border-bottom: none;
+        padding-bottom: 0;
+    }
+
+    .horario-item:first-of-type {
+        padding-top: 0;
+    }
+
+    .horario-item span:first-child {
+        color: #212529;
+        font-weight: 600;
+    }
+
+    .horario-item span:last-child {
+        color: #495057;
+        font-weight: 700;
+    }
+
+    .horario-item.fechado span:last-child {
+        color: #dc3545;
+    }
+
+    .cta-final {
+        background: linear-gradient(135deg, #0d6efd, #0b5ed7);
+        color: #fff;
+        border-radius: 24px;
+        padding: 28px;
+        box-shadow: 0 14px 30px rgba(13, 110, 253, 0.22);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 18px;
+        flex-wrap: wrap;
+    }
+
+    .cta-final h3 {
+        margin: 0 0 6px;
+        font-size: 1.45rem;
+        font-weight: 700;
+    }
+
+    .cta-final p {
+        margin: 0;
+        color: rgba(255,255,255,0.88);
+    }
+
+    .cta-final .btn-light {
+        min-height: 48px;
+        border-radius: 14px;
+        padding: 0 18px;
+        font-weight: 700;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    @media (max-width: 991px) {
+        .hero-grid,
+        .info-grid,
+        .diferenciais-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    @media (max-width: 576px) {
+        .sobre-page {
+            padding: 18px 0 32px;
+        }
+
+        .topbar-sobre {
+            flex-direction: column;
+            align-items: stretch;
+        }
+
+        .hero-sobre,
+        .section-card,
+        .cta-final {
+            border-radius: 0;
+        }
+
+        .hero-sobre,
+        .section-card {
+            padding: 22px 18px;
+        }
+
+        .hero-title {
+            font-size: 1.8rem;
+        }
+
+        .topbar-title h1 {
+            font-size: 1.5rem;
+        }
+
+        .btn-voltar {
+            justify-content: center;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="sobre-page">
+    <div class="sobre-wrapper">
+
+        <div class="topbar-sobre">
+            <div class="topbar-title">
+                <div class="topbar-icon">
+                    <i class="bi bi-info-circle"></i>
+                </div>
+                <div>
+                    <h1>Sobre a Barbearia</h1>
+                    <p>Conheça nossa proposta, horários, localização e meios de contato.</p>
+                </div>
+            </div>
+
+            <a href="javascript:history.back()" class="btn-voltar">
+                <i class="bi bi-arrow-left"></i>
+                Voltar
+            </a>
+        </div>
+
+        <section class="hero-sobre">
+            <div class="hero-grid">
+                <div>
+                    <div class="hero-badge">
+                        <i class="bi bi-stars"></i>
+                        Atendimento profissional e experiência premium.
+                    </div>
+
+                    <div class="hero-title">
+                        Estilo, cuidado e pontualidade em cada atendimento.
+                    </div>
+
+                    <p class="hero-text">
+                        Nossa barbearia foi pensada para oferecer uma experiência moderna, prática e confortável.
+                        Aqui, você encontra atendimento com horário marcado, ambiente organizado e foco total na qualidade
+                        do serviço, desde o primeiro contato até a finalização do corte.
+                    </p>
+
+                    <div class="hero-actions">
+                        <a href="{% url 'agendar' %}" class="btn btn-primary btn-acao">
+                            <i class="bi bi-calendar-check"></i>
+                            Agendar agora
+                        </a>
+
+                        <a href="https://wa.me/5583996912624" target="_blank" class="btn btn-outline-primary btn-acao">
+                            <i class="bi bi-whatsapp"></i>
+                            Falar no WhatsApp
+                        </a>
+                    </div>
+                </div>
+
+                <div class="hero-side">
+                    <div class="hero-mini-card">
+                        <h3>Nossa proposta</h3>
+                        <p>
+                            Oferecer uma experiência completa que une praticidade no agendamento com um atendimento
+                            próximo, pontual e de alta qualidade. Nosso compromisso é valorizar o tempo de cada cliente,
+                            proporcionando um ambiente organizado, moderno e acolhedor, onde cada detalhe é pensado
+                            para garantir conforto, confiança e um ótimo resultado.
+                        </p>
+                    </div>
+
+                    <div class="hero-mini-card">
+                        <h3>Para quem atendemos</h3>
+                        <p>
+                            Atendemos clientes de todos os perfis — homens, mulheres, crianças, adultos e idosos — que
+                            valorizam organização, bom atendimento, horários bem definidos e uma experiência
+                            profissional do início ao fim.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="section-card">
+            <div class="section-header">
+                <div class="icon-box">
+                    <i class="bi bi-gem"></i>
+                </div>
+                <div>
+                    <h2>Diferenciais</h2>
+                    <p>Elementos que reforçam a percepção de qualidade e confiança.</p>
+                </div>
+            </div>
+
+            <div class="diferenciais-grid">
+                <div class="diferencial-item">
+                    <i class="bi bi-clock-history"></i>
+                    <h3>Horário marcado</h3>
+                    <p>Agendamento simples, rápido e com uma ótima organização.</p>
+                </div>
+
+                <div class="diferencial-item">
+                    <i class="bi bi-shield-check"></i>
+                    <h3>Atendimento confiável</h3>
+                    <p>Contato acessível e experiência mais profissional.</p>
+                </div>
+
+                <div class="diferencial-item">
+                    <i class="bi bi-emoji-sunglasses"></i>
+                    <h3>Experiência moderna</h3>
+                    <p>Visual moderno, processo intuitivo e foco em conforto antes, durante e após o serviço.</p>
+                </div>
+            </div>
+        </section>
+
+        <section class="section-card">
+            <div class="section-header">
+                <div class="icon-box">
+                    <i class="bi bi-geo-alt"></i>
+                </div>
+                <div>
+                    <h2>Informações e localização</h2>
+                    <p>Dados essenciais para o cliente encontrar e entrar em contato facilmente.</p>
+                </div>
+            </div>
+
+            <div class="info-grid">
+                <div class="info-box">
+                    <div class="info-list">
+                        <div class="info-item">
+                            <i class="bi bi-building"></i>
+                            <div>
+                                <strong>Nome da empresa</strong>
+                                <span>Barbearia Premium</span>
+                            </div>
+                        </div>
+
+                        <div class="info-item">
+                            <i class="bi bi-geo-alt"></i>
+                            <div>
+                                <strong>Endereço</strong>
+                                <span>Rua Exemplo, 123 - João Pessoa, PB</span>
+                            </div>
+                        </div>
+
+                        <div class="info-item">
+                            <i class="bi bi-telephone"></i>
+                            <div>
+                                <strong>Telefone</strong>
+                                <span>(83) 99691-2624</span>
+                            </div>
+                        </div>
+
+                        <div class="info-item">
+                            <i class="bi bi-envelope"></i>
+                            <div>
+                                <strong>E-mail</strong>
+                                <span>contato@barbeariapremium.com</span>
+                            </div>
+                        </div>
+
+                        <div class="info-item">
+                            <i class="bi bi-instagram"></i>
+                            <div>
+                                <strong>Instagram</strong>
+                                <span>@barbeariapremium</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mapa-box">
+                    <iframe
+                        src="https://www.google.com/maps?q=João%20Pessoa%20PB&output=embed"
+                        loading="lazy"
+                        allowfullscreen>
+                    </iframe>
+                </div>
+            </div>
+        </section>
+
+        <section class="section-card">
+            <div class="section-header">
+                <div class="icon-box">
+                    <i class="bi bi-clock"></i>
+                </div>
+                <div>
+                    <h2>Horários de funcionamento</h2>
+                    <p>Organização clara para facilitar o agendamento.</p>
+                </div>
+            </div>
+
+            <div class="horarios-card">
+                <div class="horarios-header">
+                    <i class="bi bi-clock-history"></i>
+                    <span>Atendimento semanal</span>
+                </div>
+
+                <div class="horario-item">
+                    <span>Segunda-feira</span>
+                    <span>08:00 - 22:00</span>
+                </div>
+
+                <div class="horario-item">
+                    <span>Terça-feira</span>
+                    <span>08:00 - 22:00</span>
+                </div>
+
+                <div class="horario-item">
+                    <span>Quarta-feira</span>
+                    <span>08:00 - 22:00</span>
+                </div>
+
+                <div class="horario-item">
+                    <span>Quinta-feira</span>
+                    <span>08:00 - 22:00</span>
+                </div>
+
+                <div class="horario-item">
+                    <span>Sexta-feira</span>
+                    <span>08:00 - 22:00</span>
+                </div>
+
+                <div class="horario-item">
+                    <span>Sábado</span>
+                    <span>08:00 - 22:00</span>
+                </div>
+
+                <div class="horario-item fechado">
+                    <span>Domingo</span>
+                    <span>Fechado</span>
+                </div>
+            </div>
+        </section>
+
+        <section class="cta-final">
+            <div>
+                <h3>Pronto para marcar seu horário?</h3>
+                <p>Agende em poucos cliques e tenha uma experiência mais organizada e profissional.</p>
+            </div>
+
+            <a href="{% url 'agendar' %}" class="btn btn-light">
+                <i class="bi bi-calendar-plus"></i>
+                Fazer agendamento
+            </a>
+        </section>
+
+    </div>
+</div>
+{% endblock %}

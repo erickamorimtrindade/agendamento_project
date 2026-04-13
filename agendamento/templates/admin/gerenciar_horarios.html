@@ -1,0 +1,274 @@
+{% extends 'admin/base_admin.html' %}
+{% load static %}
+
+{% block title %}{% endblock %}
+
+{% block content %}
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+
+<style>
+    .page-wrapper {
+        min-height: 100vh;
+        padding: 40px 15px;
+        display: flex;
+        justify-content: center;
+        align-items: flex-start;
+    }
+
+    .main-card {
+        width: 100%;
+        max-width: 1100px;
+        background: #ffffff;
+        border-radius: 28px;
+        padding: 32px 24px;
+        box-shadow: 0 20px 45px rgba(0, 0, 0, 0.08);
+    }
+
+    .page-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 30px;
+        flex-wrap: wrap;
+    }
+
+    .page-title {
+        margin: 0;
+        font-size: 1.8rem;
+        font-weight: 700;
+        color: #212529;
+    }
+
+    .date-input {
+        max-width: 320px;
+        margin: 0 auto;
+        border-radius: 14px;
+        padding: 12px 16px;
+    }
+
+    .section-actions {
+        text-align: center;
+        margin-bottom: 24px;
+    }
+
+    .btn-dia,
+    .btn-voltar,
+    .btn-acao {
+        border-radius: 12px;
+        font-weight: 600;
+    }
+
+    .btn-voltar {
+        padding: 10px 18px;
+    }
+
+    .btn-dia {
+        padding: 12px 22px;
+    }
+
+    .alert-custom {
+        border-radius: 14px;
+        text-align: center;
+        font-weight: 600;
+        margin-bottom: 24px;
+    }
+
+    .grid-horarios {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+        gap: 16px;
+    }
+
+    .horario-card {
+        border: 1px solid #dee2e6;
+        border-radius: 18px;
+        padding: 18px 12px;
+        text-align: center;
+        transition: 0.2s ease;
+        background: #f8f9fa;
+        height: 100%;
+    }
+
+    .horario-card.disponivel {
+        background: #f8f9fa;
+        border-color: #dee2e6;
+    }
+
+    .horario-card.disponivel:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 18px rgba(0, 0, 0, 0.06);
+    }
+
+    .horario-card.bloqueado {
+        background: #fff5f5;
+        border-color: #f1aeb5;
+    }
+
+    .horario-card.liberado {
+        background: #f1fff3;
+        border-color: #75c28a;
+    }
+
+    .horario-texto {
+        font-size: 1rem;
+        font-weight: 700;
+        color: #212529;
+        margin-bottom: 12px;
+    }
+
+    .btn-acao {
+        width: 100%;
+    }
+
+    @media (max-width: 768px) {
+        .page-wrapper {
+            padding: 20px 12px;
+        }
+
+        .main-card {
+            padding: 24px 16px;
+            border-radius: 22px;
+        }
+
+        .page-header {
+            flex-direction: column;
+            align-items: stretch;
+        }
+
+        .page-title {
+            text-align: center;
+            font-size: 1.5rem;
+        }
+
+        .btn-voltar {
+            width: 100%;
+        }
+
+        .date-input {
+            max-width: 100%;
+        }
+
+        .grid-horarios {
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+        }
+    }
+
+    @media (max-width: 480px) {
+        .grid-horarios {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+
+<div class="page-wrapper">
+    <div class="main-card">
+
+        <div class="page-header">
+            <h1 class="page-title">Gerenciar Horários</h1>
+            <a href="{% url 'painel_admin' %}" class="btn btn-secondary btn-voltar">
+                Voltar
+            </a>
+        </div>
+
+        <form method="GET" class="mb-4 text-center">
+            <input
+                type="text"
+                name="data"
+                id="data"
+                class="form-control date-input"
+                placeholder="Selecione a data"
+                value="{{ data|default:'' }}"
+            >
+        </form>
+
+        {% if data %}
+            <div class="section-actions">
+                {% if dia_bloqueado %}
+                    <form method="POST" action="{% url 'desbloquear_dia' %}">
+                        {% csrf_token %}
+                        <input type="hidden" name="data" value="{{ data }}">
+                        <button type="submit" class="btn btn-success btn-dia">
+                            Desbloquear dia inteiro
+                        </button>
+                    </form>
+                {% else %}
+                    <form method="POST" action="{% url 'bloquear_dia' %}">
+                        {% csrf_token %}
+                        <input type="hidden" name="data" value="{{ data }}">
+                        <button type="submit" class="btn btn-danger btn-dia">
+                            Bloquear dia inteiro
+                        </button>
+                    </form>
+                {% endif %}
+            </div>
+
+            {% if dia_bloqueado %}
+                <div class="alert alert-danger alert-custom">
+                    Dia totalmente bloqueado (exceto horários liberados manualmente)
+                </div>
+            {% endif %}
+
+            <div class="grid-horarios">
+                {% for h in horarios %}
+                    <div class="horario-card {% if h in horarios_liberados %}liberado{% elif dia_bloqueado or h in bloqueados %}bloqueado{% else %}disponivel{% endif %}">
+                        <div class="horario-texto">{{ h }}</div>
+
+                        <form method="POST"
+                              action="{% if h in horarios_liberados %}{% url 'bloquear_horario' %}{% elif dia_bloqueado %}{% url 'liberar_horario' %}{% elif h in bloqueados %}{% url 'desbloquear_horario' %}{% else %}{% url 'bloquear_horario' %}{% endif %}">
+                            {% csrf_token %}
+                            <input type="hidden" name="data" value="{{ data }}">
+                            <input type="hidden" name="horario" value="{{ h }}">
+
+                            <button
+                                type="submit"
+                                class="btn btn-sm btn-acao mt-2 {% if h in horarios_liberados %}btn-danger{% elif dia_bloqueado %}btn-success{% elif h in bloqueados %}btn-success{% else %}btn-danger{% endif %}"
+                                onclick="return confirm('Tem certeza que deseja alterar este horário?')"
+                            >
+                                {% if h in horarios_liberados %}
+                                    Bloquear
+                                {% elif dia_bloqueado %}
+                                    Liberar
+                                {% elif h in bloqueados %}
+                                    Desbloquear
+                                {% else %}
+                                    Bloquear
+                                {% endif %}
+                            </button>
+                        </form>
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<script>
+    flatpickr("#data", {
+        dateFormat: "d-m-Y",
+        allowInput: true,
+        minDate: "today",
+        defaultDate: "{{ data|default:'' }}",
+        onChange: function(selectedDates, dateStr) {
+            window.location.href = "?data=" + dateStr;
+        }
+    });
+
+    const inputData = document.getElementById("data");
+
+    inputData.addEventListener("input", function(e) {
+        let value = e.target.value.replace(/\D/g, "");
+
+        if (value.length > 2 && value.length <= 4) {
+            value = value.slice(0, 2) + "-" + value.slice(2);
+        } else if (value.length > 4) {
+            value = value.slice(0, 2) + "-" + value.slice(2, 4) + "-" + value.slice(4, 8);
+        }
+
+        e.target.value = value;
+    });
+</script>
+{% endblock %}
