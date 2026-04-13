@@ -39,8 +39,9 @@ body {
 }
 
 .servicos-title i {
-    font-size: 1.6rem;
+    font-size: 2rem;
     color: #0d6efd;
+    padding-bottom: 12px;
 }
 
 .servicos-title h1 {
@@ -164,6 +165,7 @@ body {
 .btn-agendar {
     background: linear-gradient(135deg, #0d6efd, #0b5ed7);
     color: white;
+    border: none;
     padding: 10px 20px;
     border-radius: 14px;
     font-weight: 700;
@@ -209,11 +211,11 @@ body {
 
     <div class="servicos-header">
         <div class="servicos-title">
-            <i class="bi bi-scissors"></i>
+            <i class="bi bi-clipboard-data-fill"></i>
             <h1>Serviços</h1>
         </div>
 
-        <a href="javascript:history.back()" class="btn-voltar">
+        <a href="{% url 'home' %}" class="btn-voltar">
             <i class="bi bi-arrow-left"></i>
         </a>
     </div>
@@ -239,9 +241,14 @@ body {
             <div class="servico-right">
                 <div class="servico-preco">R$ {{ servico.preco }}</div>
 
-                <a href="{% url 'agendar' %}?servico={{ servico.id }}" class="btn-agendar">
-                    Agendar
-                </a>
+                <form method="POST" action="{% url 'escolher_servico' %}">
+                    {% csrf_token %}
+                    <input type="hidden" name="servico" value="{{ servico.id }}">
+
+                    <button type="submit" class="btn-agendar">
+                        Agendar
+                    </button>
+                </form>
             </div>
 
         </div>
