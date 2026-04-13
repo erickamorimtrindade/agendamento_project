@@ -6,298 +6,1510 @@
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
 
 <style>
-    body {
-        min-height: 100vh;
-        margin: 0;
-        background: linear-gradient(135deg, #807f7f, #f2f5f7);
-        font-family: Arial, sans-serif;
+
+:root {
+    --primary-50: #eef4ff;
+    --primary-100: #dfeaff;
+    --primary-150: #d7e5ff;
+    --primary-200: #c9dcff;
+    --primary-300: #9bbcff;
+    --primary-400: #6b97ff;
+    --primary-500: #3d7cff;
+    --primary-600: #2f6cf0;
+    --primary-700: #255cdd;
+
+    --slate-25: #fcfdff;
+    --slate-50: #f8fafc;
+    --slate-75: #f5f7fb;
+    --slate-100: #f1f5f9;
+    --slate-150: #ebf0f6;
+    --slate-200: #e2e8f0;
+    --slate-250: #d9e2ec;
+    --slate-300: #cbd5e1;
+    --slate-350: #bcc8d8;
+    --slate-400: #94a3b8;
+    --slate-500: #64748b;
+    --slate-600: #475569;
+    --slate-700: #334155;
+    --slate-800: #1f2937;
+    --slate-900: #0f172a;
+
+    --surface: #ffffff;
+    --surface-soft: #fbfcfe;
+    --surface-soft-2: #f9fbfd;
+
+    --success: #22c55e;
+    --success-soft: rgba(34, 197, 94, 0.08);
+
+    --shadow-xs: 0 1px 2px rgba(15, 23, 42, 0.03);
+    --shadow-sm: 0 6px 14px rgba(15, 23, 42, 0.05);
+    --shadow-md: 0 14px 30px rgba(15, 23, 42, 0.07);
+    --shadow-lg: 0 22px 48px rgba(15, 23, 42, 0.09);
+    --shadow-xl: 0 36px 80px rgba(15, 23, 42, 0.12);
+
+    --radius-xs: 10px;
+    --radius-sm: 14px;
+    --radius-md: 18px;
+    --radius-lg: 22px;
+    --radius-xl: 28px;
+    --radius-2xl: 34px;
+
+    --transition-fast: 0.16s ease;
+    --transition-main: 0.26s ease;
+    --transition-slow: 0.38s ease;
+}
+
+html,
+body {
+    min-height: 100%;
+}
+
+body {
+    margin: 0;
+    font-family: "Inter", "Segoe UI", Arial, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+    color: var(--slate-800);
+    background:
+        radial-gradient(circle at top left, rgba(61, 124, 255, 0.07), transparent 30%),
+        radial-gradient(circle at bottom right, rgba(37, 92, 221, 0.07), transparent 28%),
+        linear-gradient(135deg, #eef2f7 0%, #f7f9fc 45%, #edf2f8 100%);
+    overflow-x: hidden;
+}
+
+*,
+*::before,
+*::after {
+    box-sizing: border-box;
+}
+
+
+.page-shell {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+}
+
+.page-wrapper {
+    width: 100%;
+    max-width: 640px;
+}
+
+.booking-card {
+    position: relative;
+    width: 100%;
+    overflow: hidden;
+    border-radius: 32px;
+    background:
+        linear-gradient(180deg, rgba(255,255,255,0.985) 0%, rgba(255,255,255,0.965) 100%);
+    border: 1px solid rgba(226, 232, 240, 0.94);
+    box-shadow:
+        0 28px 80px rgba(15, 23, 42, 0.11),
+        0 10px 26px rgba(15, 23, 42, 0.06);
+}
+
+.booking-card::before {
+    content: "";
+    position: absolute;
+    inset: 0 0 auto 0;
+    height: 6px;
+    background: linear-gradient(90deg, var(--primary-500), var(--primary-300));
+}
+
+.booking-card::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background:
+        radial-gradient(circle at top center, rgba(61, 124, 255, 0.08), transparent 30%),
+        linear-gradient(180deg, rgba(255,255,255,0.06), transparent 20%);
+}
+
+.booking-card-inner {
+    position: relative;
+    z-index: 2;
+    padding: 22px 22px 24px;
+}
+
+
+.booking-topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 18px;
+}
+
+.top-chip,
+.top-status {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 42px;
+    padding: 0 15px;
+    border-radius: 999px;
+    background: linear-gradient(180deg, #ffffff, #f8fbff);
+    border: 1px solid #d7e5ff;
+    color: var(--primary-600);
+    font-size: 0.9rem;
+    font-weight: 800;
+    box-shadow: var(--shadow-xs);
+    white-space: nowrap;
+}
+
+.top-chip i {
+    font-size: 0.92rem;
+}
+
+.top-status {
+    color: var(--slate-600);
+    border-color: #dfe6ee;
+    background: linear-gradient(180deg, #ffffff, #fafbfd);
+}
+
+.top-status-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: var(--success);
+    box-shadow: 0 0 0 5px var(--success-soft);
+}
+
+.booking-hero {
+    text-align: center;
+    margin-bottom: 18px;
+}
+
+.main-icon {
+    position: relative;
+    width: 110px;
+    height: 110px;
+    margin: 10px auto 18px;
+    border-radius: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #ffffff;
+    font-size: 2rem;
+    background: linear-gradient(145deg, var(--primary-500), var(--primary-700));
+    box-shadow:
+        0 24px 54px rgba(47, 108, 240, 0.26),
+        inset 0 1px 0 rgba(255,255,255,0.18);
+}
+
+.main-icon::before {
+    content: "";
+    position: absolute;
+    inset: 8px;
+    border-radius: 24px;
+    border: 1px solid rgba(255,255,255,0.16);
+}
+
+.main-icon::after {
+    content: "";
+    position: absolute;
+    inset: -14px;
+    border-radius: 38px;
+    background: radial-gradient(circle, rgba(61,124,255,0.16), transparent 65%);
+    z-index: -1;
+}
+
+.page-title {
+    margin: 0 0 10px;
+    font-size: 2.75rem;
+    line-height: 1.02;
+    font-weight: 900;
+    letter-spacing: -0.04em;
+    color: var(--slate-900);
+}
+
+.page-subtitle {
+    margin: 0 auto;
+    max-width: 460px;
+    color: #6e7f96;
+    font-size: 1.02rem;
+    line-height: 1.75;
+}
+
+
+
+
+.steps-shell {
+    margin-bottom: 22px;
+    padding: 14px;
+    border-radius: 22px;
+    background: linear-gradient(180deg, #f9fbff, #f8fbff);
+    border: 1px solid #dbe7fb;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.9);
+}
+
+.steps-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 10px;
+}
+
+.step-card {
+    padding: 14px 12px;
+    border-radius: 18px;
+    background: linear-gradient(180deg, #ffffff, #fbfcfe);
+    border: 1px solid #e2e8f0;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-height: 84px;
+}
+
+.step-icon {
+    width: 42px;
+    height: 42px;
+    flex-shrink: 0;
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #f2f6ff;
+    color: var(--primary-600);
+    font-size: 1rem;
+    box-shadow: inset 0 0 0 1px #e2ebff;
+}
+
+.step-label {
+    display: block;
+    margin-bottom: 3px;
+    color: #9aa8b9;
+    font-size: 0.74rem;
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+}
+
+.step-value {
+    display: block;
+    color: #314055;
+    font-size: 0.98rem;
+    font-weight: 900;
+    line-height: 1.2;
+}
+
+.section-block {
+    margin-bottom: 24px;
+}
+
+.section-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 14px;
+}
+
+.section-header-main {
+    min-width: 0;
+}
+
+
+.section-title {
+    margin: 0 0 6px;
+    color: var(--slate-900);
+    font-size: 1.22rem;
+    line-height: 1.18;
+    font-weight: 900;
+}
+
+.section-description {
+    margin: 0;
+    max-width: 360px;
+    color: #6e7f96;
+    font-size: 0.98rem;
+    line-height: 1.72;
+}
+
+.section-badge {
+    flex-shrink: 0;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 42px;
+    padding: 0 14px;
+    border-radius: 999px;
+    background: linear-gradient(180deg, #ffffff, #fafbfd);
+    border: 1px solid #e1e7ef;
+    color: #5b6b80;
+    font-size: 0.9rem;
+    font-weight: 800;
+    white-space: nowrap;
+    box-shadow: var(--shadow-xs);
+}
+
+
+.soft-panel {
+    background: linear-gradient(180deg, #ffffff, #fbfcfe);
+    border: 1px solid #dde6ef;
+    border-radius: 24px;
+    padding: 18px;
+    box-shadow: 0 10px 24px rgba(15, 23, 42, 0.04);
+}
+
+.form-label {
+    display: inline-block;
+    margin-bottom: 10px;
+    color: #39485c;
+    font-size: 0.98rem;
+    font-weight: 900;
+}
+
+.field-shell {
+    position: relative;
+}
+
+.field-shell .field-icon {
+    position: absolute;
+    left: 16px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 20px;
+    text-align: center;
+    color: #9aa9bc;
+    pointer-events: none;
+    z-index: 2;
+}
+
+.field-shell.with-icon input[type="text"] {
+    padding-left: 46px;
+}
+
+input[type="text"],
+textarea {
+    width: 100%;
+    border: 1px solid #d8e1eb;
+    background: linear-gradient(180deg, #ffffff, #fbfcfe);
+    color: #314055;
+    border-radius: 18px;
+    padding: 15px 16px;
+    font-size: 0.98rem;
+    line-height: 1.4;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.85);
+    transition:
+        border-color var(--transition-main),
+        box-shadow var(--transition-main),
+        background var(--transition-main);
+}
+
+input[type="text"]:hover,
+textarea:hover {
+    border-color: #cad4e2;
+}
+
+input[type="text"]:focus,
+textarea:focus {
+    outline: none;
+    border-color: #9dbdff;
+    background: #ffffff;
+    box-shadow:
+        0 0 0 4px rgba(61, 124, 255, 0.10),
+        0 12px 24px rgba(61, 124, 255, 0.06);
+}
+
+textarea {
+    min-height: 132px;
+    resize: vertical;
+}
+
+.field-hint {
+    margin-top: 10px;
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    color: #6f8096;
+    font-size: 0.92rem;
+    line-height: 1.65;
+}
+
+.field-hint i {
+    color: var(--primary-600);
+    margin-top: 2px;
+}
+
+.slot-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 40px;
+    padding: 0 14px;
+    border-radius: 999px;
+    background: linear-gradient(180deg, #ffffff, #f8fafc);
+    border: 1px solid #e1e7ef;
+    color: #48576d;
+    font-size: 0.88rem;
+    font-weight: 800;
+    box-shadow: var(--shadow-xs);
+}
+
+.slot-chip strong {
+    color: #2f3f54;
+}
+
+.slot-chip i {
+    color: #98a7ba;
+}
+
+
+.legend-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 14px;
+}
+
+.legend-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 38px;
+    padding: 0 12px;
+    border-radius: 999px;
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    color: #55657a;
+    font-size: 0.84rem;
+    font-weight: 800;
+}
+
+.legend-dot,
+.legend-box {
+    width: 13px;
+    height: 13px;
+    border-radius: 4px;
+    flex-shrink: 0;
+}
+
+.legend-box.available {
+    background: linear-gradient(180deg, #ffffff, #f8fbff);
+    border: 1px solid #dbe4ef;
+}
+
+.legend-dot.selected {
+    background: linear-gradient(135deg, var(--primary-600), var(--primary-400));
+    border-radius: 999px;
+}
+
+.legend-box.busy {
+    background:
+        repeating-linear-gradient(
+            45deg,
+            #eef2f6,
+            #eef2f6 5px,
+            #e3e8ee 5px,
+            #e3e8ee 10px
+        );
+    border: 1px solid #d5dde7;
+}
+
+.horarios-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 14px;
+    margin-top: 2px;
+}
+
+.horario-card {
+    position: relative;
+    display: block;
+    margin: 0;
+    cursor: pointer;
+}
+
+.horario-card input {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+}
+
+.horario-card span {
+    position: relative;
+    min-height: 88px;
+    overflow: hidden;
+    border-radius: 22px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 7px;
+    padding: 16px 12px;
+    text-align: center;
+    background: linear-gradient(180deg, #ffffff, #fbfcfe);
+    border: 1px solid #dde5ee;
+    color: #34445a;
+    box-shadow:
+        inset 0 1px 0 rgba(255,255,255,0.9),
+        0 6px 14px rgba(15, 23, 42, 0.03);
+    transition:
+        transform var(--transition-main),
+        border-color var(--transition-main),
+        box-shadow var(--transition-main),
+        background var(--transition-main),
+        color var(--transition-main);
+}
+
+.horario-card span::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(120deg, transparent 20%, rgba(255,255,255,0.45) 50%, transparent 80%);
+    transform: translateX(-120%);
+    transition: transform 0.8s ease;
+}
+
+.horario-card:hover span::before {
+    transform: translateX(120%);
+}
+
+.horario-card:hover span {
+    transform: translateY(-3px);
+    border-color: #bfd3f8;
+    box-shadow:
+        0 16px 30px rgba(61, 124, 255, 0.09),
+        0 8px 16px rgba(15, 23, 42, 0.04);
+}
+
+.slot-time {
+    display: block;
+    font-size: 1.08rem;
+    line-height: 1;
+    letter-spacing: -0.02em;
+    font-weight: 900;
+}
+
+.slot-meta {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    color: #97a5b7;
+    font-size: 0.78rem;
+    font-weight: 900;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.slot-meta i {
+    font-size: 0.8rem;
+}
+
+.horario-card input:checked + span {
+    color: #ffffff;
+    background: linear-gradient(145deg, var(--primary-600), var(--primary-500));
+    border-color: transparent;
+    box-shadow:
+        0 22px 42px rgba(47, 108, 240, 0.22),
+        inset 0 1px 0 rgba(255,255,255,0.16);
+}
+
+.horario-card input:checked + span .slot-meta {
+    color: rgba(255,255,255,0.82);
+}
+
+.horario-card input:checked + span::after {
+    content: "\F26A";
+    font-family: "bootstrap-icons";
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    width: 24px;
+    height: 24px;
+    border-radius: 999px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(255,255,255,0.16);
+    color: #ffffff;
+    font-size: 0.76rem;
+}
+
+.horario-card.ocupado {
+    cursor: not-allowed;
+}
+
+.horario-card.ocupado span {
+    background:
+        repeating-linear-gradient(
+            45deg,
+            #f1f4f8,
+            #f1f4f8 8px,
+            #e7ecf2 8px,
+            #e7ecf2 16px
+        );
+    border: 1px dashed #d4dde8;
+    color: #9ba9ba;
+    box-shadow: none;
+}
+
+.horario-card.ocupado span::before {
+    display: none;
+}
+
+.horario-card.ocupado:hover span {
+    transform: none;
+    border-color: #d4dde8;
+    box-shadow: none;
+}
+
+.horario-card.ocupado .slot-meta {
+    color: #a5b1c0;
+}
+
+
+.error-box {
+    display: grid;
+    grid-template-columns: 42px 1fr;
+    gap: 12px;
+    align-items: start;
+    margin-bottom: 18px;
+    padding: 14px;
+    border-radius: 18px;
+    background: linear-gradient(135deg, #fffdf6, #fff9ee);
+    border: 1px solid #f8e0a3;
+    color: #8a5a12;
+    box-shadow: var(--shadow-xs);
+}
+
+.error-icon {
+    width: 42px;
+    height: 42px;
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #fff5de;
+    color: #c67b00;
+    font-size: 1rem;
+}
+
+.error-title {
+    margin: 0 0 4px;
+    color: #7a4a08;
+    font-size: 0.96rem;
+    font-weight: 900;
+}
+
+.error-text {
+    margin: 0;
+    font-size: 0.9rem;
+    line-height: 1.65;
+}
+
+
+.description-wrap {
+    position: relative;
+}
+
+.description-wrap::after {
+    content: "";
+    position: absolute;
+    right: 16px;
+    bottom: 14px;
+    width: 78px;
+    height: 20px;
+    border-radius: 999px;
+    background: linear-gradient(90deg, rgba(255,255,255,0), rgba(255,255,255,0.94));
+    pointer-events: none;
+}
+
+
+.actions-wrap {
+    margin-top: 22px;
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 12px;
+}
+
+.btn-main {
+    position: relative;
+    overflow: hidden;
+    height: 62px;
+    width: 100%;
+    border: none;
+    border-radius: 20px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    background: linear-gradient(145deg, var(--primary-600), var(--primary-500));
+    color: #ffffff;
+    font-size: 1rem;
+    font-weight: 900;
+    box-shadow:
+        0 18px 36px rgba(47, 108, 240, 0.22),
+        inset 0 1px 0 rgba(255,255,255,0.16);
+    transition:
+        transform var(--transition-main),
+        box-shadow var(--transition-main),
+        filter var(--transition-main);
+}
+
+.btn-main::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(120deg, transparent 22%, rgba(255,255,255,0.20) 50%, transparent 78%);
+    transform: translateX(-140%);
+    transition: transform 0.8s ease;
+}
+
+.btn-main:hover::before {
+    transform: translateX(140%);
+}
+
+.btn-main:hover {
+    transform: translateY(-2px);
+    filter: brightness(1.02);
+    box-shadow:
+        0 24px 48px rgba(47, 108, 240, 0.26),
+        inset 0 1px 0 rgba(255,255,255,0.16);
+}
+
+.btn-back {
+    height: 56px;
+    width: 100%;
+    border-radius: 18px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 9px;
+    text-decoration: none;
+    background: linear-gradient(180deg, #ffffff, #f8fafc);
+    border: 1px solid #d8e1eb;
+    color: #4a5a70;
+    font-size: 0.98rem;
+    font-weight: 800;
+    box-shadow: var(--shadow-xs);
+    transition:
+        transform var(--transition-main),
+        box-shadow var(--transition-main),
+        border-color var(--transition-main),
+        color var(--transition-main);
+}
+
+.btn-back:hover {
+    transform: translateY(-2px);
+    color: var(--primary-700);
+    border-color: #bcd0f5;
+    box-shadow: var(--shadow-sm);
+}
+
+.footnote {
+    margin-top: 14px;
+    text-align: center;
+    color: #8a99ab;
+    font-size: 0.84rem;
+    line-height: 1.7;
+}
+
+.footnote strong {
+    color: #55657a;
+}
+
+
+.flatpickr-calendar {
+    border: 1px solid #dfe6ef !important;
+    border-radius: 22px !important;
+    box-shadow: 0 24px 60px rgba(15, 23, 42, 0.16) !important;
+    overflow: hidden !important;
+}
+
+.flatpickr-months {
+    background: linear-gradient(145deg, var(--primary-600), var(--primary-500));
+}
+
+.flatpickr-current-month,
+.flatpickr-monthDropdown-months,
+.flatpickr-prev-month,
+.flatpickr-next-month,
+span.flatpickr-weekday {
+    color: #ffffff !important;
+}
+
+span.flatpickr-weekday {
+    font-weight: 800 !important;
+}
+
+.flatpickr-day.today {
+    border-color: #bcd0ff !important;
+}
+
+.flatpickr-day.selected,
+.flatpickr-day.startRange,
+.flatpickr-day.endRange,
+.flatpickr-day.selected:hover,
+.flatpickr-day.startRange:hover,
+.flatpickr-day.endRange:hover {
+    background: var(--primary-600) !important;
+    border-color: var(--primary-600) !important;
+}
+
+.flatpickr-day:hover {
+    background: var(--primary-50) !important;
+    border-color: var(--primary-100) !important;
+}
+
+
+.pulse-once {
+    animation: pulseButton 0.45s ease;
+}
+
+@keyframes pulseButton {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.015); }
+    100% { transform: scale(1); }
+}
+
+
+@media (max-width: 991.98px) {
+    .page-shell {
+        padding: 16px;
     }
 
     .page-wrapper {
-        min-height: 100vh;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        padding: 20px;
+        max-width: 100%;
     }
 
-    .schedule-card {
-        width: 100%;
-        max-width: 650px;
-        border: none;
-        border-radius: 20px;
-        margin: 0 auto;
+    .booking-card {
+        max-width: 100%;
     }
 
-    .mobile-content {
-        width: 100%;
-        margin: 0 auto;
-    }
-
-    .brand-icon {
-        width: 70px;
-        height: 70px;
-        background-color: #0d6efd;
-        color: white;
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 28px;
-        margin: 0 auto 15px;
+    .booking-card-inner {
+        padding: 24px 20px 26px;
     }
 
     .page-title {
-        font-size: 1.8rem;
-        font-weight: 700;
-        color: #212529;
+        font-size: 2.45rem;
     }
 
     .page-subtitle {
-        font-size: 0.95rem;
-        color: #6c757d;
+        max-width: 100%;
+    }
+
+    .section-description {
+        max-width: 100%;
+    }
+}
+
+@media (max-width: 767.98px) {
+    .page-shell {
+        padding: 10px;
+        align-items: flex-start;
+    }
+
+    .page-wrapper {
+        max-width: 100%;
+    }
+
+    .booking-card {
+        width: 100%;
+        max-width: 100%;
+        border-radius: 26px;
+    }
+
+    .booking-card-inner {
+        padding: 22px 18px 24px;
+    }
+
+    .booking-topbar {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 10px;
+        margin-bottom: 18px;
+    }
+
+    .top-chip,
+    .top-status {
+        width: 100%;
+        justify-content: center;
+        min-height: 42px;
+        padding: 0 14px;
+        font-size: 0.88rem;
+    }
+
+    .main-icon {
+        width: 100px;
+        height: 100px;
+        margin: 6px auto 16px;
+        border-radius: 28px;
+    }
+
+    .page-title {
+        font-size: 2.1rem;
+        line-height: 1.04;
+    }
+
+    .page-subtitle {
+        font-size: 0.96rem;
+        line-height: 1.7;
+    }
+
+    .hero-pills {
+        gap: 8px;
+        margin: 16px 0 18px;
+    }
+
+    .hero-pill {
+        min-height: 38px;
+        padding: 0 12px;
+        font-size: 0.84rem;
+        justify-content: center;
+    }
+
+    .steps-shell {
+        padding: 12px;
+        border-radius: 20px;
+        margin-bottom: 18px;
+    }
+
+    .steps-grid {
+        grid-template-columns: 1fr;
+        gap: 10px;
+    }
+
+    .step-card {
+        min-height: 74px;
+        padding: 12px;
+        border-radius: 16px;
+    }
+
+    .step-icon {
+        width: 38px;
+        height: 38px;
+        border-radius: 12px;
+        font-size: 0.92rem;
+    }
+
+    .step-label {
+        font-size: 0.68rem;
+    }
+
+    .step-value {
+        font-size: 0.92rem;
+    }
+
+    .helper-box {
+        padding: 16px 14px;
+        border-radius: 20px;
+    }
+
+    .helper-box-inner {
+        grid-template-columns: 40px 1fr;
+        gap: 10px;
+    }
+
+    .helper-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 12px;
+    }
+
+    .helper-title {
+        font-size: 0.98rem;
+    }
+
+    .helper-text {
+        font-size: 0.91rem;
+        line-height: 1.65;
+    }
+
+    .section-header {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 10px;
+        margin-bottom: 12px;
+    }
+
+    .section-badge {
+        align-self: flex-start;
+        min-height: 38px;
+        padding: 0 12px;
+        font-size: 0.84rem;
+    }
+
+    .section-title {
+        font-size: 1.14rem;
+        line-height: 1.16;
+    }
+
+    .section-description {
+        max-width: 100%;
+        font-size: 0.94rem;
+        line-height: 1.64;
+    }
+
+    .soft-panel {
+        padding: 14px;
+        border-radius: 20px;
+    }
+
+    .slot-toolbar {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 10px;
+    }
+
+    .slot-toolbar-left,
+    .slot-toolbar-right {
+        width: 100%;
+        justify-content: flex-start;
+    }
+
+    .slot-chip {
+        min-height: 36px;
+        padding: 0 12px;
+        font-size: 0.82rem;
+    }
+
+    .legend-row {
+        gap: 8px;
+        margin-bottom: 12px;
+    }
+
+    .legend-chip {
+        min-height: 34px;
+        padding: 0 10px;
+        font-size: 0.78rem;
+    }
+
+    .horarios-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 12px;
+    }
+
+    .horario-card span {
+        min-height: 84px;
+        padding: 14px 10px;
+        border-radius: 18px;
+    }
+
+    .slot-time {
+        font-size: 1rem;
+    }
+
+    .slot-meta {
+        font-size: 0.72rem;
+        gap: 4px;
+    }
+
+    .actions-wrap {
+        gap: 10px;
+    }
+
+    .btn-main {
+        height: 58px;
+        border-radius: 18px;
+        font-size: 0.96rem;
+    }
+
+    .btn-back {
+        height: 52px;
+        border-radius: 16px;
+        font-size: 0.94rem;
+    }
+
+    .footnote {
+        font-size: 0.8rem;
+        line-height: 1.6;
+    }
+}
+
+@media (max-width: 575.98px) {
+    .page-shell {
+        padding: 0;
+        align-items: stretch;
+    }
+
+    .page-wrapper {
+        max-width: 100%;
+    }
+
+    .booking-card {
+        width: 100%;
+        max-width: 100%;
+        min-height: 100vh;
+        border-radius: 0;
+        border-left: none;
+        border-right: none;
+        box-shadow: none;
+    }
+
+    .booking-card-inner {
+        padding: 22px 16px 26px;
+    }
+
+    .page-title {
+        font-size: 1.92rem;
+    }
+
+    .page-subtitle {
+        font-size: 0.92rem;
+    }
+
+    .top-chip,
+    .top-status {
+        font-size: 0.83rem;
+        min-height: 40px;
+        padding: 0 12px;
+    }
+
+    .main-icon {
+        width: 92px;
+        height: 92px;
+        border-radius: 24px;
+    }
+
+    .hero-pill {
+        width: 100%;
+    }
+
+    .helper-box-inner {
+        grid-template-columns: 1fr;
+    }
+
+    .helper-icon {
+        margin: 0 auto;
+    }
+
+    .helper-title,
+    .helper-text {
+        text-align: center;
+    }
+
+    .section-badge {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .soft-panel {
+        padding: 12px;
+        border-radius: 18px;
     }
 
     .form-label {
-        font-weight: 600;
-        margin-bottom: 8px;
-        color: #212529;
+        font-size: 0.94rem;
     }
 
-    input[type="date"],
-    textarea,
-    select,
-    input[type="text"] {
+    input[type="text"],
+    textarea {
+        padding: 14px 14px;
+        border-radius: 16px;
+        font-size: 0.94rem;
+    }
+
+    .field-shell.with-icon input[type="text"] {
+        padding-left: 42px;
+    }
+
+    .field-shell .field-icon {
+        left: 14px;
+    }
+
+    .field-hint {
+        font-size: 0.86rem;
+    }
+
+    .slot-toolbar-left,
+    .slot-toolbar-right {
+        gap: 8px;
+    }
+
+    .slot-chip {
         width: 100%;
-        padding: 12px 14px;
-        border: 1px solid #ced4da;
-        border-radius: 12px;
-        outline: none;
-        transition: 0.2s;
-        background-color: #fff;
+        justify-content: center;
     }
 
-    input[type="date"]:focus,
-    textarea:focus,
-    select:focus,
-    input[type="text"]:focus {
-        border-color: #86b7fe;
-        box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.15);
+    .legend-chip {
+        flex: 1 1 100%;
+        justify-content: center;
+    }
+
+    .horarios-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px;
+    }
+
+    .horario-card span {
+        min-height: 78px;
+        padding: 12px 8px;
+        border-radius: 16px;
+    }
+
+    .slot-time {
+        font-size: 0.98rem;
+    }
+
+    .slot-meta {
+        font-size: 0.68rem;
     }
 
     textarea {
         min-height: 120px;
-        resize: vertical;
-    }
-
-    .section-title {
-        font-size: 1rem;
-        font-weight: 700;
-        color: #212529;
-        margin-bottom: 12px;
-    }
-
-    .horarios-grid {
-        display: grid;
-        grid-template-columns: repeat(4, 1fr);
-        gap: 12px;
-        margin-top: 10px;
-        margin-bottom: 20px;
-    }
-
-    .horario-card {
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        border-radius: 16px;
-        overflow: hidden;
-        cursor: pointer;
-    }
-
-    .horario-card span {
-        width: 100%;
-        padding: 22px 14px;
-        background: #e3ffdd;
-        border: 2px solid #b2fc9b;
-        font-size: 18px;
-        font-weight: 600;
-        text-align: center;
-        transition: 0.2s ease;
-    }
-
-    .horario-card:hover span {
-        background: #88ff88;
-        border-color: #15ff00;
-        color: #ffffff;
-        transform: translateY(-1px);
-    }
-
-    .horario-card input:checked + span {
-        background: #26ff38;
-        color: white;
-        border-color: #1eff00;
-        box-shadow: 0 6px 16px rgba(13, 110, 253, 0.25);
-    }
-
-    .horario-card.ocupado span {
-        background: #ff3247;
-        color: white;
-        border-color: #ff0019;
-        cursor: not-allowed;
     }
 
     .btn-main {
+        height: 56px;
+        border-radius: 16px;
+    }
+
+    .btn-back {
         height: 50px;
-        border-radius: 12px;
-        font-weight: 600;
-        font-size: 1rem;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 8px;
-        text-align: center;
-        width: 100%;
+        border-radius: 15px;
     }
-
-    .error-box {
-        border-radius: 12px;
-    }
-
-    .helper-box {
-        background-color: #f8f9fa;
-        border-radius: 14px;
-        padding: 14px;
-        margin-bottom: 20px;
-        text-align: center;
-    }
-
-    .helper-box p {
-        margin: 0;
-        color: #6c757d;
-        font-size: 0.95rem;
-    }
-
-    @media (max-width: 768px) {
-        .horarios-grid {
-            grid-template-columns: repeat(3, 1fr);
-        }
-    }
-
-    @media (max-width: 576px) {
-        body {
-            background: #ffffff;
-        }
-
-        .page-wrapper {
-            padding: 0;
-        }
-
-        .schedule-card {
-            max-width: 100%;
-            min-height: 100vh;
-            border-radius: 0;
-            box-shadow: none !important;
-        }
-
-        .mobile-content {
-            max-width: 380px;
-            width: 100%;
-            margin: 0 auto;
-        }
-
-        .horarios-grid {
-            grid-template-columns: repeat(2, 1fr);
-            gap: 10px;
-        }
-
-        .horario-card span {
-            padding: 14px 8px;
-            font-size: 0.95rem;
-        }
-    }
+}
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="page-wrapper">
-    <div class="card shadow-lg schedule-card p-4 p-md-5">
-        <div class="mobile-content">
+<div class="page-shell">
+    <div class="page-wrapper">
+        <section class="booking-card">
+            <div class="booking-card-inner">
 
-            <div class="text-center mb-4">
-                <div class="brand-icon">
-                    <i class="bi bi-calendar-plus"></i>
-                </div>
-                <h1 class="page-title mb-2">Agendamento</h1>
-                <p class="page-subtitle mb-0">
-                    Escolha o hórario de sua preferência
-                </p>
-            </div>
-
-            <div class="helper-box">
-                <p>Selecione um horário disponível e finalize seu agendamento!</p>
-            </div>
-
-            <form method="GET" class="mb-4" id="form-data">
-                <label class="form-label" for="data">Data</label>
-                {{ form.data }}
-            </form>
-
-            <form method="POST">
-                {% csrf_token %}
-
-                <input type="hidden" name="data" value="{{ data_selecionada }}">
-
-                {% if form.horario.errors %}
-                    <div class="alert alert-danger text-center mt-2 mb-3 error-box" role="alert">
-                        {% for error in form.horario.errors %}
-                            {{ error }}
-                        {% endfor %}
+                <div class="booking-topbar">
+                    <div class="top-chip">
+                        <i class="bi bi-calendar-week"></i>
+                        <span>Reserva online</span>
                     </div>
-                {% endif %}
 
-                <div class="mb-4">
-                    <h3 class="section-title">Escolha um horário</h3>
+                    <div class="top-status">
+                        <span class="top-status-dot"></span>
+                        <span>Disponibilidade em tempo real</span>
+                    </div>
+                </div>
 
-                    <div class="horarios-grid">
-                        {% for horario in horarios %}
-                            <label class="horario-card {% if horario in horarios_ocupados or horario in bloqueados %}ocupado{% endif %}">
-                                <input
-                                    type="radio"
-                                    name="horario"
-                                    value="{{ horario }}"
-                                    hidden
-                                    {% if horario in horarios_ocupados or horario in bloqueados %}disabled{% endif %}
-                                >
-                                <span>
-                                    {{ horario }}
-                                    {% if horario in horarios_ocupados or horario in bloqueados %}
-                                        <i class="bi bi-lock-fill"></i>
-                                    {% endif %}
+                <div class="booking-hero">
+                    <div class="main-icon">
+                        <i class="bi bi-calendar-plus"></i>
+                    </div>
+
+                    <h1 class="page-title">Agendamento</h1>
+
+                    <p class="page-subtitle">
+                        Escolha o hórario de uma preferência,selecione um horário disponível e
+                        finalize seu agendamento.
+  
+                    </p>
+
+                    
+                </div>
+
+                <div class="steps-shell">
+                    <div class="steps-grid">
+                        <div class="step-card">
+                            <div class="step-icon">
+                                <i class="bi bi-calendar3"></i>
+                            </div>
+                            <div>
+                                <span class="step-label">Etapa 1</span>
+                                <span class="step-value">Escolha<br>a data</span>
+                            </div>
+                        </div>
+
+                        <div class="step-card">
+                            <div class="step-icon">
+                                <i class="bi bi-grid-3x3-gap"></i>
+                            </div>
+                            <div>
+                                <span class="step-label">Etapa 2</span>
+                                <span class="step-value">Selecione<br>o horário</span>
+                            </div>
+                        </div>
+
+                        <div class="step-card">
+                            <div class="step-icon">
+                                <i class="bi bi-check2-square"></i>
+                            </div>
+                            <div>
+                                <span class="step-label">Etapa 3</span>
+                                <span class="step-value">Confirme<br>a reserva</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="helper-box">
+                    <div class="helper-box-inner">
+                        
+
+                        
+                    </div>
+                </div>
+
+                <div class="section-block">
+                    <div class="section-header">
+                        <div class="section-header-main">
+                            <h2 class="section-title">Defina o dia do agendamento</h2>
+                            <p class="section-description">
+                                Selecione a data pelo calendário ou digite manualmente no campo.
+                            </p>
+                        </div>
+
+                        <div class="section-badge">
+                            <i class="bi bi-calendar2-event"></i>
+                            <span>Seleção inteligente</span>
+                        </div>
+                    </div>
+
+                    <div class="soft-panel">
+                        <form method="GET" id="form-data">
+                            <label class="form-label" for="data">Data</label>
+
+                            <div class="field-shell with-icon">
+                                <span class="field-icon">
+                                    <i class="bi bi-calendar-date"></i>
                                 </span>
-                            </label>
-                        {% endfor %}
+                                {{ form.data }}
+                            </div>
+
+                            <div class="field-hint">
+                                <i class="bi bi-mouse"></i>
+                                <span>
+                                    Clique no campo para abrir o calendário ou digite no formato desejado.
+                                </span>
+                            </div>
+                        </form>
                     </div>
                 </div>
 
-                <div class="mb-4">
-                    <label class="form-label">Descrição</label>
-                    {{ form.descricao }}
-                </div>
+                <form method="POST">
+                    {% csrf_token %}
+                    <input type="hidden" name="data" value="{{ data_selecionada }}">
 
-                <div class="d-grid gap-2">
-                    <button type="submit" class="btn btn-primary btn-main">
-                        <i class="bi bi-check-circle"></i>
-                        <span>Agendar</span>
-                    </button>
+                    {% if form.horario.errors %}
+                        <div class="error-box">
+                            <div class="error-icon">
+                                <i class="bi bi-exclamation-triangle"></i>
+                            </div>
 
-                    <a href="/" class="btn btn-outline-secondary btn-main">
-                        <i class="bi bi-house-door"></i>
-                        <span>Voltar</span>
-                    </a>
-                </div>
-            </form>
+                            <div>
+                                <div class="error-title">Horário não selecionado</div>
+                                <p class="error-text">
+                                    {% for error in form.horario.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </p>
+                            </div>
+                        </div>
+                    {% endif %}
 
-        </div>
+                    <div class="section-block">
+                        <div class="section-header">
+                            <div class="section-header-main">
+                                <h2 class="section-title">Escolha um horário disponível</h2>
+                                
+                            </div>
+
+                            <div class="section-badge">
+                                <i class="bi bi-clock"></i>
+                                <span>Atualizado por data</span>
+                            </div>
+                        </div>
+
+                        <div class="soft-panel">
+                            
+
+                            <div class="legend-row">
+                                <span class="legend-chip">
+                                    <span class="legend-box available"></span>
+                                    Disponível
+                                </span>
+
+                                <span class="legend-chip">
+                                    <span class="legend-dot selected"></span>
+                                    Selecionado
+                                </span>
+
+                                <span class="legend-chip">
+                                    <span class="legend-box busy"></span>
+                                    Ocupado
+                                </span>
+                            </div>
+
+                            <div class="horarios-grid">
+                                {% for horario in horarios %}
+                                    <label class="horario-card {% if horario in horarios_ocupados or horario in bloqueados %}ocupado{% endif %}">
+                                        <input
+                                            type="radio"
+                                            name="horario"
+                                            value="{{ horario }}"
+                                            {% if horario in horarios_ocupados or horario in bloqueados %}disabled{% endif %}
+                                        >
+
+                                        <span>
+                                            <strong class="slot-time">{{ horario }}</strong>
+
+                                            {% if horario in horarios_ocupados or horario in bloqueados %}
+                                                <small class="slot-meta">
+                                                    <i class="bi bi-lock"></i>
+                                                    Ocupado
+                                                </small>
+                                                
+                                            {% endif %}
+                                        </span>
+                                    </label>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="section-block">
+                        <div class="section-header">
+                            <div class="section-header-main">
+                                <h2 class="section-title">Adicione uma descrição</h2>
+                                <p class="section-description">
+                                    Esse campo ajuda a enriquecer o contexto do agendamento e deixa
+                                    o registro mais completo no sistema.
+                                </p>
+                            </div>
+
+                            <div class="section-badge">
+                                <i class="bi bi-pencil-square"></i>
+                                <span>Opcional</span>
+                            </div>
+                        </div>
+
+                        <div class="soft-panel">
+                            <label class="form-label" for="id_descricao">Descrição</label>
+
+                            <div class="description-wrap">
+                                {{ form.descricao }}
+                            </div>
+
+                            <div class="field-hint">
+                                <i class="bi bi-chat-left-text"></i>
+                                <span>
+                                    Use esse espaço para observações, preferências ou detalhes da reserva.
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="actions-wrap">
+                        <button type="submit" class="btn-main">
+                            <i class="bi bi-check2-circle"></i>
+                            <span>Confirmar Agendamento</span>
+                        </button>
+
+                        <a href="/" class="btn-back">
+                            <i class="bi bi-arrow-left"></i>
+                            <span>Voltar</span>
+                        </a>
+                    </div>
+
+                    <p class="footnote">
+                        Ao confirmar, o sistema registra a reserva conforme a disponibilidade exibida
+                        para a data escolhida. <strong>Interface otimizada para uma experiência mais profissional.</strong>
+                    </p>
+                </form>
+            </div>
+        </section>
     </div>
 </div>
 {% endblock %}
@@ -309,6 +1521,9 @@
 <script>
 document.addEventListener("DOMContentLoaded", function () {
     const campoData = document.getElementById("data");
+    const formData = document.getElementById("form-data");
+    const horarioInputs = document.querySelectorAll('input[name="horario"]');
+    const submitButton = document.querySelector(".btn-main");
 
     if (campoData) {
         flatpickr(campoData, {
@@ -316,7 +1531,8 @@ document.addEventListener("DOMContentLoaded", function () {
             allowInput: true,
             minDate: "today",
             locale: flatpickr.l10ns.pt,
-            clickOpens: true
+            clickOpens: true,
+            disableMobile: true
         });
 
         campoData.addEventListener("input", function (e) {
@@ -336,9 +1552,22 @@ document.addEventListener("DOMContentLoaded", function () {
         });
 
         campoData.addEventListener("change", function () {
-            document.getElementById("form-data").submit();
+            if (formData) {
+                formData.submit();
+            }
         });
     }
+
+    horarioInputs.forEach(function (input) {
+        input.addEventListener("change", function () {
+            if (submitButton) {
+                submitButton.classList.add("pulse-once");
+                setTimeout(function () {
+                    submitButton.classList.remove("pulse-once");
+                }, 450);
+            }
+        });
+    });
 });
 </script>
 {% endblock %}
