@@ -1,4 +1,4 @@
-{% extends 'admin/base_admin.html' %}
+{% extends 'admin/base_admin.html' %}#sa
 
 {% block extra_css %}
 <style>
@@ -25,6 +25,113 @@ body{
     background:linear-gradient(135deg,#eef2f7,#f8fafc);
     color:var(--text);
 }
+
+.modal{
+    position: fixed;
+    inset: 0;
+    background: rgba(15,23,42,0.55);
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    opacity: 0;
+    pointer-events: none;
+    transition: 0.25s ease;
+
+    z-index: 9999;
+
+    backdrop-filter: blur(8px);
+}
+
+.modal.show{
+    opacity: 1;
+    pointer-events: all;
+}
+
+
+.modal-box{
+    background: #fff;
+    padding: 28px;
+    border-radius: 20px;
+    width: 360px;
+
+    text-align: center;
+
+    box-shadow: 0 30px 80px rgba(0,0,0,0.25);
+
+    transform: translateY(15px) scale(0.94);
+    transition: all 0.25s ease;
+}
+
+.modal.show .modal-box{
+    transform: translateY(0) scale(1);
+}
+
+
+.modal-title{
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: #111827;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+
+.modal-sub{
+    font-size: 0.9rem;
+    color: #6b7280;
+    margin-top: 6px;
+    margin-bottom: 18px;
+}
+
+
+.modal-actions{
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+}
+
+
+.btn-confirm{
+    background: linear-gradient(135deg, #ef4444, #dc2626);
+    color: #fff;
+    padding: 10px 20px;
+    border-radius: 12px;
+    font-weight: 600;
+    border: none;
+
+    transition: all 0.2s ease;
+}
+
+.btn-confirm:hover{
+    transform: translateY(-2px) scale(1.03);
+    box-shadow: 0 10px 20px rgba(220,38,38,0.3);
+}
+
+
+.btn-cancel{
+    background: #f3f4f6;
+    color: #374151;
+    padding: 10px 20px;
+    border-radius: 12px;
+    font-weight: 600;
+    border: none;
+
+    transition: all 0.2s ease;
+}
+
+.btn-cancel:hover{
+    background: #e5e7eb;
+    transform: translateY(-1px);
+}
+
+.perfil-page {
+    padding: 40px 12px;
+}
+
 
 .layout{
     display:flex;
@@ -165,24 +272,36 @@ body{
 .instruction-top{
     display:flex;
     justify-content:space-between;
+    align-items:flex-start;
     gap:12px;
     margin-bottom:12px;
 }
 
 .instruction-left{
     display:flex;
+    align-items:flex-start;
     gap:12px;
+    min-width:0;
+    flex:1;
 }
 
 .instruction-icon{
     width:45px;
     height:45px;
+    min-width:45px;
+    min-height:45px;
     border-radius:14px;
     background:#e8f0ff;
     color:var(--primary-light);
     display:flex;
     align-items:center;
     justify-content:center;
+    flex-shrink:0;
+}
+
+.instruction-left > div:last-child{
+    min-width:0;
+    flex:1;
 }
 
 .instruction-title{
@@ -210,27 +329,37 @@ body{
 
 .step-item{
     display:flex;
-    gap:10px;
+    align-items:flex-start;
+    gap:12px;
+
     background:var(--soft);
-    padding:10px;
+    padding:12px;
     border-radius:14px;
 }
 
 .step-number{
-    width:24px;
-    height:24px;
+    width:26px;
+    height:26px;
+    min-width:26px; 
+
     border-radius:50%;
     background:var(--primary);
     color:#fff;
+
     font-size:.75rem;
+    font-weight:700;
+
     display:flex;
     align-items:center;
     justify-content:center;
+
+    flex-shrink:0; 
+
+    margin-top:2px; 
 }
 
 .step-text{
-    font-size:.9rem;
-    line-height:1.5;
+    flex:1; 
 }
 
 .tips-content{
@@ -281,6 +410,22 @@ body{
     color:var(--text);
 }
 
+@media(max-width:768px){
+
+    .step-item{
+        gap:10px;
+        padding:10px;
+    }
+
+    .step-number{
+        width:24px;
+        height:24px;
+        min-width:24px;
+        font-size:.7rem;
+    }
+
+}
+
 @media(max-width:1200px){
     .instructions-wrapper{
         grid-template-columns:1fr;
@@ -302,6 +447,7 @@ body{
         padding:20px;
     }
 }
+
 </style>
 {% endblock %}
 
@@ -356,7 +502,7 @@ body{
         <i class="bi bi-person-circle"></i> Perfil
     </a>
 
-    <a href="{% url 'logout' %}">
+    <a href="{% url 'logout' %}" class="btn-sair">
         <i class="bi bi-box-arrow-right"></i> Sair
     </a>
 </div>
@@ -657,4 +803,56 @@ body{
         </div>
     </div>
 </div>
+
+
+<div id="logoutModal" class="modal">
+    <div class="modal-box">
+        <p class="modal-title">Tem certeza que deseja sair da conta?</p>
+
+        <div class="modal-actions">
+            <button id="confirmLogout" class="btn btn-confirm">Sair</button>
+            <button id="cancelLogout" class="btn btn-cancel">Cancelar</button>
+        </div>
+    </div>
+</div>
+
+<script>
+window.onload = function () {
+
+    let logoutUrl = null;
+
+    const botoes = document.querySelectorAll(".btn-sair");
+    const modal = document.getElementById("logoutModal");
+
+    const confirmLogout = document.getElementById("confirmLogout");
+    const cancelLogout = document.getElementById("cancelLogout");
+
+    console.log("Botões encontrados:", botoes.length); // DEBUG
+
+    botoes.forEach(btn => {
+        btn.onclick = function(e){
+            e.preventDefault();
+
+            logoutUrl = this.href;
+
+            modal.classList.add("show");
+        };
+    });
+
+    confirmLogout.onclick = function(){
+        if (logoutUrl) {
+            window.location.href = logoutUrl;
+        }
+    };
+
+    cancelLogout.onclick = function(){
+        modal.classList.remove("show");
+    };
+
+};
+document.getElementById('confirmLogout').addEventListener('click', function(){
+    this.innerText = "Saindo...";
+    this.style.opacity = "0.7";
+});
+</script>
 {% endblock %}

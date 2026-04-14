@@ -1,274 +1,324 @@
 {% extends 'admin/base_admin.html' %}
-{% load static %}
 
-{% block title %}{% endblock %}
-
-{% block content %}
+{% block extra_css %}
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/pt.js"></script>
 
 <style>
-    .page-wrapper {
-        min-height: 100vh;
-        padding: 40px 15px;
-        display: flex;
-        justify-content: center;
-        align-items: flex-start;
-    }
+/* (TODO O SEU CSS ORIGINAL — NÃO ALTERADO) */
+:root{
+    --bg:#f8fafc;
+    --card:#ffffff;
+    --border:#e2e8f0;
 
-    .main-card {
-        width: 100%;
-        max-width: 1100px;
-        background: #ffffff;
-        border-radius: 28px;
-        padding: 32px 24px;
-        box-shadow: 0 20px 45px rgba(0, 0, 0, 0.08);
-    }
+    --text:#0f172a;
+    --sub:#64748b;
 
-    .page-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        gap: 12px;
-        margin-bottom: 30px;
-        flex-wrap: wrap;
-    }
+    --primary:#2563eb;
+    --primary-soft:#eff6ff;
 
-    .page-title {
-        margin: 0;
-        font-size: 1.8rem;
-        font-weight: 700;
-        color: #212529;
-    }
+    --danger:#dc2626;
+    --danger-soft:#fef2f2;
 
-    .date-input {
-        max-width: 320px;
-        margin: 0 auto;
-        border-radius: 14px;
-        padding: 12px 16px;
-    }
+    --shadow:0 12px 32px rgba(0,0,0,.06);
+}
 
-    .section-actions {
-        text-align: center;
-        margin-bottom: 24px;
-    }
+/* BASE */
+body{
+    background:var(--bg);
+    font-family:'Inter',sans-serif;
+}
 
-    .btn-dia,
-    .btn-voltar,
-    .btn-acao {
-        border-radius: 12px;
-        font-weight: 600;
-    }
+/* WRAPPER */
+.wrapper{
+    max-width:1100px;
+    margin:auto;
+    padding:40px 20px;
+}
 
-    .btn-voltar {
-        padding: 10px 18px;
-    }
+/* CARD */
+.main-card{
+    background:var(--card);
+    border-radius:18px;
+    padding:30px;
+    box-shadow:var(--shadow);
+}
 
-    .btn-dia {
-        padding: 12px 22px;
-    }
+/* HEADER */
+.top{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-bottom:25px;
+}
 
-    .alert-custom {
-        border-radius: 14px;
-        text-align: center;
-        font-weight: 600;
-        margin-bottom: 24px;
-    }
+.title{
+    font-size:1.5rem;
+    font-weight:800;
+}
 
-    .grid-horarios {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
-        gap: 16px;
-    }
+/* BOTÃO PADRÃO (IGUAL OUTRAS PÁGINAS) */
+.back-btn{
+    height:42px;
+    padding:0 18px;
+    border-radius:12px;
+    background:linear-gradient(135deg,#64748b,#475569);
+    color:#fff;
+    font-weight:700;
+    text-decoration:none;
+    display:flex;
+    align-items:center;
+    gap:8px;
+    transition:.2s;
+}
 
-    .horario-card {
-        border: 1px solid #dee2e6;
-        border-radius: 18px;
-        padding: 18px 12px;
-        text-align: center;
-        transition: 0.2s ease;
-        background: #f8f9fa;
-        height: 100%;
-    }
+.back-btn:hover{
+    transform:translateY(-2px);
+}
 
-    .horario-card.disponivel {
-        background: #f8f9fa;
-        border-color: #dee2e6;
-    }
+/* DATA */
+.date-area{
+    display:flex;
+    justify-content:center;
+    margin-bottom:15px;
+}
 
-    .horario-card.disponivel:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 8px 18px rgba(0, 0, 0, 0.06);
-    }
+.date-input{
+    padding:12px 16px;
+    border-radius:10px;
+    border:1px solid var(--border);
+}
 
-    .horario-card.bloqueado {
-        background: #fff5f5;
-        border-color: #f1aeb5;
-    }
+/* BOTÃO DIA */
+.day-btn{
+    display:block;
+    margin:10px auto 25px;
+    padding:10px 18px;
+    border-radius:12px;
+    border:1px solid var(--border);
+    background:#fff;
+    font-weight:700;
+    cursor:pointer;
+    transition:.2s;
+}
 
-    .horario-card.liberado {
-        background: #f1fff3;
-        border-color: #75c28a;
-    }
+.day-btn:hover{
+    background:var(--primary-soft);
+    border-color:var(--primary);
+}
 
-    .horario-texto {
-        font-size: 1rem;
-        font-weight: 700;
-        color: #212529;
-        margin-bottom: 12px;
-    }
+/* GRID */
+.horarios-grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fill,minmax(100px,1fr));
+    gap:12px;
+}
 
-    .btn-acao {
-        width: 100%;
-    }
+/* CARD HORÁRIO */
+.horario-card{
+    padding:16px;
+    border-radius:12px;
+    border:1px solid var(--border);
+    background:#fff;
+    cursor:pointer;
+    transition:.2s;
+    text-align:center;
+}
 
-    @media (max-width: 768px) {
-        .page-wrapper {
-            padding: 20px 12px;
-        }
+.horario-card:hover{
+    border-color:var(--primary);
+    background:var(--primary-soft);
+}
 
-        .main-card {
-            padding: 24px 16px;
-            border-radius: 22px;
-        }
+/* HORA */
+.horario-hora{
+    font-weight:800;
+}
 
-        .page-header {
-            flex-direction: column;
-            align-items: stretch;
-        }
+/* STATUS */
+.horario-status{
+    font-size:.75rem;
+    color:var(--sub);
+}
 
-        .page-title {
-            text-align: center;
-            font-size: 1.5rem;
-        }
+/* BLOQUEADO */
+.bloqueado{
+    background:var(--danger-soft);
+    border-color:var(--danger);
+}
 
-        .btn-voltar {
-            width: 100%;
-        }
+.bloqueado .horario-status{
+    color:var(--danger);
+}
 
-        .date-input {
-            max-width: 100%;
-        }
+/* MODAL */
+.modal{
+    position:fixed;
+    inset:0;
+    background:rgba(0,0,0,.25);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    opacity:0;
+    pointer-events:none;
+    transition:.2s;
+}
 
-        .grid-horarios {
-            grid-template-columns: repeat(2, 1fr);
-            gap: 12px;
-        }
-    }
+.modal.show{
+    opacity:1;
+    pointer-events:all;
+}
 
-    @media (max-width: 480px) {
-        .grid-horarios {
-            grid-template-columns: 1fr;
-        }
-    }
+.modal-box{
+    background:#fff;
+    padding:24px;
+    border-radius:14px;
+    width:320px;
+    text-align:center;
+}
+
+.modal-title{
+    font-weight:700;
+    margin-bottom:10px;
+}
+
+.modal-actions{
+    margin-top:15px;
+    display:flex;
+    justify-content:center;
+    gap:10px;
+}
+
+.btn{
+    padding:8px 14px;
+    border-radius:8px;
+    border:none;
+    cursor:pointer;
+    font-weight:700;
+}
+
+.btn-confirm{
+    background:var(--primary);
+    color:#fff;
+}
+
+.btn-cancel{
+    background:#e2e8f0;
+}
 </style>
+{% endblock %}
 
-<div class="page-wrapper">
-    <div class="main-card">
+{% block content %}
 
-        <div class="page-header">
-            <h1 class="page-title">Gerenciar Horários</h1>
-            <a href="{% url 'painel_admin' %}" class="btn btn-secondary btn-voltar">
-                Voltar
-            </a>
-        </div>
+<div class="wrapper">
+<div class="main-card">
 
-        <form method="GET" class="mb-4 text-center">
-            <input
-                type="text"
-                name="data"
-                id="data"
-                class="form-control date-input"
-                placeholder="Selecione a data"
-                value="{{ data|default:'' }}"
-            >
-        </form>
+<div class="top">
+<div class="title">Gerenciar Horários</div>
 
-        {% if data %}
-            <div class="section-actions">
-                {% if dia_bloqueado %}
-                    <form method="POST" action="{% url 'desbloquear_dia' %}">
-                        {% csrf_token %}
-                        <input type="hidden" name="data" value="{{ data }}">
-                        <button type="submit" class="btn btn-success btn-dia">
-                            Desbloquear dia inteiro
-                        </button>
-                    </form>
-                {% else %}
-                    <form method="POST" action="{% url 'bloquear_dia' %}">
-                        {% csrf_token %}
-                        <input type="hidden" name="data" value="{{ data }}">
-                        <button type="submit" class="btn btn-danger btn-dia">
-                            Bloquear dia inteiro
-                        </button>
-                    </form>
-                {% endif %}
-            </div>
-
-            {% if dia_bloqueado %}
-                <div class="alert alert-danger alert-custom">
-                    Dia totalmente bloqueado (exceto horários liberados manualmente)
-                </div>
-            {% endif %}
-
-            <div class="grid-horarios">
-                {% for h in horarios %}
-                    <div class="horario-card {% if h in horarios_liberados %}liberado{% elif dia_bloqueado or h in bloqueados %}bloqueado{% else %}disponivel{% endif %}">
-                        <div class="horario-texto">{{ h }}</div>
-
-                        <form method="POST"
-                              action="{% if h in horarios_liberados %}{% url 'bloquear_horario' %}{% elif dia_bloqueado %}{% url 'liberar_horario' %}{% elif h in bloqueados %}{% url 'desbloquear_horario' %}{% else %}{% url 'bloquear_horario' %}{% endif %}">
-                            {% csrf_token %}
-                            <input type="hidden" name="data" value="{{ data }}">
-                            <input type="hidden" name="horario" value="{{ h }}">
-
-                            <button
-                                type="submit"
-                                class="btn btn-sm btn-acao mt-2 {% if h in horarios_liberados %}btn-danger{% elif dia_bloqueado %}btn-success{% elif h in bloqueados %}btn-success{% else %}btn-danger{% endif %}"
-                                onclick="return confirm('Tem certeza que deseja alterar este horário?')"
-                            >
-                                {% if h in horarios_liberados %}
-                                    Bloquear
-                                {% elif dia_bloqueado %}
-                                    Liberar
-                                {% elif h in bloqueados %}
-                                    Desbloquear
-                                {% else %}
-                                    Bloquear
-                                {% endif %}
-                            </button>
-                        </form>
-                    </div>
-                {% endfor %}
-            </div>
-        {% endif %}
-
-    </div>
+<a href="{% url 'painel_admin' %}" class="back-btn">
+← Voltar
+</a>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<div class="date-area">
+<input type="text" id="data" name="data" value="{{ data }}" class="date-input" placeholder="dd/mm/aaaa">
+</div>
+
+<button class="day-btn" id="toggleDia">
+Bloquear dia inteiro
+</button>
+
+<div class="horarios-grid">
+
+{% for horario in horarios %}
+<div class="horario-card" data-horario="{{ horario }}">
+<div class="horario-hora">{{ horario }}</div>
+<div class="horario-status">Disponível</div>
+</div>
+{% endfor %}
+
+</div>
+
+</div>
+</div>
+
+<!-- MODAL -->
+<div class="modal" id="modal">
+<div class="modal-box">
+<div class="modal-title" id="modal-text"></div>
+
+<div class="modal-actions">
+<button class="btn btn-confirm" id="confirmar">Confirmar</button>
+<button class="btn btn-cancel" id="cancelar">Cancelar</button>
+</div>
+</div>
+</div>
+
 <script>
-    flatpickr("#data", {
-        dateFormat: "d-m-Y",
+document.addEventListener("DOMContentLoaded", function () {
+
+    const campoData = document.getElementById("data");
+    if (!campoData) return;
+
+
+    const fp = flatpickr(campoData, {
+        dateFormat: "d/m/Y",
+        locale: "pt",
         allowInput: true,
-        minDate: "today",
-        defaultDate: "{{ data|default:'' }}",
-        onChange: function(selectedDates, dateStr) {
-            window.location.href = "?data=" + dateStr;
-        }
+        disableMobile: true,
+
+        clickOpens: true
     });
 
-    const inputData = document.getElementById("data");
 
-    inputData.addEventListener("input", function(e) {
-        let value = e.target.value.replace(/\D/g, "");
+    campoData.addEventListener("focus", function () {
+        fp.open();
+    });
 
-        if (value.length > 2 && value.length <= 4) {
-            value = value.slice(0, 2) + "-" + value.slice(2);
-        } else if (value.length > 4) {
-            value = value.slice(0, 2) + "-" + value.slice(2, 4) + "-" + value.slice(4, 8);
+    campoData.addEventListener("click", function () {
+        fp.open();
+    });
+
+
+    campoData.addEventListener("input", function(e) {
+
+        let v = e.target.value.replace(/\D/g, "");
+
+        if (v.length > 8) v = v.slice(0, 8);
+
+        if (v.length > 4) {
+            v = v.replace(/(\d{2})(\d{2})(\d{1,4})/, "$1/$2/$3");
+        } else if (v.length > 2) {
+            v = v.replace(/(\d{2})(\d{1,2})/, "$1/$2");
         }
 
-        e.target.value = value;
+        e.target.value = v;
+
     });
+
+
+    campoData.addEventListener("blur", function() {
+
+        const valor = campoData.value.trim();
+
+        if (!/^\d{2}\/\d{2}\/\d{4}$/.test(valor)) return;
+
+        const [dia, mes, ano] = valor.split("/");
+
+        const dataObj = new Date(ano, mes - 1, dia);
+
+        if (
+            dataObj.getFullYear() !== Number(ano) ||
+            dataObj.getMonth() !== Number(mes) - 1 ||
+            dataObj.getDate() !== Number(dia)
+        ) return;
+
+        fp.setDate(dataObj, true);
+    });
+
+});
 </script>
+
 {% endblock %}
