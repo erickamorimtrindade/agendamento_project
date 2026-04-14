@@ -123,6 +123,16 @@
     margin-top:6px;
 }
 
+.tempo-servico {
+    margin-top: 6px;
+    font-size: 0.85rem;
+    color: #64748b;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-weight: 600;
+}
+
 /* ================= PREÇO ================= */
 .preco-box{
     margin-top:14px;
@@ -270,7 +280,10 @@
 
             <div class="nome">{{ servico.nome }}</div>
             <div class="desc">{{ servico.descricao }}</div>
-
+            <div class="tempo-servico">
+                <i class="bi bi-clock"></i>
+                {{ servico.duracao_minutos }} min
+            </div>
             <div class="preco-box">
                 <div class="preco">
                     R$ {{ servico.preco|floatformat:2 }}

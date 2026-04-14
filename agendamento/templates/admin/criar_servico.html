@@ -85,6 +85,11 @@
                 <label class="form-label">Preço</label>
                 <input type="number" step="0.01" name="preco" class="form-control" placeholder="R$ 0,00" required>
             </div>
+            
+            <div class="mb-3">
+                <label>Duração (minutos)</label>
+                <input type="number" name="duracao_minutos" class="form-control" placeholder="Ex: 60" required>
+            </div>
 
             <div class="d-flex gap-3 mt-4">
                 <a href="{% url 'listar_servicos' %}" class="btn btn-secondary w-50 btn-save">

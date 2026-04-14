@@ -22,11 +22,13 @@ def criar_servico(request):
         nome = request.POST.get("nome")
         descricao = request.POST.get("descricao")
         preco = request.POST.get("preco")
+        duracao = request.POST.get("duracao_minutos")
 
         Servico.objects.create(
             nome=nome,
             descricao=descricao,
-            preco=preco
+            preco=preco,
+            duracao_minutos=duracao
         )
 
         return redirect("listar_servicos")
@@ -48,6 +50,7 @@ def editar_servico(request, id):
         servico.nome = request.POST.get("nome")
         servico.descricao = request.POST.get("descricao")
         servico.preco = request.POST.get("preco")
+        servico.duracao_minutos = request.POST.get("duracao_minutos")
         servico.save()
 
         return redirect("listar_servicos")
@@ -84,10 +87,8 @@ def relatorio_31_dias(request):
         status='presente'
     ).order_by('data')
 
-   
     total = sum(float(ag.servico.preco) for ag in agendamentos)
 
-   
     faturamento_por_dia = defaultdict(float)
 
     for ag in agendamentos:
@@ -194,7 +195,6 @@ def painel_admin(request):
 @staff_member_required
 def atualizar_status(request, id, status):
     ag = get_object_or_404(Agendamento, id=id)
-
     ag.status = status
     ag.save()
 
@@ -243,55 +243,19 @@ def gerar_horarios():
 
     return horarios
 
-
-@staff_member_required
-def gerenciar_horarios(request):
-    data = request.GET.get('data')
-
-    data_formatada = None
-
-    if data:
-        try:
-           
-            data_formatada = datetime.strptime(data, "%Y-%m-%d").date()
-        except:
-            try:
-                
-                data_formatada = datetime.strptime(data, "%d-%m-%Y").date()
-            except:
-                data_formatada = None
-
-    horarios = gerar_horarios()
-    bloqueados = []
-    dia_bloqueado = False
-
-    if data:
-        bloqueios = HorarioBloqueado.objects.filter(data=data_formatada)
-
-        bloqueados = [b.horario.strftime("%H:%M") for b in bloqueios if b.horario]
-
-        if bloqueios.filter(horario__isnull=True).exists():
-            dia_bloqueado = True
-
-    return render(request, 'admin/gerenciar_horarios.html', {
-        'horarios': horarios,
-        'data': data,
-        'bloqueados': bloqueados,
-        'dia_bloqueado': dia_bloqueado
-    })
-
-
 def converter_data(data):
     if not data:
         return None
 
-    try:
-        return datetime.strptime(data, "%Y-%m-%d").date()
-    except ValueError:
+    formatos = ["%Y-%m-%d", "%d-%m-%Y", "%d/%m/%Y"]
+
+    for formato in formatos:
         try:
-            return datetime.strptime(data, "%d-%m-%Y").date()
+            return datetime.strptime(data, formato).date()
         except ValueError:
-            return None
+            continue
+
+    return None
 
 
 @staff_member_required
@@ -332,7 +296,6 @@ def gerenciar_horarios(request):
         "horarios_liberados": horarios_liberados,
         "dia_bloqueado": dia_bloqueado
     })
-
 
 #bloquear horario
 @staff_member_required
