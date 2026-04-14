@@ -1,274 +1,679 @@
 {% extends 'admin/base_admin.html' %}
-{% load static %}
 
-{% block title %}{% endblock %}
-
-{% block content %}
+{% block extra_css %}
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/pt.js"></script>
 
 <style>
-    .page-wrapper {
-        min-height: 100vh;
-        padding: 40px 15px;
-        display: flex;
-        justify-content: center;
-        align-items: flex-start;
+:root{
+    --bg:#f8fafc;
+    --card:#ffffff;
+    --border:#e2e8f0;
+    --text:#0f172a;
+    --sub:#64748b;
+
+    --primary:#2563eb;
+    --primary-soft:#eff6ff;
+
+    --danger:#dc2626;
+    --danger-soft:#fef2f2;
+
+    --success:#16a34a;
+    --success-soft:#ecfdf5;
+
+    --neutral:#475569;
+    --neutral-soft:#f1f5f9;
+
+    --shadow:0 12px 32px rgba(0,0,0,.06);
+}
+
+body{
+    background:var(--bg);
+    font-family:'Inter',sans-serif;
+}
+
+.wrapper{
+    max-width:1100px;
+    margin:auto;
+    padding:40px 20px;
+}
+
+.main-card{
+    background:var(--card);
+    border-radius:22px;
+    padding:30px;
+    box-shadow:var(--shadow);
+    border:1px solid rgba(226,232,240,.8);
+}
+
+.top{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap:14px;
+    margin-bottom:24px;
+    flex-wrap:wrap;
+}
+
+.title-group{
+    display:flex;
+    flex-direction:column;
+    gap:4px;
+}
+
+.title{
+    font-size:1.55rem;
+    font-weight:800;
+    color:var(--text);
+    line-height:1.2;
+}
+
+.subtitle{
+    color:var(--sub);
+    font-size:.95rem;
+}
+
+.back-btn{
+    height:44px;
+    padding:0 18px;
+    border-radius:12px;
+    background:linear-gradient(135deg,#64748b,#475569);
+    color:#fff;
+    font-weight:700;
+    text-decoration:none;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:8px;
+    transition:.2s;
+    white-space:nowrap;
+}
+
+.back-btn:hover{
+    transform:translateY(-2px);
+    color:#fff;
+}
+
+.controls{
+    display:flex;
+    gap:12px;
+    align-items:center;
+    justify-content:space-between;
+    margin-bottom:22px;
+    flex-wrap:wrap;
+}
+
+.date-area{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    flex-wrap:wrap;
+}
+
+.date-label{
+    font-weight:700;
+    color:var(--text);
+}
+
+.date-input{
+    min-width:180px;
+    padding:12px 16px;
+    border-radius:12px;
+    border:1px solid var(--border);
+    outline:none;
+    font-weight:600;
+    background:#fff;
+    color:var(--text);
+    transition:.2s;
+}
+
+.date-input:focus{
+    border-color:var(--primary);
+    box-shadow:0 0 0 4px rgba(37,99,235,.08);
+}
+
+.day-btn{
+    padding:12px 18px;
+    border-radius:12px;
+    border:1px solid var(--border);
+    background:#fff;
+    font-weight:800;
+    cursor:pointer;
+    transition:.2s;
+    color:var(--text);
+}
+
+.day-btn:hover{
+    transform:translateY(-2px);
+}
+
+.day-btn.bloqueado-dia{
+    background:var(--danger-soft);
+    border-color:var(--danger);
+    color:var(--danger);
+}
+
+.day-btn.livre-dia{
+    background:var(--primary-soft);
+    border-color:var(--primary);
+    color:var(--primary);
+}
+
+.legend{
+    display:flex;
+    gap:10px;
+    flex-wrap:wrap;
+    margin-bottom:18px;
+}
+
+.legend-item{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    background:#fff;
+    border:1px solid var(--border);
+    border-radius:999px;
+    padding:8px 12px;
+    font-size:.85rem;
+    color:var(--sub);
+    font-weight:700;
+}
+
+.legend-dot{
+    width:10px;
+    height:10px;
+    border-radius:50%;
+}
+
+.dot-bloqueado{
+    background:var(--danger);
+}
+
+.dot-liberado{
+    background:var(--success);
+}
+
+.info-banner{
+    background:linear-gradient(135deg,#f8fafc,#f1f5f9);
+    border:1px solid var(--border);
+    border-radius:14px;
+    padding:14px 16px;
+    margin-bottom:22px;
+    color:var(--sub);
+    font-size:.94rem;
+}
+
+.horarios-grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fill,minmax(120px,1fr));
+    gap:14px;
+}
+
+.horario-card{
+    padding:16px 12px;
+    border-radius:14px;
+    border:1px solid var(--border);
+    cursor:pointer;
+    transition:.2s;
+    text-align:center;
+    user-select:none;
+}
+
+.horario-card:hover{
+    transform:translateY(-2px);
+    box-shadow:0 10px 18px rgba(0,0,0,.05);
+}
+
+.horario-card.bloqueado{
+    background:var(--danger-soft);
+    border-color:var(--danger);
+}
+
+.horario-card.bloqueado:hover{
+    background:#fee2e2;
+}
+
+.horario-card.liberado{
+    background:var(--success-soft);
+    border-color:var(--success);
+}
+
+.horario-card.liberado:hover{
+    background:#dcfce7;
+}
+
+.horario-hora{
+    font-size:1rem;
+    font-weight:800;
+    color:var(--text);
+    margin-bottom:6px;
+}
+
+.horario-status{
+    font-size:.78rem;
+    font-weight:700;
+    color:var(--sub);
+}
+
+.horario-card.bloqueado .horario-status{
+    color:var(--danger);
+}
+
+.horario-card.liberado .horario-status{
+    color:var(--success);
+}
+
+.empty-state{
+    text-align:center;
+    color:var(--sub);
+    padding:30px 10px;
+    font-weight:600;
+}
+
+.modal{
+    position:fixed;
+    inset:0;
+    background:rgba(15,23,42,.35);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    opacity:0;
+    pointer-events:none;
+    transition:.2s;
+    z-index:9999;
+    padding:20px;
+}
+
+.modal.show{
+    opacity:1;
+    pointer-events:all;
+}
+
+.modal-box{
+    width:100%;
+    max-width:380px;
+    background:#fff;
+    border-radius:18px;
+    padding:24px;
+    box-shadow:0 25px 50px rgba(0,0,0,.18);
+    text-align:center;
+}
+
+.modal-title{
+    font-size:1.1rem;
+    font-weight:800;
+    color:var(--text);
+    margin-bottom:8px;
+}
+
+.modal-desc{
+    color:var(--sub);
+    font-size:.92rem;
+    margin-bottom:18px;
+}
+
+.modal-actions{
+    display:grid;
+    grid-template-columns:1fr;
+    gap:10px;
+}
+
+.btn-action{
+    border:none;
+    border-radius:12px;
+    padding:12px 14px;
+    font-weight:800;
+    cursor:pointer;
+    transition:.2s;
+}
+
+.btn-action:hover{
+    transform:translateY(-1px);
+}
+
+.btn-bloquear{
+    background:var(--danger);
+    color:#fff;
+}
+
+.btn-liberar{
+    background:var(--success);
+    color:#fff;
+}
+
+.btn-desbloquear{
+    background:var(--primary);
+    color:#fff;
+}
+
+.btn-cancel{
+    background:var(--neutral-soft);
+    color:var(--neutral);
+}
+
+@media (max-width: 768px){
+    .wrapper{
+        padding:20px 14px;
     }
 
-    .main-card {
-        width: 100%;
-        max-width: 1100px;
-        background: #ffffff;
-        border-radius: 28px;
-        padding: 32px 24px;
-        box-shadow: 0 20px 45px rgba(0, 0, 0, 0.08);
+    .main-card{
+        padding:22px 16px;
+        border-radius:18px;
     }
 
-    .page-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        gap: 12px;
-        margin-bottom: 30px;
-        flex-wrap: wrap;
+    .top{
+        align-items:stretch;
     }
 
-    .page-title {
-        margin: 0;
-        font-size: 1.8rem;
-        font-weight: 700;
-        color: #212529;
+    .back-btn{
+        width:100%;
     }
 
-    .date-input {
-        max-width: 320px;
-        margin: 0 auto;
-        border-radius: 14px;
-        padding: 12px 16px;
+    .controls{
+        flex-direction:column;
+        align-items:stretch;
     }
 
-    .section-actions {
-        text-align: center;
-        margin-bottom: 24px;
+    .date-area{
+        flex-direction:column;
+        align-items:stretch;
     }
 
-    .btn-dia,
-    .btn-voltar,
-    .btn-acao {
-        border-radius: 12px;
-        font-weight: 600;
+    .date-input,
+    .day-btn{
+        width:100%;
     }
 
-    .btn-voltar {
-        padding: 10px 18px;
+    .horarios-grid{
+        grid-template-columns:repeat(2,1fr);
+        gap:10px;
     }
 
-    .btn-dia {
-        padding: 12px 22px;
+    .horario-card{
+        padding:14px 10px;
     }
-
-    .alert-custom {
-        border-radius: 14px;
-        text-align: center;
-        font-weight: 600;
-        margin-bottom: 24px;
-    }
-
-    .grid-horarios {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
-        gap: 16px;
-    }
-
-    .horario-card {
-        border: 1px solid #dee2e6;
-        border-radius: 18px;
-        padding: 18px 12px;
-        text-align: center;
-        transition: 0.2s ease;
-        background: #f8f9fa;
-        height: 100%;
-    }
-
-    .horario-card.disponivel {
-        background: #f8f9fa;
-        border-color: #dee2e6;
-    }
-
-    .horario-card.disponivel:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 8px 18px rgba(0, 0, 0, 0.06);
-    }
-
-    .horario-card.bloqueado {
-        background: #fff5f5;
-        border-color: #f1aeb5;
-    }
-
-    .horario-card.liberado {
-        background: #f1fff3;
-        border-color: #75c28a;
-    }
-
-    .horario-texto {
-        font-size: 1rem;
-        font-weight: 700;
-        color: #212529;
-        margin-bottom: 12px;
-    }
-
-    .btn-acao {
-        width: 100%;
-    }
-
-    @media (max-width: 768px) {
-        .page-wrapper {
-            padding: 20px 12px;
-        }
-
-        .main-card {
-            padding: 24px 16px;
-            border-radius: 22px;
-        }
-
-        .page-header {
-            flex-direction: column;
-            align-items: stretch;
-        }
-
-        .page-title {
-            text-align: center;
-            font-size: 1.5rem;
-        }
-
-        .btn-voltar {
-            width: 100%;
-        }
-
-        .date-input {
-            max-width: 100%;
-        }
-
-        .grid-horarios {
-            grid-template-columns: repeat(2, 1fr);
-            gap: 12px;
-        }
-    }
-
-    @media (max-width: 480px) {
-        .grid-horarios {
-            grid-template-columns: 1fr;
-        }
-    }
+}
 </style>
+{% endblock %}
 
-<div class="page-wrapper">
+{% block content %}
+<div class="wrapper">
     <div class="main-card">
 
-        <div class="page-header">
-            <h1 class="page-title">Gerenciar Horários</h1>
-            <a href="{% url 'painel_admin' %}" class="btn btn-secondary btn-voltar">
+        <div class="top">
+            <div class="title-group">
+                <div class="title">Gerenciar Horários</div>
+                <div class="subtitle">Bloqueie, libere ou desbloqueie horários da agenda.</div>
+            </div>
+
+            <a href="{% url 'painel_admin' %}" class="back-btn">
                 Voltar
             </a>
         </div>
 
-        <form method="GET" class="mb-4 text-center">
-            <input
-                type="text"
-                name="data"
-                id="data"
-                class="form-control date-input"
-                placeholder="Selecione a data"
-                value="{{ data|default:'' }}"
-            >
-        </form>
-
-        {% if data %}
-            <div class="section-actions">
-                {% if dia_bloqueado %}
-                    <form method="POST" action="{% url 'desbloquear_dia' %}">
-                        {% csrf_token %}
-                        <input type="hidden" name="data" value="{{ data }}">
-                        <button type="submit" class="btn btn-success btn-dia">
-                            Desbloquear dia inteiro
-                        </button>
-                    </form>
-                {% else %}
-                    <form method="POST" action="{% url 'bloquear_dia' %}">
-                        {% csrf_token %}
-                        <input type="hidden" name="data" value="{{ data }}">
-                        <button type="submit" class="btn btn-danger btn-dia">
-                            Bloquear dia inteiro
-                        </button>
-                    </form>
-                {% endif %}
+        <div class="controls">
+            <div class="date-area">
+                <label for="data" class="date-label">Data</label>
+                <input
+                    type="text"
+                    id="data"
+                    name="data"
+                    value="{{ data }}"
+                    class="date-input"
+                    placeholder="dia/mes/ano"
+                    autocomplete="off"
+                >
             </div>
 
-            {% if dia_bloqueado %}
-                <div class="alert alert-danger alert-custom">
-                    Dia totalmente bloqueado (exceto horários liberados manualmente)
-                </div>
-            {% endif %}
+            <button
+                type="button"
+                class="day-btn {% if dia_bloqueado %}bloqueado-dia{% else %}livre-dia{% endif %}"
+                id="toggleDia"
+                data-bloqueado="{% if dia_bloqueado %}true{% else %}false{% endif %}">
+                {% if dia_bloqueado %}
+                    Desbloquear dia inteiro
+                {% else %}
+                    Bloquear dia inteiro
+                {% endif %}
+            </button>
+        </div>
 
-            <div class="grid-horarios">
-                {% for h in horarios %}
-                    <div class="horario-card {% if h in horarios_liberados %}liberado{% elif dia_bloqueado or h in bloqueados %}bloqueado{% else %}disponivel{% endif %}">
-                        <div class="horario-texto">{{ h }}</div>
+        <div class="legend">
+            <div class="legend-item">
+                <span class="legend-dot dot-bloqueado"></span>
+                Bloqueado
+            </div>
+            <div class="legend-item">
+                <span class="legend-dot dot-liberado"></span>
+                Liberado
+            </div>
+        </div>
 
-                        <form method="POST"
-                              action="{% if h in horarios_liberados %}{% url 'bloquear_horario' %}{% elif dia_bloqueado %}{% url 'liberar_horario' %}{% elif h in bloqueados %}{% url 'desbloquear_horario' %}{% else %}{% url 'bloquear_horario' %}{% endif %}">
-                            {% csrf_token %}
-                            <input type="hidden" name="data" value="{{ data }}">
-                            <input type="hidden" name="horario" value="{{ h }}">
+        <div class="info-banner">
+            Clique em um horário para escolher a ação. Ao mudar a data, a página será recarregada para mostrar os bloqueios daquele dia.
+        </div>
 
-                            <button
-                                type="submit"
-                                class="btn btn-sm btn-acao mt-2 {% if h in horarios_liberados %}btn-danger{% elif dia_bloqueado %}btn-success{% elif h in bloqueados %}btn-success{% else %}btn-danger{% endif %}"
-                                onclick="return confirm('Tem certeza que deseja alterar este horário?')"
-                            >
-                                {% if h in horarios_liberados %}
-                                    Bloquear
-                                {% elif dia_bloqueado %}
-                                    Liberar
-                                {% elif h in bloqueados %}
-                                    Desbloquear
-                                {% else %}
-                                    Bloquear
-                                {% endif %}
-                            </button>
-                        </form>
+        {% if horarios %}
+            <div class="horarios-grid">
+                {% for horario in horarios %}
+                    <div
+                        class="horario-card {% if dia_bloqueado or horario in bloqueados %}bloqueado{% else %}liberado{% endif %}"
+                        data-horario="{{ horario }}"
+                        data-status="{% if dia_bloqueado or horario in bloqueados %}bloqueado{% else %}liberado{% endif %}"
+                    >
+                        <div class="horario-hora">{{ horario }}</div>
+                        <div class="horario-status">
+                            {% if dia_bloqueado or horario in bloqueados %}
+                                Bloqueado
+                            {% else %}
+                                Liberado
+                            {% endif %}
+                        </div>
                     </div>
                 {% endfor %}
+            </div>
+        {% else %}
+            <div class="empty-state">
+                Nenhum horário encontrado.
             </div>
         {% endif %}
 
     </div>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<form id="form-acao" method="POST" style="display:none;">
+    {% csrf_token %}
+    <input type="hidden" name="data" id="form-data">
+    <input type="hidden" name="horario" id="form-horario">
+</form>
+
+<div class="modal" id="modal">
+    <div class="modal-box">
+        <div class="modal-title" id="modal-title">Escolha uma ação</div>
+        <div class="modal-desc" id="modal-desc">Selecione o que deseja fazer.</div>
+
+        <div class="modal-actions">
+            <button type="button" class="btn-action btn-bloquear" id="acaoBloquear">Bloquear</button>
+            <button type="button" class="btn-action btn-liberar" id="acaoLiberar">Liberar</button>
+            <button type="button" class="btn-action btn-desbloquear" id="acaoDesbloquear">Desbloquear</button>
+            <button type="button" class="btn-action btn-cancel" id="acaoCancelar">Cancelar</button>
+        </div>
+    </div>
+</div>
+
 <script>
-    flatpickr("#data", {
-        dateFormat: "d-m-Y",
-        allowInput: true,
-        minDate: "today",
-        defaultDate: "{{ data|default:'' }}",
-        onChange: function(selectedDates, dateStr) {
-            window.location.href = "?data=" + dateStr;
+document.addEventListener("DOMContentLoaded", function () {
+    const campoData = document.getElementById("data");
+    const btnToggleDia = document.getElementById("toggleDia");
+    const cards = document.querySelectorAll(".horario-card");
+
+    const modal = document.getElementById("modal");
+    const modalTitle = document.getElementById("modal-title");
+    const modalDesc = document.getElementById("modal-desc");
+
+    const btnBloquear = document.getElementById("acaoBloquear");
+    const btnLiberar = document.getElementById("acaoLiberar");
+    const btnDesbloquear = document.getElementById("acaoDesbloquear");
+    const btnCancelar = document.getElementById("acaoCancelar");
+
+    const form = document.getElementById("form-acao");
+    const inputData = document.getElementById("form-data");
+    const inputHorario = document.getElementById("form-horario");
+
+    let horarioSelecionado = "";
+    let contexto = "";
+
+    if (campoData) {
+        const valorInicial = campoData.value.trim();
+
+        const fp = flatpickr(campoData, {
+            dateFormat: "d/m/Y",
+            locale: "pt",
+            allowInput: true,
+            disableMobile: true,
+            clickOpens: false,
+            defaultDate: valorInicial || null,
+            onChange: function(selectedDates, dateStr) {
+                if (dateStr) {
+                    window.location.href = `{% url 'gerenciar_horarios' %}?data=${encodeURIComponent(dateStr)}`;
+                }
+            }
+        });
+
+        campoData.addEventListener("mousedown", function(e) {
+            e.preventDefault();
+            fp.open();
+        });
+
+        campoData.addEventListener("input", function(e) {
+            let v = e.target.value.replace(/\D/g, "");
+
+            if (v.length > 8) {
+                v = v.slice(0, 8);
+            }
+
+            if (v.length > 4) {
+                v = v.replace(/(\d{2})(\d{2})(\d{1,4})/, "$1/$2/$3");
+            } else if (v.length > 2) {
+                v = v.replace(/(\d{2})(\d{1,2})/, "$1/$2");
+            }
+
+            e.target.value = v;
+        });
+
+        campoData.addEventListener("keydown", function(e) {
+            if (e.key === "Enter") {
+                e.preventDefault();
+
+                const valor = campoData.value.trim();
+
+                if (!/^\d{2}\/\d{2}\/\d{4}$/.test(valor)) return;
+
+                const [dia, mes, ano] = valor.split("/");
+                const dataObj = new Date(ano, mes - 1, dia);
+
+                if (
+                    dataObj.getFullYear() !== Number(ano) ||
+                    dataObj.getMonth() !== Number(mes) - 1 ||
+                    dataObj.getDate() !== Number(dia)
+                ) {
+                    return;
+                }
+
+                window.location.href = `{% url 'gerenciar_horarios' %}?data=${encodeURIComponent(valor)}`;
+            }
+        });
+    }
+
+    function abrirModal(tipo, horario = "") {
+        contexto = tipo;
+        horarioSelecionado = horario;
+
+        if (tipo === "horario") {
+            modalTitle.textContent = `Horário ${horario}`;
+            modalDesc.textContent = "Escolha a ação que deseja aplicar neste horário.";
+            btnBloquear.style.display = "block";
+            btnLiberar.style.display = "none";
+            btnDesbloquear.style.display = "block";
+        } else if (tipo === "dia") {
+            modalTitle.textContent = "Dia inteiro";
+            modalDesc.textContent = "Deseja bloquear ou desbloquear o dia inteiro?";
+            btnBloquear.style.display = "block";
+            btnLiberar.style.display = "none";
+            btnDesbloquear.style.display = "block";
+        }
+
+        modal.classList.add("show");
+    }
+
+    function fecharModal() {
+        modal.classList.remove("show");
+        contexto = "";
+        horarioSelecionado = "";
+    }
+
+    function enviarAcao(url) {
+        const dataSelecionada = campoData.value.trim();
+
+        if (!dataSelecionada) {
+            alert("Selecione uma data primeiro.");
+            return;
+        }
+
+        inputData.value = dataSelecionada;
+        inputHorario.value = horarioSelecionado;
+        form.action = url;
+        form.submit();
+    }
+
+    cards.forEach(card => {
+        card.addEventListener("click", function () {
+            const dataSelecionada = campoData.value.trim();
+
+            if (!dataSelecionada) {
+                alert("Selecione uma data primeiro.");
+                return;
+            }
+
+            abrirModal("horario", card.dataset.horario);
+        });
+    });
+
+    btnToggleDia.addEventListener("click", function () {
+        const dataSelecionada = campoData.value.trim();
+
+        if (!dataSelecionada) {
+            alert("Selecione uma data primeiro.");
+            return;
+        }
+
+        abrirModal("dia");
+    });
+
+    btnBloquear.addEventListener("click", function () {
+        if (contexto === "horario") {
+            enviarAcao("{% url 'bloquear_horario' %}");
+        } else if (contexto === "dia") {
+            enviarAcao("{% url 'bloquear_dia' %}");
         }
     });
 
-    const inputData = document.getElementById("data");
-
-    inputData.addEventListener("input", function(e) {
-        let value = e.target.value.replace(/\D/g, "");
-
-        if (value.length > 2 && value.length <= 4) {
-            value = value.slice(0, 2) + "-" + value.slice(2);
-        } else if (value.length > 4) {
-            value = value.slice(0, 2) + "-" + value.slice(2, 4) + "-" + value.slice(4, 8);
+    btnDesbloquear.addEventListener("click", function () {
+        if (contexto === "horario") {
+            enviarAcao("{% url 'desbloquear_horario' %}");
+        } else if (contexto === "dia") {
+            enviarAcao("{% url 'desbloquear_dia' %}");
         }
-
-        e.target.value = value;
     });
+
+    btnCancelar.addEventListener("click", fecharModal);
+
+    modal.addEventListener("click", function (e) {
+        if (e.target === modal) {
+            fecharModal();
+        }
+    });
+});
 </script>
 {% endblock %}

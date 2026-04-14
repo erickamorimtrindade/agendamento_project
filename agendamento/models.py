@@ -46,16 +46,16 @@ class Agendamento(models.Model):
 
         now = timezone.localtime()
 
-        # Data passada
+
         if self.data and self.data < now.date():
             errors['data'] = 'Não é permitido agendar em datas passadas.'
 
-        # Horário inválido (fora do expediente)
+
         if self.horario:
             if self.horario < time(8,0) or self.horario > time(22,0):
                 errors['horario'] = 'Horário permitido apenas entre 08:00 e 22:00.'
 
-        # Horário inválido (mesmo dia)
+
         if self.data == now.date() and self.horario:
             if self.horario <= now.time():
                 errors['horario'] = 'Não é possível agendar horários anteriores ao horário atual.'
@@ -66,12 +66,13 @@ class Agendamento(models.Model):
     def __str__(self):
         return f"{self.cliente.id_usuario.username} - {self.data} {self.horario}"
 
-#Mostra servicos disponiveis
+
 class Servico(models.Model):
     nome = models.CharField(max_length=100)
     descricao = models.CharField(max_length=200, blank=True)
     ativo = models.BooleanField(default=True)
     preco = models.DecimalField(max_digits=8, decimal_places=2, default=0)
+    duracao_minutos = models.PositiveIntegerField(default=60)
 
     def __str__(self):
         return f"{self.nome} - {self.preco}"
@@ -80,11 +81,10 @@ class Servico(models.Model):
 class HorarioBloqueado(models.Model):
     data = models.DateField()
     horario = models.TimeField(null=True, blank=True)
-
     tipo = models.CharField(max_length=10, choices=[
         ('bloqueio', 'Bloqueio'),
         ('liberado', 'Liberado')
     ])
 
     class Meta:
-        unique_together = ['data', 'horario', 'tipo']
+        unique_together = ['data', 'horario']

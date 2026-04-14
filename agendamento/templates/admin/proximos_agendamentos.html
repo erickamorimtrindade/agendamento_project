@@ -315,7 +315,7 @@
                         name="data"
                         class="form-control"
                         value="{{ data_filtro }}"
-                        placeholder="dd/mm/aaaa"
+                        placeholder="dia/mes/ano"
                     >
                 </div>
 
@@ -395,7 +395,8 @@
 <script>
     flatpickr("#data", {
         dateFormat: "d/m/Y",
-        allowInput: true
+        allowInput: true,
+        disableMobile: true
     });
 
     const campoData = document.getElementById("data");

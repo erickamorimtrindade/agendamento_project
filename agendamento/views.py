@@ -22,11 +22,13 @@ def criar_servico(request):
         nome = request.POST.get("nome")
         descricao = request.POST.get("descricao")
         preco = request.POST.get("preco")
+        duracao = request.POST.get("duracao_minutos")
 
         Servico.objects.create(
             nome=nome,
             descricao=descricao,
-            preco=preco
+            preco=preco,
+            duracao_minutos=duracao
         )
 
         return redirect("listar_servicos")
@@ -48,6 +50,7 @@ def editar_servico(request, id):
         servico.nome = request.POST.get("nome")
         servico.descricao = request.POST.get("descricao")
         servico.preco = request.POST.get("preco")
+        servico.duracao_minutos = request.POST.get("duracao_minutos")
         servico.save()
 
         return redirect("listar_servicos")
@@ -77,23 +80,21 @@ def agendamentos_hoje(request):
 @staff_member_required
 def relatorio_31_dias(request):
     hoje = timezone.localdate()
-    inicio = hoje - timedelta(days=30)  # 🔥 31 dias contando hoje
+    inicio = hoje - timedelta(days=30) 
 
     agendamentos = Agendamento.objects.filter(
         data__range=[inicio, hoje],
         status='presente'
     ).order_by('data')
 
-    # 💰 TOTAL
     total = sum(float(ag.servico.preco) for ag in agendamentos)
 
-    # 📈 FATURAMENTO POR DIA
     faturamento_por_dia = defaultdict(float)
 
     for ag in agendamentos:
         faturamento_por_dia[ag.data.isoformat()] += float(ag.servico.preco)
 
-    # 🔥 AQUI ESTÁ A CORREÇÃO PRINCIPAL
+    
     datas_ordenadas = []
     valores_ordenados = []
 
@@ -104,7 +105,7 @@ def relatorio_31_dias(request):
         datas_ordenadas.append(dia.strftime("%d/%m"))
         valores_ordenados.append(round(faturamento_por_dia.get(dia_str, 0), 2))
 
-    # 🍩 SERVIÇOS
+    
     servicos = Servico.objects.all()
     servicos_dict = {s.nome: 0 for s in servicos}
 
@@ -116,7 +117,7 @@ def relatorio_31_dias(request):
     servicos_labels = list(servicos_dict.keys())
     servicos_valores = list(servicos_dict.values())
 
-    # 📊 DIAS DA SEMANA
+    
     dias_semana = {
         "Monday": 0,
         "Tuesday": 0,
@@ -148,38 +149,44 @@ def relatorio_31_dias(request):
         dias_labels.append(traducao[dia])
         dias_valores.append(valor)
 
-    # 🏆 SERVIÇO TOP
+    
     servico_top = max(servicos_dict, key=servicos_dict.get) if servicos_dict else "Nenhum"
 
-    # TOTAL DE AGENDAMENTOS
+    
     total_agendamentos = Agendamento.objects.filter(
         data__range=[inicio, hoje]
     ).count()
 
-    # AUSENTES
+    
     total_ausentes = Agendamento.objects.filter(
         data__range=[inicio, hoje],
         status='ausente'
     ).count()
 
-    # TAXA DE AUSÊNCIA
+    
     taxa_ausencia = 0
     if total_agendamentos > 0:
         taxa_ausencia = (total_ausentes / total_agendamentos) * 100
 
     return render(request, "admin/relatorio_31.html", {
-        "agendamentos": agendamentos,
-        "total": total,
-        "datas": json.dumps(datas_ordenadas),  
-        "valores": json.dumps(valores_ordenados),
-        "servicos_labels": json.dumps(servicos_labels),
-        "servicos_valores": json.dumps(servicos_valores),
-        "dias_labels": json.dumps(dias_labels),
-        "dias_valores": json.dumps(dias_valores),
-        "servico_top": servico_top,
-        "total_agendamentos": total_agendamentos,
-        "taxa_ausencia": round(taxa_ausencia, 1)
-    })
+    "agendamentos": agendamentos,
+
+    "faturamento_total": total,
+
+    "labels_faturamento": json.dumps(datas_ordenadas),
+    "dados_faturamento": json.dumps(valores_ordenados),
+
+    "labels_servicos": json.dumps(servicos_labels),
+    "dados_servicos": json.dumps(servicos_valores),
+
+    "labels_semana": json.dumps(dias_labels),
+    "dados_semana": json.dumps(dias_valores),
+
+    "servico_mais_lucrativo": servico_top,
+    "total_agendamentos": total_agendamentos,
+    "taxa_ausencia": round(taxa_ausencia, 1)
+})
+    
 
 @staff_member_required
 def painel_admin(request):
@@ -188,7 +195,6 @@ def painel_admin(request):
 @staff_member_required
 def atualizar_status(request, id, status):
     ag = get_object_or_404(Agendamento, id=id)
-
     ag.status = status
     ag.save()
 
@@ -237,55 +243,19 @@ def gerar_horarios():
 
     return horarios
 
-
-@staff_member_required
-def gerenciar_horarios(request):
-    data = request.GET.get('data')
-
-    data_formatada = None
-
-    if data:
-        try:
-           
-            data_formatada = datetime.strptime(data, "%Y-%m-%d").date()
-        except:
-            try:
-                
-                data_formatada = datetime.strptime(data, "%d-%m-%Y").date()
-            except:
-                data_formatada = None
-
-    horarios = gerar_horarios()
-    bloqueados = []
-    dia_bloqueado = False
-
-    if data:
-        bloqueios = HorarioBloqueado.objects.filter(data=data_formatada)
-
-        bloqueados = [b.horario.strftime("%H:%M") for b in bloqueios if b.horario]
-
-        if bloqueios.filter(horario__isnull=True).exists():
-            dia_bloqueado = True
-
-    return render(request, 'admin/gerenciar_horarios.html', {
-        'horarios': horarios,
-        'data': data,
-        'bloqueados': bloqueados,
-        'dia_bloqueado': dia_bloqueado
-    })
-
-
 def converter_data(data):
     if not data:
         return None
 
-    try:
-        return datetime.strptime(data, "%Y-%m-%d").date()
-    except ValueError:
+    formatos = ["%Y-%m-%d", "%d-%m-%Y", "%d/%m/%Y"]
+
+    for formato in formatos:
         try:
-            return datetime.strptime(data, "%d-%m-%Y").date()
+            return datetime.strptime(data, formato).date()
         except ValueError:
-            return None
+            continue
+
+    return None
 
 
 @staff_member_required
@@ -327,8 +297,7 @@ def gerenciar_horarios(request):
         "dia_bloqueado": dia_bloqueado
     })
 
-
-# 🔥 BLOQUEAR HORÁRIO
+#bloquear horario
 @staff_member_required
 def bloquear_horario(request):
     if request.method == "POST":
@@ -340,7 +309,7 @@ def bloquear_horario(request):
         if data_formatada and horario and data_formatada >= date.today():
             horario_formatado = datetime.strptime(horario, "%H:%M").time()
 
-            # remove exceção liberada
+
             HorarioBloqueado.objects.filter(
                 data=data_formatada,
                 horario=horario_formatado,
@@ -358,7 +327,7 @@ def bloquear_horario(request):
     return redirect("/gerenciar-horarios/")
 
 
-# 🔥 DESBLOQUEAR HORÁRIO
+#desbloquear horario
 @staff_member_required
 def desbloquear_horario(request):
     if request.method == "POST":
@@ -381,7 +350,7 @@ def desbloquear_horario(request):
     return redirect("/gerenciar-horarios/")
 
 
-# 🔥 LIBERAR HORÁRIO (EXCEÇÃO)
+#liberar horario
 @staff_member_required
 def liberar_horario(request):
     if request.method == "POST":
@@ -393,7 +362,6 @@ def liberar_horario(request):
         if data_formatada and horario and data_formatada >= date.today():
             horario_formatado = datetime.strptime(horario, "%H:%M").time()
 
-            # remove bloqueio daquele horário
             HorarioBloqueado.objects.filter(
                 data=data_formatada,
                 horario=horario_formatado,
@@ -411,7 +379,7 @@ def liberar_horario(request):
     return redirect("/gerenciar-horarios/")
 
 
-# 🔥 BLOQUEAR DIA INTEIRO
+#bloquear dia inteiro
 @staff_member_required
 def bloquear_dia(request):
     if request.method == "POST":
@@ -430,7 +398,7 @@ def bloquear_dia(request):
     return redirect("/gerenciar-horarios/")
 
 
-# 🔥 DESBLOQUEAR DIA INTEIRO (SEM APAGAR EXCEÇÕES)
+#desbloquear dia inteiro
 @staff_member_required
 def desbloquear_dia(request):
     if request.method == "POST":
@@ -438,7 +406,7 @@ def desbloquear_dia(request):
         data_formatada = converter_data(data)
 
         if data_formatada:
-            # 🔥 remove SOMENTE o bloqueio geral
+
             HorarioBloqueado.objects.filter(
                 data=data_formatada,
                 horario=None,
@@ -467,7 +435,7 @@ def register(request):
             return render(request, 'clients/register.html', {'erro': 'Usuário já existe!'})
 
         user = User.objects.create_user(username=username, password=password)
-        # cria cliente automaticamente
+
         cliente, _ = Cliente.objects.get_or_create(id_usuario=user)
         cliente.telefone = telefone
         cliente.save()
@@ -504,9 +472,12 @@ def logout_view(request):
 #Home
 @login_required
 def home(request):
-    return render(request, 'clients/home.html')
+    if request.user.is_staff:
+        return redirect('painel_admin')  # admin vai pro painel
 
-# GERAR HORÁRIOS (08:00 até 22:00 de 30 em 30 min)
+    return render(request, 'clients/home.html')  # cliente normal
+
+#gerar horarios
 def gerar_horarios():
     horarios = []
     inicio = datetime.strptime("08:00", "%H:%M")
@@ -521,6 +492,10 @@ def gerar_horarios():
 #Criar agendamentos
 @login_required
 def criar_agendamento(request):
+
+    if request.user.is_staff:
+        return redirect('painel_admin')
+
     cliente, _ = Cliente.objects.get_or_create(id_usuario=request.user)
 
     servico_id = request.session.get("servico_id")
@@ -669,7 +644,6 @@ def listar_agendamentos(request):
 def excluir_agendamento(request, id):
     cliente, _ = Cliente.objects.get_or_create(id_usuario=request.user)
 
-    # Impede usuário deletar agendamento de outro
     agendamento = get_object_or_404(Agendamento, id=id, cliente=cliente)
 
     if request.method == 'POST':

@@ -191,6 +191,20 @@
                 >
             </div>
 
+            <div class="mb-3">
+                <label>Duração</label>
+                <div class="input-group">
+                    <input 
+                        type="number" 
+                        name="duracao_minutos" 
+                        class="form-control"
+                        value="{{ servico.duracao_minutos }}"
+                        required
+                    >
+                    <span class="input-group-text">min</span>
+                </div>
+            </div>
+
             <div class="form-actions">
                 <a href="{% url 'listar_servicos' %}" class="btn btn-cancel">
                     <i class="bi bi-arrow-left"></i>
