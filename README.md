@@ -112,11 +112,12 @@ A aplicação foi pensada para ser utilizada em cenários reais, com potencial d
 👨‍💻 Autores
 
 Desenvolvido por Erick Amorim e Rafael Maia
+
 [LinkedIn] [https://www.linkedin.com/in/erickamorimtrindade/]
 [GitHub] [https://github.com/erickamorimtrindade]
 
-[LinkedIn]
-[GitHub]
+[LinkedIn] [https://www.linkedin.com/in/rafael-olímpio-96999a2b5/]
+[GitHub] [https://github.com/rafaelolimpioo]
 
 📄 Licença
 
