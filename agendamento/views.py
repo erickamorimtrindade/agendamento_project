@@ -537,7 +537,6 @@ def criar_agendamento(request):
                 horario=horario_selecionado
             ).exists()
 
-
         bloqueado = False
 
         if data_convertida and horario_selecionado:
@@ -653,8 +652,6 @@ def excluir_agendamento(request, id):
     return render (request, 'clients/confirmar_exclusao.html', {
         'agendamento': agendamento
     })
-
-
 
 @login_required
 def escolher_servico(request):
