@@ -12,6 +12,7 @@ from collections import defaultdict
 import json
 from .models import HorarioBloqueado
 from django.utils import timezone
+from .utils import gerar_horarios
 
 
 #painel do dono --------
@@ -232,17 +233,6 @@ def proximos_agendamentos(request):
         'data': data
     })
 
-def gerar_horarios():
-    horarios = []
-    inicio = datetime.strptime("08:00", "%H:%M")
-    fim = datetime.strptime("22:00", "%H:%M")
-
-    while inicio <= fim:
-        horarios.append(inicio.strftime("%H:%M"))
-        inicio += timedelta(minutes=30)
-
-    return horarios
-
 def converter_data(data):
     if not data:
         return None
@@ -263,7 +253,7 @@ def gerenciar_horarios(request):
     data = request.GET.get("data")
     data_formatada = converter_data(data)
 
-    horarios = gerar_horarios()
+    horarios = gerar_horarios(data_formatada)
 
     bloqueados = []
     horarios_liberados = []
@@ -477,18 +467,6 @@ def home(request):
 
     return render(request, 'clients/home.html')  # cliente normal
 
-#gerar horarios
-def gerar_horarios():
-    horarios = []
-    inicio = datetime.strptime("08:00", "%H:%M")
-    fim = datetime.strptime("22:00", "%H:%M")
-
-    while inicio <= fim:
-        horarios.append(inicio.strftime("%H:%M"))
-        inicio += timedelta(minutes=30)
-
-    return horarios
-
 #Criar agendamentos
 @login_required
 def criar_agendamento(request):
@@ -505,8 +483,6 @@ def criar_agendamento(request):
 
     servico = get_object_or_404(Servico, id=servico_id, ativo=True)
 
-    horarios = gerar_horarios()
-    horarios_ocupados = []
 
     data_selecionada = request.GET.get("data") or request.POST.get("data")
     data_convertida = None
@@ -519,6 +495,9 @@ def criar_agendamento(request):
                 data_convertida = datetime.strptime(data_selecionada, "%Y-%m-%d").date()
             except ValueError:
                 data_convertida = None
+                
+    horarios = gerar_horarios(data_convertida)
+    horarios_ocupados = []
 
     if data_convertida:
         agendamentos_do_dia = Agendamento.objects.filter(data=data_convertida)
