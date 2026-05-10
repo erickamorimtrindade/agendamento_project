@@ -86,6 +86,76 @@
         margin-bottom: 10px;
     }
 
+    .nav-box {
+        width: 100%;
+        background: #ffffff;
+        border-radius: 12px;
+        border: 1px solid #e8e8e8;
+        padding: 24px 28px;
+        margin-top: 20px;
+        box-sizing: border-box;
+    }
+
+    .nav-box .nav-label {
+        font-size: 11px;
+        font-weight: 500;
+        color: #888;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        margin: 0 0 6px;
+    }
+
+    .nav-box h2 {
+        font-size: 20px;
+        font-weight: 500;
+        color: #222;
+        margin: 0 0 20px;
+    }
+
+    .nav-items {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .nav-item {
+        display: flex;
+        align-items: flex-start;
+        gap: 14px;
+        background: #f7f7f7;
+        border-radius: 8px;
+        padding: 14px 16px;
+    }
+
+    .nav-item-icon {
+        width: 36px;
+        height: 36px;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        font-size: 18px;
+    }
+
+    .nav-item-icon.sobre    { background: #EEEDFE; color: #534AB7; }
+    .nav-item-icon.suporte  { background: #E1F5EE; color: #0F6E56; }
+    .nav-item-icon.agenda   { background: #FAECE7; color: #993C1D; }
+
+    .nav-item-title {
+        font-size: 14px;
+        font-weight: 500;
+        color: #222;
+        margin: 0 0 3px;
+    }
+
+    .nav-item-desc {
+        font-size: 13px;
+        color: #666;
+        margin: 0;
+        line-height: 1.5;
+    }
+
     /* 🔥 FOOTER PERFEITO */
     .footer-card {
         margin-top: auto; /* empurra pra baixo */
@@ -157,12 +227,41 @@
                     </a>
                 </div>
 
-                <div class="welcome-box">
-                    <h2>Para facilitar sua navegação:
-                        • Na seção “Sobre”, você encontrará informações gerais do serviço e o WhatsApp do proprietário para eventuais dúvidas.
-                        • Na seção “Suporte”, estão disponíveis os contatos do suporte técnico e também o WhatsApp do proprietário caso precise de ajuda, tirar dúvidas ou relatar algum problema.
-                        • Na seção “Agendamentos”, você poderá visualizar todos os agendamentos realizados em sua conta, além da opção de excluir agendamentos quando necessário.
-                        </h2>
+                <div class="nav-box">
+                    <p class="nav-label">Guia rápido</p>
+                    <h2>Para facilitar sua navegação</h2>
+
+                    <div class="nav-items">
+                        <div class="nav-item">
+                            <div class="nav-item-icon sobre">
+                                <i class="bi bi-info-circle"></i>
+                            </div>
+                            <div>
+                                <p class="nav-item-title">Sobre</p>
+                                <p class="nav-item-desc">Informações gerais do serviço e o WhatsApp da proprietária para eventuais dúvidas.</p>
+                            </div>
+                        </div>
+
+                        <div class="nav-item">
+                            <div class="nav-item-icon suporte">
+                                <i class="bi bi-headset"></i>
+                            </div>
+                            <div>
+                                <p class="nav-item-title">Suporte</p>
+                                <p class="nav-item-desc">Contato do suporte técnico e WhatsApp da proprietária para dúvidas ou problemas.</p>
+                            </div>
+                        </div>
+
+                        <div class="nav-item">
+                            <div class="nav-item-icon agenda">
+                                <i class="bi bi-calendar-check"></i>
+                            </div>
+                            <div>
+                                <p class="nav-item-title">Agendamentos</p>
+                                <p class="nav-item-desc">Visualize todos os agendamentos feitos por você e exclua-os quando necessário.</p>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
                 <div class="footer-card">
@@ -191,7 +290,7 @@
 
                         <div class="col">
                             <a href="{% url 'suporte' %}" class="text-dark text-decoration-none">
-                                <i class="bi bi-question-circle footer-icon"></i>
+                                <i class="bi bi-headset footer-icon"></i>
                                 <small>Suporte</small>
                             </a>
                         </div>
