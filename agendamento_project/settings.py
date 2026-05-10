@@ -29,6 +29,9 @@ SECRET_KEY = os.environ.get('SECRET_KEY')
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.environ.get('DEBUG') == 'True'
 
+#TESTES LOCAIS
+#DEBUG = True
+
 ALLOWED_HOSTS = os.environ.get(
     'ALLOWED_HOSTS',
     '127.0.0.1,localhost'
@@ -81,12 +84,22 @@ WSGI_APPLICATION = 'agendamento_project.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/6.0/ref/settings/#databases
 
-DATABASES = {
-    'default': dj_database_url.config(
-        default=os.environ.get('DATABASE_URL'),
-        conn_max_age=600,
-    )
-}
+if os.environ.get('DATABASE_URL'):
+    # Produção → usa o PostgreSQL do Render
+    DATABASES = {
+        'default': dj_database_url.config(
+            default=os.environ.get('DATABASE_URL'),
+            conn_max_age=600,
+        )
+    }
+else:
+    # Local → usa SQLite normalmente
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
+        }
+    }
 
 #if os.getenv("USE_SQLITE", "True") == "True":
 #    DATABASES = {
