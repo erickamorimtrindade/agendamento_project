@@ -3,7 +3,7 @@ from django.contrib.auth.models import User
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 from .models import Cliente, Agendamento, Servico
-from .forms import AgendamentoForm
+from .forms import AgendamentoForm, IdentificarUsuarioForm , RedefinirSenhaForm
 from datetime import datetime, timedelta, date
 from django.db import IntegrityError
 from django.core.exceptions import ValidationError
@@ -13,7 +13,7 @@ import json
 from .models import HorarioBloqueado
 from django.utils import timezone
 from .utils import gerar_horarios
-
+from django.contrib import messages
 
 #painel do dono --------
 
@@ -458,6 +458,71 @@ def login_view(request):
 def logout_view(request):
     logout(request)
     return redirect('login')
+
+#Campo "Esqueci minha senha"
+def esqueci_senha(request):
+    """
+    Etapa 1 — Identifica o usuário pelo nome.
+    Ao confirmar, armazena o nome na sessão e redireciona
+    para a etapa de definição da nova senha.
+    """
+    form = IdentificarUsuarioForm(request.POST or None)
+
+    if request.method == "POST" and form.is_valid():
+        nome = form.cleaned_data["nome"]
+
+        # Guarda o nome na sessão para usar na próxima etapa.
+        # A sessão é protegida pelo Django via cookie assinado.
+        request.session["redefinir_nome"] = nome
+
+        return redirect("redefinir_senha")
+
+    return render(request, "clients/esqueci_senha.html", {"form": form})
+
+def redefinir_senha(request):
+    """
+    Etapa 2 — Redefine a senha do usuário identificado na etapa 1.
+    Não deixa avançar se a sessão não tiver o nome (acesso direto à URL).
+    """
+    nome = request.session.get("redefinir_nome")
+
+    # Proteção: bloqueia acesso direto a esta URL sem ter passado pela etapa 1.
+    if not nome:
+        messages.error(request, "Sessão expirada. Por favor, comece novamente.")
+        return redirect("esqueci_senha")
+
+    form = RedefinirSenhaForm(request.POST or None)
+
+    if request.method == "POST" and form.is_valid():
+        nova_senha = form.cleaned_data["nova_senha"]
+
+        # Busca o usuário correto pelo nome salvo na sessão.
+        # Usamos filter().first() para não lançar exceção se o usuário
+        # tiver sido deletado entre as etapas.
+        usuario = User.objects.filter(username__iexact=nome).first()
+
+        if usuario:
+            # set_password() faz o hash automaticamente (pbkdf2 + salt).
+            # A senha NUNCA é salva em texto puro.
+            usuario.set_password(nova_senha)
+            usuario.save()
+
+            # Remove o nome da sessão para invalidar o fluxo.
+            del request.session["redefinir_nome"]
+
+            messages.success(
+                request,
+                "Senha redefinida com sucesso! Volte para página de login e entre com sua nova senha."
+            )
+
+        else:
+            messages.error(request, "Usuário não encontrado. Tente novamente.")
+            return redirect("esqueci_senha")
+
+    return render(request, "clients/redefinir_senha.html", {
+        "form": form,
+        "nome": nome,
+    })
 
 #Home
 @login_required

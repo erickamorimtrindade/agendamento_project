@@ -1,0 +1,303 @@
+{% extends 'clients/base_clients.html' %}
+{% load static %}
+
+{% block content %}
+
+<style>
+
+body{
+    background:#f3f4f6;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+/* ===== CONTAINER CENTRAL ===== */
+.reset-container{
+    max-width:520px;
+    margin:80px auto;
+    background:#ffffff;
+    padding:40px;
+    border-radius:18px;
+    box-shadow:0 10px 25px rgba(0,0,0,0.08);
+    text-align:center;
+}
+
+/* ===== ICONE ===== */
+.reset-icon{
+    width:70px;
+    height:70px;
+    background:#2f6fe4;
+    border-radius:50%;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    margin:0 auto 20px;
+    color:#fff;
+    font-size:28px;
+}
+
+/* ===== TITULOS ===== */
+.reset-container h1{
+    font-size:28px;
+    font-weight:700;
+    margin-bottom:8px;
+    color:#111827;
+}
+
+.subtitle{
+    color:#6b7280;
+    margin-bottom:25px;
+}
+
+/* ===== BOX USUARIO ===== */
+.usuario-box{
+    background:#f3f4f6;
+    padding:15px;
+    border-radius:12px;
+    margin-bottom:25px;
+    font-size:15px;
+    color:#374151;
+}
+
+/* ===== INPUTS ===== */
+.form-group{
+    text-align:left;
+    margin-bottom:18px;
+}
+
+.form-group label{
+    font-weight:600;
+    margin-bottom:6px;
+    display:block;
+    color:#374151;
+}
+
+.form-group input{
+    width:100%;
+    padding:12px;
+    border-radius:10px;
+    border:1px solid #d1d5db;
+    outline:none;
+    font-size:15px;
+    transition:.2s;
+}
+
+.form-group input:focus{
+    border-color:#2f6fe4;
+    box-shadow:0 0 0 2px rgba(47,111,228,.15);
+}
+
+.password-wrapper{
+    position:relative;
+}
+
+.password-wrapper input{
+    width:100%;
+    padding-right:45px;
+    border-radius:10px;
+}
+
+/* botão olho */
+.toggle-password{
+    position:absolute;
+    top:50%;
+    right:12px;
+    transform:translateY(-50%);
+    border:none;
+    background:none;
+    cursor:pointer;
+    color:#6c757d;
+    font-size:20px;
+    display:flex;
+    align-items:center;
+}
+
+.toggle-password:hover{
+    color:#0d6efd;
+}
+
+/* ===== BOTÃO PRINCIPAL ===== */
+.btn-submit{
+    width:100%;
+    background:#2f6fe4;
+    color:#fff;
+    border:none;
+    padding:14px;
+    border-radius:12px;
+    font-size:16px;
+    font-weight:600;
+    cursor:pointer;
+    transition:.2s;
+}
+
+.btn-submit:hover{
+    background:#245bd1;
+}
+
+/* ===== BOTÃO VOLTAR ===== */
+.btn-back{
+    display:block;
+    margin-top:15px;
+    text-decoration:none;
+    color:#2f6fe4;
+    font-weight:500;
+}
+
+.btn-back:hover{
+    text-decoration:underline;
+}
+
+/* ===== MENSAGENS ===== */
+.messages{
+    margin-bottom:20px;
+}
+
+.message{
+    padding:12px;
+    border-radius:10px;
+    margin-bottom:10px;
+    font-size:14px;
+}
+
+.message.error{
+    background:#ffe5e5;
+    color:#a10000;
+}
+
+.message.success{
+    background:#e5ffe8;
+    color:#0a7a22;
+}
+/*=======CUSTOM ERRO=======*/
+
+.alert-custom{
+    display:flex;
+    align-items:center;
+    gap:12px;
+    padding:16px;
+    border-radius:10px;
+    margin-bottom:20px;
+    font-size:15px;
+    font-weight:500;
+}
+
+.alert-error{
+    background:#fdecea;
+    color:#b42318;
+    border:1px solid #f5c2c7;
+}
+
+.alert-error i{
+    font-size:22px;
+    color:#dc3545;
+}
+
+.alert-custom p{
+    margin:0;
+}
+
+</style>
+
+
+<div class="reset-container">
+
+    <!-- Ícone -->
+    <div class="reset-icon">
+        <i class="bi bi-person-lock"></i>
+    </div>
+
+    <h1>Redefinir senha</h1>
+    <p class="subtitle">
+        Crie uma nova senha para acessar sua conta.
+    </p>
+
+    <div class="usuario-box">
+        Usuário identificado: <strong>{{ nome }}</strong>
+    </div>
+
+    {% if messages %}
+        <div class="messages">
+            {% for message in messages %}
+                <div class="message {{ message.tags }}">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+    {% if form.errors %}
+    <div class="alert-custom alert-error">
+        <i class="bi bi-exclamation-circle-fill"></i>
+        <div>
+            {% for field in form %}
+                {% for error in field.errors %}
+                    <p>{{ error }}</p>
+                {% endfor %}
+            {% endfor %}
+            {% for error in form.non_field_errors %}
+                <p>{{ error }}</p>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    <form method="POST">
+        {% csrf_token %}
+
+        <!-- NOVA SENHA -->
+        <div class="form-group mb-3">
+            <label class="form-label">Nova senha</label>
+
+            <div class="password-wrapper">
+                {{ form.nova_senha }}
+                <button type="button" class="toggle-password">
+                    <i class="bi bi-eye"></i>
+                </button>
+            </div>
+
+            {{ form.nova_senha.errors }}
+        </div>
+
+        <!-- CONFIRMAR SENHA -->
+        <div class="form-group mb-3">
+            <label class="form-label">Confirmar senha</label>
+
+            <div class="password-wrapper">
+                {{ form.confirmar_senha }}
+                <button type="button" class="toggle-password">
+                    <i class="bi bi-eye"></i>
+                </button>
+            </div>
+
+            {{ form.confirmar_senha.errors }}
+        </div>
+
+        <button type="submit" class="btn btn-primary w-100">
+            Salvar nova senha
+        </button>
+
+    </form>
+
+    <!-- Voltar login -->
+    <a href="{% url 'login' %}" class="btn-back">
+        Voltar para o login
+    </a>
+</div>
+
+<script>
+    document.querySelectorAll(".toggle-password").forEach(button => {
+        button.addEventListener("click", function () {
+            const input = this.parentElement.querySelector("input");
+            const icon = this.querySelector("i");
+            if (input.type === "password") {
+                input.type = "text";
+                icon.classList.remove("bi-eye");
+                icon.classList.add("bi-eye-slash");
+            } else {
+                input.type = "password";
+                icon.classList.remove("bi-eye-slash");
+                icon.classList.add("bi-eye");
+            }
+        });
+    });
+</script>
+
+{% endblock %}

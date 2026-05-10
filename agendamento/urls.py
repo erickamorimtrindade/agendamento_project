@@ -27,6 +27,8 @@ urlpatterns = [
     path('liberar-horario/', views.liberar_horario, name='liberar_horario'),
     path('perfil/', views.perfil, name='perfil'),
     path('sobre/', views.sobre, name='sobre'),
-    path('suporte/', views.suporte, name='suporte')
+    path('suporte/', views.suporte, name='suporte'),
+    path("esqueci-minha-senha/", views.esqueci_senha, name="esqueci_senha"),
+    path("redefinir-senha/",views.redefinir_senha, name="redefinir_senha"),
 
 ]

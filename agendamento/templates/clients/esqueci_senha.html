@@ -1,0 +1,243 @@
+{% extends 'clients/base_clients.html' %}
+{% load static %}
+
+{% block content %}
+
+<style>
+    .recovery-page {
+        min-height: 100vh;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        padding: 30px 16px;
+        background: #f4f4f4;
+    }
+
+    .recovery-container {
+        width: 100%;
+        max-width: 520px;
+        background: #ffffff;
+        border-radius: 24px;
+        padding: 32px 26px;
+        box-shadow: 0 4px 18px rgba(0,0,0,0.05);
+        border: 1px solid #e8e8e8;
+    }
+
+    .recovery-icon {
+        width: 70px;
+        height: 70px;
+        background-color: #0d6efd;
+        color: white;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 28px;
+        margin: 0 auto 15px;
+    }
+
+    .recovery-title {
+        text-align: center;
+        font-size: 2rem;
+        font-weight: 700;
+        color: #1d1d1d;
+        margin-bottom: 10px;
+    }
+
+    .recovery-subtitle {
+        text-align: center;
+        color: #666;
+        font-size: 1rem;
+        line-height: 1.5;
+        margin-bottom: 28px;
+    }
+
+    .info-box {
+        background: #f7f7f7;
+        border-radius: 18px;
+        padding: 18px;
+        margin-bottom: 28px;
+        text-align: center;
+    }
+
+    .info-box h3 {
+        margin: 0 0 8px;
+        font-size: 1.4rem;
+        color: #222;
+    }
+
+    .info-box p {
+        margin: 0;
+        color: #666;
+        font-size: 0.96rem;
+    }
+
+    .form-group {
+        margin-bottom: 22px;
+    }
+
+    .form-group label {
+        display: block;
+        margin-bottom: 8px;
+        font-size: 0.95rem;
+        font-weight: 600;
+        color: #333;
+    }
+
+    .form-group input {
+        width: 100%;
+        height: 54px;
+        border: 1px solid #dcdcdc;
+        border-radius: 14px;
+        padding: 0 16px;
+        font-size: 15px;
+        background: #fafafa;
+        transition: 0.2s ease;
+        box-sizing: border-box;
+    }
+
+    .form-group input:focus {
+        outline: none;
+        border-color: #216df0;
+        background: white;
+        box-shadow: 0 0 0 4px rgba(33, 109, 240, 0.10);
+    }
+
+    .btn-submit {
+        width: 100%;
+        height: 56px;
+        border: none;
+        border-radius: 16px;
+        background: #216df0;
+        color: white;
+        font-size: 1rem;
+        font-weight: 700;
+        cursor: pointer;
+        transition: 0.2s ease;
+    }
+
+    .btn-submit:hover {
+        opacity: 0.95;
+        transform: translateY(-1px);
+    }
+
+    .back-login {
+        margin-top: 22px;
+        text-align: center;
+    }
+
+    .back-login a {
+        color: #216df0;
+        text-decoration: none;
+        font-weight: 600;
+        font-size: 0.95rem;
+    }
+
+    .back-login a:hover {
+        text-decoration: underline;
+    }
+
+    .messages {
+        margin-bottom: 20px;
+    }
+
+    .message {
+        padding: 14px;
+        border-radius: 12px;
+        margin-bottom: 10px;
+        font-size: 14px;
+    }
+
+    .message.error {
+        background: #ffe7e7;
+        color: #a10000;
+    }
+
+    .message.success {
+        background: #e7ffec;
+        color: #0b7a2a;
+    }
+
+    .errorlist {
+        list-style: none;
+        padding: 0;
+        margin-top: 8px;
+        color: #c00000;
+        font-size: 13px;
+    }
+
+    @media (max-width: 600px) {
+        .recovery-container {
+            padding: 28px 20px;
+            border-radius: 20px;
+        }
+
+        .recovery-title {
+            font-size: 1.7rem;
+        }
+    }
+</style>
+
+<div class="recovery-page">
+
+    <div class="recovery-container">
+
+        <div class="recovery-icon">
+            <i class="bi bi-lock"></i>
+        </div>
+
+        <h1 class="recovery-title">
+            Recuperar senha
+        </h1>
+
+        <p class="recovery-subtitle">
+            Redefina sua senha de forma rápida e segura.
+        </p>
+
+        <div class="info-box">
+            <h3>Vamos localizar sua conta</h3>
+
+            <p>
+                Digite seu nome de usuário para continuar.
+            </p>
+        </div>
+
+        {% if messages %}
+            <div class="messages">
+                {% for message in messages %}
+                    <div class="message {{ message.tags }}">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+
+        <form method="POST">
+            {% csrf_token %}
+
+            <div class="form-group">
+                <label for="id_nome">
+                    Nome de usuário
+                </label>
+
+                {{ form.nome }}
+
+                {{ form.nome.errors }}
+            </div>
+
+            <button type="submit" class="btn-submit">
+                Continuar
+            </button>
+        </form>
+
+        <div class="back-login">
+            <a href="{% url 'login' %}">
+                Voltar para o login
+            </a>
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}
