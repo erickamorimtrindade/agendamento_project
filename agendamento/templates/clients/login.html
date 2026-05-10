@@ -77,6 +77,22 @@
         font-weight: 600;
     }
 
+    .password-bnt {
+        margin-top: 22px;
+        text-align: center;
+    }
+
+    .password-bnt a {
+        color: #216df0;
+        text-decoration: none;
+        font-weight: 600;
+        font-size: 0.95rem;
+    }
+
+    .password-bnt a:hover {
+        text-decoration: underline;
+    }
+
     @media (max-width: 576px) {
         body {
             background: #ffffff;
@@ -177,6 +193,12 @@
                     <div class="text-center mt-4 register-link">
                         <span class="text-muted">Não tem conta?</span>
                         <a href="/register/">Criar conta</a>
+                    </div>
+
+                    <div class="password-bnt">
+                        <a href="{% url 'esqueci_senha' %}">
+                            Esqueci minha senha
+                        </a>
                     </div>
 
                 </div>

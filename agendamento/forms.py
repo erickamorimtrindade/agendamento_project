@@ -1,4 +1,6 @@
 from django import forms
+from django.contrib.auth.models import User
+from django.core.exceptions import ValidationError
 from .models import Agendamento
 from datetime import date, time, datetime
 
@@ -58,5 +60,61 @@ class AgendamentoForm(forms.ModelForm):
 
         if data and horario and Agendamento.objects.filter(data=data, horario=horario).exists():
             raise forms.ValidationError("Este horário já está ocupado.")
+
+        return cleaned_data
+    
+class IdentificarUsuarioForm(forms.Form):
+    """
+    Etapa 1: identifica o usuário pelo nome cadastrado.
+    """
+    nome = forms.CharField(
+        label="Nome do usuário",
+        widget=forms.TextInput(attrs={
+            "class": "form-control",
+            "placeholder": "Digite seu nome",
+            "autofocus": True,
+        })
+    )
+    
+    def clean_nome(self):
+        nome = self.cleaned_data["nome"].strip()
+        if not User.objects.filter(username__iexact=nome).exists():
+            raise ValidationError("Nenhuma conta encontrada com este nome, tente novamente com o nome da sua conta.")
+        return nome
+    
+    
+class RedefinirSenhaForm(forms.Form):
+    """
+    Etapa 2: recebe e valida a nova senha do usuário já identificado.
+    """
+    nova_senha = forms.CharField(
+        label="Nova senha",
+        min_length=5,
+        widget=forms.PasswordInput(attrs={
+            "class": "form-control",
+            "placeholder": "Mínimo 5 caracteres",
+        })
+    )
+    confirmar_senha = forms.CharField(
+        label="Confirmar nova senha",
+        widget=forms.PasswordInput(attrs={
+            "class": "form-control",
+            "placeholder": "Repita a nova senha",
+        })
+    )
+    
+    def clean(self):
+        cleaned_data = super().clean()
+        nova = cleaned_data.get("nova_senha")
+        confirmar = cleaned_data.get("confirmar_senha")
+
+        # Validação: campos vazios já são capturados pelo min_length,
+        # mas verificamos a igualdade só se ambos estiverem presentes.
+        if nova and confirmar and nova != confirmar:
+            # erro amigável associado ao campo correto
+            self.add_error(
+                "confirmar_senha",
+                "As senhas não coincidem. Digite novamente."
+            )
 
         return cleaned_data
