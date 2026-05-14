@@ -196,7 +196,6 @@
 
         <div class="info-box">
             <h3>Vamos localizar sua conta</h3>
-
             <p>
                 Digite seu nome de usuário para continuar.
             </p>
@@ -215,6 +214,8 @@
         <form method="POST">
             {% csrf_token %}
 
+            {{ form.non_field_errors }}
+
             <div class="form-group">
                 <label for="id_nome">
                     Nome de usuário
@@ -223,6 +224,15 @@
                 {{ form.nome }}
 
                 {{ form.nome.errors }}
+            </div>
+            <div class="form-group">
+                <label for="id_telefone">
+                    Telefone do usuário
+                </label>
+
+                {{ form.telefone }}
+
+                {{ form.telefone.errors }}
             </div>
 
             <button type="submit" class="btn-submit">

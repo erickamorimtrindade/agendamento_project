@@ -20,6 +20,7 @@ urlpatterns = [
     path('painel/agendamento/status/<int:id>/<str:status>/', views.atualizar_status, name='atualizar_status'),
     path('painel/proximos-agendamentos/', views.proximos_agendamentos, name='proximos_agendamentos'),
     path('gerenciar-horarios/', views.gerenciar_horarios, name='gerenciar_horarios'),
+    path('remover-excecao/', views.remover_excecao, name='remover_excecao'),
     path('bloquear-horario/', views.bloquear_horario, name='bloquear_horario'),
     path('desbloquear-horario/', views.desbloquear_horario, name='desbloquear_horario'),
     path('bloquear-dia/', views.bloquear_dia, name='bloquear_dia'),

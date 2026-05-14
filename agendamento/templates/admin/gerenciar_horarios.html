@@ -22,6 +22,9 @@
     --success:#16a34a;
     --success-soft:#ecfdf5;
 
+    --warning:#d97706;
+    --warning-soft:#fffbeb;
+
     --neutral:#475569;
     --neutral-soft:#f1f5f9;
 
@@ -186,13 +189,9 @@ body{
     border-radius:50%;
 }
 
-.dot-bloqueado{
-    background:var(--danger);
-}
-
-.dot-liberado{
-    background:var(--success);
-}
+.dot-bloqueado{ background:var(--danger); }
+.dot-liberado{ background:var(--success); }
+.dot-excecao{ background:var(--warning); }
 
 .info-banner{
     background:linear-gradient(135deg,#f8fafc,#f1f5f9);
@@ -225,23 +224,37 @@ body{
     box-shadow:0 10px 18px rgba(0,0,0,.05);
 }
 
-.horario-card.bloqueado{
-    background:var(--danger-soft);
-    border-color:var(--danger);
-}
-
-.horario-card.bloqueado:hover{
-    background:#fee2e2;
-}
-
-.horario-card.liberado{
+/* dia livre, horário livre */
+.horario-card.status-livre{
     background:var(--success-soft);
     border-color:var(--success);
 }
+.horario-card.status-livre:hover{ background:#dcfce7; }
+.horario-card.status-livre .horario-status{ color:var(--success); }
 
-.horario-card.liberado:hover{
-    background:#dcfce7;
+/* bloqueado individualmente */
+.horario-card.status-bloqueado-individual{
+    background:var(--danger-soft);
+    border-color:var(--danger);
 }
+.horario-card.status-bloqueado-individual:hover{ background:#fee2e2; }
+.horario-card.status-bloqueado-individual .horario-status{ color:var(--danger); }
+
+/* dia bloqueado, horário sem exceção */
+.horario-card.status-bloqueado-pelo-dia{
+    background:var(--danger-soft);
+    border-color:var(--danger);
+}
+.horario-card.status-bloqueado-pelo-dia:hover{ background:#fee2e2; }
+.horario-card.status-bloqueado-pelo-dia .horario-status{ color:var(--danger); }
+
+/* dia bloqueado, mas esse horário foi liberado como exceção */
+.horario-card.status-excecao{
+    background:var(--warning-soft);
+    border-color:var(--warning);
+}
+.horario-card.status-excecao:hover{ background:#fef3c7; }
+.horario-card.status-excecao .horario-status{ color:var(--warning); }
 
 .horario-hora{
     font-size:1rem;
@@ -254,14 +267,6 @@ body{
     font-size:.78rem;
     font-weight:700;
     color:var(--sub);
-}
-
-.horario-card.bloqueado .horario-status{
-    color:var(--danger);
-}
-
-.horario-card.liberado .horario-status{
-    color:var(--success);
 }
 
 .empty-state{
@@ -328,47 +333,23 @@ body{
     transition:.2s;
 }
 
-.btn-action:hover{
-    transform:translateY(-1px);
-}
+.btn-action:hover{ transform:translateY(-1px); }
 
-.btn-bloquear{
-    background:var(--danger);
-    color:#fff;
-}
-
-.btn-liberar{
-    background:var(--success);
-    color:#fff;
-}
-
-.btn-desbloquear{
-    background:var(--primary);
-    color:#fff;
-}
-
-.btn-cancel{
-    background:var(--neutral-soft);
-    color:var(--neutral);
-}
+.btn-bloquear{ background:var(--danger); color:#fff; }
+.btn-liberar{ background:var(--warning); color:#fff; }
+.btn-desbloquear{ background:var(--primary); color:#fff; }
+.btn-cancel{ background:var(--neutral-soft); color:var(--neutral); }
 
 @media (max-width: 768px){
-    .wrapper{
-        padding:20px 14px;
-    }
+    .wrapper{ padding:20px 14px; }
 
     .main-card{
         padding:22px 16px;
         border-radius:18px;
     }
 
-    .top{
-        align-items:stretch;
-    }
-
-    .back-btn{
-        width:100%;
-    }
+    .top{ align-items:stretch; }
+    .back-btn{ width:100%; }
 
     .controls{
         flex-direction:column;
@@ -381,18 +362,14 @@ body{
     }
 
     .date-input,
-    .day-btn{
-        width:100%;
-    }
+    .day-btn{ width:100%; }
 
     .horarios-grid{
         grid-template-columns:repeat(2,1fr);
         gap:10px;
     }
 
-    .horario-card{
-        padding:14px 10px;
-    }
+    .horario-card{ padding:14px 10px; }
 }
 </style>
 {% endblock %}
@@ -448,6 +425,10 @@ body{
                 <span class="legend-dot dot-liberado"></span>
                 Liberado
             </div>
+            <div class="legend-item">
+                <span class="legend-dot dot-excecao"></span>
+                Liberado como exceção
+            </div>
         </div>
 
         <div class="info-banner">
@@ -457,20 +438,54 @@ body{
         {% if horarios %}
             <div class="horarios-grid">
                 {% for horario in horarios %}
-                    <div
-                        class="horario-card {% if dia_bloqueado or horario in bloqueados %}bloqueado{% else %}liberado{% endif %}"
-                        data-horario="{{ horario }}"
-                        data-status="{% if dia_bloqueado or horario in bloqueados %}bloqueado{% else %}liberado{% endif %}"
-                    >
-                        <div class="horario-hora">{{ horario }}</div>
-                        <div class="horario-status">
-                            {% if dia_bloqueado or horario in bloqueados %}
-                                Bloqueado
-                            {% else %}
-                                Liberado
-                            {% endif %}
+
+                    {# Determina o status real de cada horário #}
+                    {% if horario in horarios_liberados %}
+                        {# Dia bloqueado mas esse horário foi liberado como exceção #}
+                        <div
+                            class="horario-card status-excecao"
+                            data-horario="{{ horario }}"
+                            data-status="excecao"
+                        >
+                            <div class="horario-hora">{{ horario }}</div>
+                            <div class="horario-status">Exceção</div>
                         </div>
-                    </div>
+
+                    {% elif dia_bloqueado %}
+                        {# Dia inteiro bloqueado, sem exceção para este horário #}
+                        <div
+                            class="horario-card status-bloqueado-pelo-dia"
+                            data-horario="{{ horario }}"
+                            data-status="bloqueado_pelo_dia"
+                        >
+                            <div class="horario-hora">{{ horario }}</div>
+                            <div class="horario-status">Bloqueado</div>
+                        </div>
+
+                    {% elif horario in bloqueados %}
+                        {# Bloqueado individualmente, dia livre #}
+                        <div
+                            class="horario-card status-bloqueado-individual"
+                            data-horario="{{ horario }}"
+                            data-status="bloqueado_individual"
+                        >
+                            <div class="horario-hora">{{ horario }}</div>
+                            <div class="horario-status">Bloqueado</div>
+                        </div>
+
+                    {% else %}
+                        {# Dia livre, horário livre #}
+                        <div
+                            class="horario-card status-livre"
+                            data-horario="{{ horario }}"
+                            data-status="livre"
+                        >
+                            <div class="horario-hora">{{ horario }}</div>
+                            <div class="horario-status">Liberado</div>
+                        </div>
+
+                    {% endif %}
+
                 {% endfor %}
             </div>
         {% else %}
@@ -495,7 +510,7 @@ body{
 
         <div class="modal-actions">
             <button type="button" class="btn-action btn-bloquear" id="acaoBloquear">Bloquear</button>
-            <button type="button" class="btn-action btn-liberar" id="acaoLiberar">Liberar</button>
+            <button type="button" class="btn-action btn-liberar" id="acaoLiberar">Liberar como exceção</button>
             <button type="button" class="btn-action btn-desbloquear" id="acaoDesbloquear">Desbloquear</button>
             <button type="button" class="btn-action btn-cancel" id="acaoCancelar">Cancelar</button>
         </div>
@@ -523,7 +538,9 @@ document.addEventListener("DOMContentLoaded", function () {
 
     let horarioSelecionado = "";
     let contexto = "";
+    let statusAtual = "";
 
+    // ── Flatpickr ──────────────────────────────────────────────
     if (campoData) {
         const valorInicial = campoData.value.trim();
 
@@ -548,60 +565,80 @@ document.addEventListener("DOMContentLoaded", function () {
 
         campoData.addEventListener("input", function(e) {
             let v = e.target.value.replace(/\D/g, "");
-
-            if (v.length > 8) {
-                v = v.slice(0, 8);
-            }
-
+            if (v.length > 8) v = v.slice(0, 8);
             if (v.length > 4) {
                 v = v.replace(/(\d{2})(\d{2})(\d{1,4})/, "$1/$2/$3");
             } else if (v.length > 2) {
                 v = v.replace(/(\d{2})(\d{1,2})/, "$1/$2");
             }
-
             e.target.value = v;
         });
 
         campoData.addEventListener("keydown", function(e) {
             if (e.key === "Enter") {
                 e.preventDefault();
-
                 const valor = campoData.value.trim();
-
                 if (!/^\d{2}\/\d{2}\/\d{4}$/.test(valor)) return;
-
                 const [dia, mes, ano] = valor.split("/");
                 const dataObj = new Date(ano, mes - 1, dia);
-
                 if (
                     dataObj.getFullYear() !== Number(ano) ||
                     dataObj.getMonth() !== Number(mes) - 1 ||
                     dataObj.getDate() !== Number(dia)
-                ) {
-                    return;
-                }
-
+                ) return;
                 window.location.href = `{% url 'gerenciar_horarios' %}?data=${encodeURIComponent(valor)}`;
             }
         });
     }
 
-    function abrirModal(tipo, horario = "") {
+    // ── Modal ───────────────────────────────────────────────────
+    function ocultarBotoes() {
+        btnBloquear.style.display = "none";
+        btnLiberar.style.display = "none";
+        btnDesbloquear.style.display = "none";
+    }
+
+    function abrirModal(tipo, horario, statusReal) {
         contexto = tipo;
-        horarioSelecionado = horario;
+        statusAtual = statusReal || "";
+        horarioSelecionado = horario || "";
+        ocultarBotoes();
 
         if (tipo === "horario") {
             modalTitle.textContent = `Horário ${horario}`;
-            modalDesc.textContent = "Escolha a ação que deseja aplicar neste horário.";
-            btnBloquear.style.display = "block";
-            btnLiberar.style.display = "none";
-            btnDesbloquear.style.display = "block";
+
+            if (statusReal === "livre") {
+                // dia livre + horário livre → só pode bloquear
+                modalDesc.textContent = "Este horário está disponível. Deseja bloqueá-lo?";
+                btnBloquear.style.display = "block";
+
+            } else if (statusReal === "bloqueado_individual") {
+                // bloqueado manualmente → só pode desbloquear
+                modalDesc.textContent = "Este horário está bloqueado individualmente. Deseja desbloqueá-lo?";
+                btnDesbloquear.style.display = "block";
+
+            } else if (statusReal === "bloqueado_pelo_dia") {
+                // dia inteiro bloqueado → pode liberar como exceção
+                modalDesc.textContent = "O dia inteiro está bloqueado. Deseja liberar este horário como exceção?";
+                btnLiberar.style.display = "block";
+
+            } else if (statusReal === "excecao") {
+                // já é uma exceção liberada → pode desfazer a liberação
+                modalDesc.textContent = "Este horário está liberado como exceção. Deseja desfazer a liberação?";
+                btnDesbloquear.style.display = "block";
+            }
+
         } else if (tipo === "dia") {
             modalTitle.textContent = "Dia inteiro";
-            modalDesc.textContent = "Deseja bloquear ou desbloquear o dia inteiro?";
-            btnBloquear.style.display = "block";
-            btnLiberar.style.display = "none";
-            btnDesbloquear.style.display = "block";
+            const diaBloqueado = btnToggleDia.dataset.bloqueado === "true";
+
+            if (diaBloqueado) {
+                modalDesc.textContent = "Deseja desbloquear o dia inteiro?";
+                btnDesbloquear.style.display = "block";
+            } else {
+                modalDesc.textContent = "Deseja bloquear o dia inteiro?";
+                btnBloquear.style.display = "block";
+            }
         }
 
         modal.classList.add("show");
@@ -615,64 +652,62 @@ document.addEventListener("DOMContentLoaded", function () {
 
     function enviarAcao(url) {
         const dataSelecionada = campoData.value.trim();
-
         if (!dataSelecionada) {
             alert("Selecione uma data primeiro.");
             return;
         }
-
         inputData.value = dataSelecionada;
         inputHorario.value = horarioSelecionado;
         form.action = url;
         form.submit();
     }
 
+    // ── Listeners ───────────────────────────────────────────────
     cards.forEach(card => {
         card.addEventListener("click", function () {
             const dataSelecionada = campoData.value.trim();
-
             if (!dataSelecionada) {
                 alert("Selecione uma data primeiro.");
                 return;
             }
-
-            abrirModal("horario", card.dataset.horario);
+            // passa o data-status real do card para o modal
+            abrirModal("horario", card.dataset.horario, card.dataset.status);
         });
     });
 
     btnToggleDia.addEventListener("click", function () {
         const dataSelecionada = campoData.value.trim();
-
         if (!dataSelecionada) {
             alert("Selecione uma data primeiro.");
             return;
         }
-
-        abrirModal("dia");
+        abrirModal("dia", "", "");
     });
 
     btnBloquear.addEventListener("click", function () {
-        if (contexto === "horario") {
-            enviarAcao("{% url 'bloquear_horario' %}");
-        } else if (contexto === "dia") {
-            enviarAcao("{% url 'bloquear_dia' %}");
-        }
+        if (contexto === "horario") enviarAcao("{% url 'bloquear_horario' %}");
+        else if (contexto === "dia") enviarAcao("{% url 'bloquear_dia' %}");
+    });
+
+    btnLiberar.addEventListener("click", function () {
+        // só usado para horários dentro de um dia bloqueado
+        if (contexto === "horario") enviarAcao("{% url 'liberar_horario' %}");
     });
 
     btnDesbloquear.addEventListener("click", function () {
-        if (contexto === "horario") {
-            enviarAcao("{% url 'desbloquear_horario' %}");
-        } else if (contexto === "dia") {
-            enviarAcao("{% url 'desbloquear_dia' %}");
-        }
-    });
+    if (contexto === "horario" && statusAtual === "excecao") {
+        enviarAcao("{% url 'remover_excecao' %}");
+    } else if (contexto === "horario") {
+        enviarAcao("{% url 'desbloquear_horario' %}");
+    } else if (contexto === "dia") {
+        enviarAcao("{% url 'desbloquear_dia' %}");
+    }
+});
 
     btnCancelar.addEventListener("click", fecharModal);
 
     modal.addEventListener("click", function (e) {
-        if (e.target === modal) {
-            fecharModal();
-        }
+        if (e.target === modal) fecharModal();
     });
 });
 </script>
