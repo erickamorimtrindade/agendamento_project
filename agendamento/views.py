@@ -9,22 +9,39 @@ from django.db import IntegrityError
 from django.core.exceptions import ValidationError
 from django.contrib.admin.views.decorators import staff_member_required
 from collections import defaultdict
-import json
+import json, re
 from .models import HorarioBloqueado
 from django.utils import timezone
 from .utils import gerar_horarios
 from django.contrib import messages
+from decimal import Decimal
 
-#painel do dono --------
+STATUS_VALIDOS = {'presente', 'ausente', 'pendente'}
+#painel do adm --------
 
 @staff_member_required
 def criar_servico(request):
     if request.method == "POST":
-        nome = request.POST.get("nome")
-        descricao = request.POST.get("descricao")
-        preco = request.POST.get("preco")
-        duracao = request.POST.get("duracao_minutos")
+        nome = request.POST.get("nome", "").strip()
+        descricao = request.POST.get("descricao", "").strip()
+        preco = request.POST.get("preco", "").strip()
+        duracao = request.POST.get("duracao_minutos", "").strip()
 
+        # 1. valida primeiro
+        if not nome or not preco or not duracao:
+            return render(request, "admin/criar_servico.html", {
+                "erro": "Preencha todos os campos obrigatórios."
+            })
+
+        try:
+            preco = float(preco)
+            duracao = int(duracao)
+        except ValueError:
+            return render(request, "admin/criar_servico.html", {
+                "erro": "Preço e duração devem ser numéricos."
+            })
+
+        # 2. só cria após validar
         Servico.objects.create(
             nome=nome,
             descricao=descricao,
@@ -86,16 +103,15 @@ def relatorio_31_dias(request):
     agendamentos = Agendamento.objects.filter(
         data__range=[inicio, hoje],
         status='presente'
-    ).order_by('data')
+    ).select_related('servico').order_by('data')
 
-    total = sum(float(ag.servico.preco) for ag in agendamentos)
+    total = sum(ag.servico.preco for ag in agendamentos)
 
-    faturamento_por_dia = defaultdict(float)
+    faturamento_por_dia = defaultdict(Decimal)
 
     for ag in agendamentos:
-        faturamento_por_dia[ag.data.isoformat()] += float(ag.servico.preco)
+        faturamento_por_dia[ag.data.isoformat()] += ag.servico.preco
 
-    
     datas_ordenadas = []
     valores_ordenados = []
 
@@ -104,19 +120,19 @@ def relatorio_31_dias(request):
         dia_str = dia.isoformat()
 
         datas_ordenadas.append(dia.strftime("%d/%m"))
-        valores_ordenados.append(round(faturamento_por_dia.get(dia_str, 0), 2))
+        valores_ordenados.append(float(round(faturamento_por_dia.get(dia_str, Decimal('0')), 2)))
 
     
     servicos = Servico.objects.all()
-    servicos_dict = {s.nome: 0 for s in servicos}
+    servicos_dict = {s.nome: Decimal('0') for s in servicos}
 
     for ag in agendamentos:
-        servicos_dict[ag.servico.nome] += float(ag.servico.preco)
+        servicos_dict[ag.servico.nome] += ag.servico.preco
 
     servicos_dict = {k: v for k, v in servicos_dict.items() if v > 0}
 
     servicos_labels = list(servicos_dict.keys())
-    servicos_valores = list(servicos_dict.values())
+    servicos_valores = [float(v) for v in servicos_dict.values()]
 
     
     dias_semana = {
@@ -195,10 +211,13 @@ def painel_admin(request):
 
 @staff_member_required
 def atualizar_status(request, id, status):
+    if status not in STATUS_VALIDOS:
+        messages.error(request, "Status inválido.")
+        return redirect('agendamentos_hoje')
+
     ag = get_object_or_404(Agendamento, id=id)
     ag.status = status
     ag.save()
-
     return redirect('agendamentos_hoje')
 
 @staff_member_required
@@ -208,14 +227,7 @@ def proximos_agendamentos(request):
 
     data_convertida = None
 
-    if data:
-        try:
-            data_convertida = datetime.strptime(data, "%d/%m/%Y").date()
-        except:
-            try:
-                data_convertida = datetime.strptime(data, "%Y-%m-%d").date()
-            except:
-                data_convertida = None
+    data_convertida = converter_data(data) if data else None
 
     hoje = date.today()
 
@@ -395,12 +407,32 @@ def desbloquear_dia(request):
         data = request.POST.get("data")
         data_formatada = converter_data(data)
 
-        if data_formatada:
-
+        if data_formatada and data_formatada >= date.today():
             HorarioBloqueado.objects.filter(
                 data=data_formatada,
                 horario=None,
                 tipo="bloqueio"
+            ).delete()
+
+        return redirect(f"/gerenciar-horarios/?data={data}")
+
+    return redirect("/gerenciar-horarios/")
+
+@staff_member_required
+def remover_excecao(request):
+    if request.method == "POST":
+        data = request.POST.get("data")
+        horario = request.POST.get("horario")
+
+        data_formatada = converter_data(data)
+
+        if data_formatada and horario:
+            horario_formatado = datetime.strptime(horario, "%H:%M").time()
+
+            HorarioBloqueado.objects.filter(
+                data=data_formatada,
+                horario=horario_formatado,
+                tipo="liberado"
             ).delete()
 
         return redirect(f"/gerenciar-horarios/?data={data}")
@@ -461,68 +493,56 @@ def logout_view(request):
 
 #Campo "Esqueci minha senha"
 def esqueci_senha(request):
-    """
-    Etapa 1 — Identifica o usuário pelo nome.
-    Ao confirmar, armazena o nome na sessão e redireciona
-    para a etapa de definição da nova senha.
-    """
     form = IdentificarUsuarioForm(request.POST or None)
 
     if request.method == "POST" and form.is_valid():
         nome = form.cleaned_data["nome"]
+        telefone = form.cleaned_data["telefone"]
 
-        # Guarda o nome na sessão para usar na próxima etapa.
-        # A sessão é protegida pelo Django via cookie assinado.
-        request.session["redefinir_nome"] = nome
+        usuario = User.objects.filter(username__iexact=nome).first()
 
+        def apenas_digitos(valor):
+            return re.sub(r'\D', '', valor or '')
+
+        telefone_confere = (
+            usuario is not None
+            and hasattr(usuario, 'cliente')
+            and apenas_digitos(usuario.cliente.telefone) == apenas_digitos(telefone)
+        )
+
+        if not telefone_confere:
+            form.add_error(None, "Dados não encontrados. Verifique nome e telefone.")
+            return render(request, "clients/esqueci_senha.html", {"form": form})
+
+        request.session["redefinir_nome"] = usuario.username
         return redirect("redefinir_senha")
 
     return render(request, "clients/esqueci_senha.html", {"form": form})
 
 def redefinir_senha(request):
-    """
-    Etapa 2 — Redefine a senha do usuário identificado na etapa 1.
-    Não deixa avançar se a sessão não tiver o nome (acesso direto à URL).
-    """
     nome = request.session.get("redefinir_nome")
 
-    # Proteção: bloqueia acesso direto a esta URL sem ter passado pela etapa 1.
     if not nome:
-        messages.error(request, "Sessão expirada. Por favor, comece novamente.")
+        messages.error(request, "Sessão expirada. Comece novamente.")
         return redirect("esqueci_senha")
 
     form = RedefinirSenhaForm(request.POST or None)
 
     if request.method == "POST" and form.is_valid():
         nova_senha = form.cleaned_data["nova_senha"]
-
-        # Busca o usuário correto pelo nome salvo na sessão.
-        # Usamos filter().first() para não lançar exceção se o usuário
-        # tiver sido deletado entre as etapas.
         usuario = User.objects.filter(username__iexact=nome).first()
 
         if usuario:
-            # set_password() faz o hash automaticamente (pbkdf2 + salt).
-            # A senha NUNCA é salva em texto puro.
             usuario.set_password(nova_senha)
             usuario.save()
-
-            # Remove o nome da sessão para invalidar o fluxo.
             del request.session["redefinir_nome"]
-
-            messages.success(
-                request,
-                "Senha redefinida com sucesso! Volte para página de login e entre com sua nova senha."
-            )
-
+            messages.success(request, "Senha redefinida com sucesso! Pressione o botão 'Voltar para o login' e entre com sua nova senha!")
+            #return redirect("login")
         else:
-            messages.error(request, "Usuário não encontrado. Tente novamente.")
+            messages.error(request, "Usuário não encontrado.")
             return redirect("esqueci_senha")
 
-    return render(request, "clients/redefinir_senha.html", {
-        "form": form,
-        "nome": nome,
-    })
+    return render(request, "clients/redefinir_senha.html", {"form": form, "nome": nome})
 
 #Home
 @login_required
@@ -548,19 +568,9 @@ def criar_agendamento(request):
 
     servico = get_object_or_404(Servico, id=servico_id, ativo=True)
 
-
     data_selecionada = request.GET.get("data") or request.POST.get("data")
-    data_convertida = None
+    data_convertida = converter_data(data_selecionada)  # unificado com converter_data()
 
-    if data_selecionada:
-        try:
-            data_convertida = datetime.strptime(data_selecionada, "%d/%m/%Y").date()
-        except ValueError:
-            try:
-                data_convertida = datetime.strptime(data_selecionada, "%Y-%m-%d").date()
-            except ValueError:
-                data_convertida = None
-                
     horarios = gerar_horarios(data_convertida)
     horarios_ocupados = []
 
@@ -569,6 +579,19 @@ def criar_agendamento(request):
         horarios_ocupados = [
             ag.horario.strftime("%H:%M") for ag in agendamentos_do_dia
         ]
+
+    # ─── CONSULTA ÚNICA — reutilizada em todo o resto da view ───
+    bloqueios = (
+        HorarioBloqueado.objects.filter(data=data_convertida)
+        if data_convertida
+        else HorarioBloqueado.objects.none()
+    )
+
+    dia_bloqueado = bloqueios.filter(
+        horario__isnull=True,
+        tipo='bloqueio'
+    ).exists()
+    # ────────────────────────────────────────────────────────────
 
     if request.method == "POST":
         form = AgendamentoForm(request.POST)
@@ -586,13 +609,7 @@ def criar_agendamento(request):
         if data_convertida and horario_selecionado:
             horario_time = datetime.strptime(horario_selecionado, "%H:%M").time()
 
-            bloqueios = HorarioBloqueado.objects.filter(data=data_convertida)
-
-            dia_bloqueado = bloqueios.filter(
-                horario__isnull=True,
-                tipo='bloqueio'
-            ).exists()
-
+            # reutiliza 'bloqueios' e 'dia_bloqueado' já definidos acima
             horario_bloqueado = bloqueios.filter(
                 horario=horario_time,
                 tipo='bloqueio'
@@ -606,7 +623,6 @@ def criar_agendamento(request):
             if (dia_bloqueado and not horario_liberado) or horario_bloqueado:
                 bloqueado = True
 
-
         if bloqueado:
             form.add_error("horario", "Este horário está bloqueado.")
         elif ja_existe:
@@ -619,9 +635,7 @@ def criar_agendamento(request):
             try:
                 agendamento.full_clean()
                 agendamento.save()
-
                 request.session.pop("servico_id", None)
-
                 return redirect('listar_agendamentos')
 
             except ValidationError as e:
@@ -634,17 +648,9 @@ def criar_agendamento(request):
     else:
         form = AgendamentoForm(initial={"data": data_selecionada})
 
+    # monta lista de horários bloqueados para o template
+    # reutiliza 'bloqueios' e 'dia_bloqueado' — sem nova query
     bloqueados = []
-
-    bloqueios = HorarioBloqueado.objects.none() 
-
-    if data_convertida:
-        bloqueios = HorarioBloqueado.objects.filter(data=data_convertida)
-
-    dia_bloqueado = bloqueios.filter(
-        horario__isnull=True,
-        tipo='bloqueio'
-    ).exists()
 
     for h in horarios:
         horario_time = datetime.strptime(h, "%H:%M").time()
@@ -716,12 +722,14 @@ def escolher_servico(request):
         "erro": erro,
     })
 
-
+@login_required
 def perfil(request):
     return render(request, 'clients/perfil.html')
 
+@login_required
 def sobre(request):
     return render(request, 'clients/sobre.html')
 
+@login_required
 def suporte(request):
     return render(request, 'clients/suporte.html')

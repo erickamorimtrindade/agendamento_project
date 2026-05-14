@@ -69,20 +69,18 @@ class IdentificarUsuarioForm(forms.Form):
     """
     nome = forms.CharField(
         label="Nome do usuário",
+        max_length= 100,
         widget=forms.TextInput(attrs={
             "class": "form-control",
             "placeholder": "Digite seu nome",
             "autofocus": True,
         })
     )
-    
-    def clean_nome(self):
-        nome = self.cleaned_data["nome"].strip()
-        if not User.objects.filter(username__iexact=nome).exists():
-            raise ValidationError("Nenhuma conta encontrada com este nome, tente novamente com o nome da sua conta.")
-        return nome
-    
-    
+    telefone = forms.CharField(
+        label="Telefone cadastrado",
+        max_length=15,
+        widget=forms.TextInput(attrs={"placeholder": "Ex: (83) 90000-0000"})
+    )
 class RedefinirSenhaForm(forms.Form):
     """
     Etapa 2: recebe e valida a nova senha do usuário já identificado.
