@@ -482,7 +482,7 @@ def login_view(request):
             else:
                 return redirect('home')
 
-        return render(request, 'clients/login.html', {'erro': 'Login inválido'})
+        return render(request, 'clients/login.html', {'erro': 'Login inválido! Verifique os dados da conta ou Crie uma!'})
 
     return render(request, 'clients/login.html')
 
@@ -733,3 +733,6 @@ def sobre(request):
 @login_required
 def suporte(request):
     return render(request, 'clients/suporte.html')
+
+def tutorial(request):
+    return render(request, 'clients/tutorial.html')
