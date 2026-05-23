@@ -205,6 +205,25 @@
                 </div>
             </div>
 
+            <div class="mb-3">
+                <div class="form-check" style="padding: 14px; background: #ffffff; border: 1px solid #d1d5db; border-radius: 14px;">
+                    <input
+                        class="form-check-input"
+                        type="checkbox"
+                        name="horario_duplo"
+                        id="horario_duplo"
+                        {% if servico.horario_duplo %}checked{% endif %}
+                        style="width: 18px; height: 18px; margin-top: 2px; cursor: pointer;"
+                    >
+                    <label class="form-check-label ms-2" for="horario_duplo" style="cursor: pointer; font-weight: 600; color: #1f2937;">
+                        Ocupa dois horários consecutivos
+                        <small class="d-block text-muted fw-normal" style="font-size: 0.82rem; margin-top: 2px;">
+                            Marque se este serviço precisar reservar o horário seguinte automaticamente.
+                        </small>
+                    </label>
+                </div>
+            </div>
+
             <div class="form-actions">
                 <a href="{% url 'listar_servicos' %}" class="btn btn-cancel">
                     <i class="bi bi-arrow-left"></i>

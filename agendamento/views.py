@@ -12,7 +12,12 @@ from collections import defaultdict
 import json, re
 from .models import HorarioBloqueado
 from django.utils import timezone
-from .utils import gerar_horarios
+from .utils import (
+    gerar_horarios,
+    requer_horario_duplo,
+    get_proximo_horario,
+    is_excecao_almoco,
+)
 from django.contrib import messages
 from decimal import Decimal
 
@@ -26,6 +31,7 @@ def criar_servico(request):
         descricao = request.POST.get("descricao", "").strip()
         preco = request.POST.get("preco", "").strip()
         duracao = request.POST.get("duracao_minutos", "").strip()
+        horario_duplo = request.POST.get("horario_duplo") == "on"
 
         # 1. valida primeiro
         if not nome or not preco or not duracao:
@@ -46,7 +52,8 @@ def criar_servico(request):
             nome=nome,
             descricao=descricao,
             preco=preco,
-            duracao_minutos=duracao
+            duracao_minutos=duracao,
+            horario_duplo=horario_duplo,
         )
 
         return redirect("listar_servicos")
@@ -69,7 +76,57 @@ def editar_servico(request, id):
         servico.descricao = request.POST.get("descricao")
         servico.preco = request.POST.get("preco")
         servico.duracao_minutos = request.POST.get("duracao_minutos")
+
+        novo_duplo = request.POST.get("horario_duplo") == "on"
+        era_duplo = servico.horario_duplo  # valor antes de salvar
+
+        servico.horario_duplo = novo_duplo
         servico.save()
+
+        # ── Sincroniza bloqueios retroativos para agendamentos futuros ──
+        hoje = date.today()
+        agendamentos_futuros = Agendamento.objects.filter(
+            servico=servico,
+            data__gte=hoje
+        )
+
+        for ag in agendamentos_futuros:
+            horario_str = ag.horario.strftime("%H:%M")
+
+            # Ignora exceção do almoço e último horário do dia
+            if is_excecao_almoco(horario_str):
+                continue
+
+            horarios_do_dia = gerar_horarios(ag.data)
+            proximo = get_proximo_horario(horario_str, horarios_do_dia)
+
+            if proximo is None:
+                continue  # último horário do dia, não bloqueia
+
+            proximo_time = datetime.strptime(proximo, "%H:%M").time()
+
+            if novo_duplo and not era_duplo:
+                # Serviço virou duplo → cria bloqueio para o próximo horário
+                # Só bloqueia se não houver agendamento real nesse horário
+                proximo_tem_agendamento = Agendamento.objects.filter(
+                    data=ag.data,
+                    horario=proximo_time
+                ).exists()
+                if not proximo_tem_agendamento:
+                    HorarioBloqueado.objects.update_or_create(
+                        data=ag.data,
+                        horario=proximo_time,
+                        defaults={"tipo": "bloqueio"}
+                    )
+
+            elif era_duplo and not novo_duplo:
+                # Serviço deixou de ser duplo → remove o bloqueio criado por ele
+                HorarioBloqueado.objects.filter(
+                    data=ag.data,
+                    horario=proximo_time,
+                    tipo="bloqueio"
+                ).delete()
+        # ────────────────────────────────────────────────────────────────
 
         return redirect("listar_servicos")
 
@@ -568,8 +625,11 @@ def criar_agendamento(request):
 
     servico = get_object_or_404(Servico, id=servico_id, ativo=True)
 
+    # Detecta se esse serviço precisa de dois horários consecutivos
+    duplo = requer_horario_duplo(servico)
+
     data_selecionada = request.GET.get("data") or request.POST.get("data")
-    data_convertida = converter_data(data_selecionada)  # unificado com converter_data()
+    data_convertida = converter_data(data_selecionada)
 
     horarios = gerar_horarios(data_convertida)
     horarios_ocupados = []
@@ -609,7 +669,6 @@ def criar_agendamento(request):
         if data_convertida and horario_selecionado:
             horario_time = datetime.strptime(horario_selecionado, "%H:%M").time()
 
-            # reutiliza 'bloqueios' e 'dia_bloqueado' já definidos acima
             horario_bloqueado = bloqueios.filter(
                 horario=horario_time,
                 tipo='bloqueio'
@@ -623,10 +682,49 @@ def criar_agendamento(request):
             if (dia_bloqueado and not horario_liberado) or horario_bloqueado:
                 bloqueado = True
 
+        # ── Validação do horário duplo ──────────────────────────────────
+        erro_duplo = None
+        if duplo and horario_selecionado and data_convertida and not bloqueado and not ja_existe:
+            if not is_excecao_almoco(horario_selecionado):
+                proximo = get_proximo_horario(horario_selecionado, horarios)
+
+                if proximo is not None:
+                    # Verifica se o próximo está ocupado por agendamento
+                    proximo_ocupado_ag = Agendamento.objects.filter(
+                        data=data_convertida,
+                        horario=datetime.strptime(proximo, "%H:%M").time()
+                    ).exists()
+
+                    # Verifica se o próximo está bloqueado manualmente
+                    proximo_time = datetime.strptime(proximo, "%H:%M").time()
+                    proximo_bloqueado_manual = bloqueios.filter(
+                        horario=proximo_time,
+                        tipo='bloqueio'
+                    ).exists()
+                    proximo_liberado_manual = bloqueios.filter(
+                        horario=proximo_time,
+                        tipo='liberado'
+                    ).exists()
+                    proximo_bloqueado = (
+                        proximo_ocupado_ag
+                        or ((dia_bloqueado and not proximo_liberado_manual) or proximo_bloqueado_manual)
+                    )
+
+                    if proximo_bloqueado:
+                        erro_duplo = (
+                            f"Este serviço ocupa dois horários consecutivos "
+                            f"({horario_selecionado} e {proximo}), "
+                            f"mas {proximo} já está ocupado. Escolha outro horário."
+                        )
+                # Se proximo is None = último horário do dia → pode agendar normalmente
+        # ────────────────────────────────────────────────────────────────
+
         if bloqueado:
             form.add_error("horario", "Este horário está bloqueado.")
         elif ja_existe:
             form.add_error("horario", "Esse horário já está ocupado para essa data.")
+        elif erro_duplo:
+            form.add_error("horario", erro_duplo)
         elif form.is_valid():
             agendamento = form.save(commit=False)
             agendamento.cliente = cliente
@@ -635,6 +733,19 @@ def criar_agendamento(request):
             try:
                 agendamento.full_clean()
                 agendamento.save()
+
+                # ── Se for serviço duplo, bloqueia o próximo horário ──
+                if duplo and not is_excecao_almoco(horario_selecionado):
+                    proximo = get_proximo_horario(horario_selecionado, horarios)
+                    if proximo is not None:
+                        proximo_time = datetime.strptime(proximo, "%H:%M").time()
+                        HorarioBloqueado.objects.update_or_create(
+                            data=data_convertida,
+                            horario=proximo_time,
+                            defaults={"tipo": "bloqueio"}
+                        )
+                # ─────────────────────────────────────────────────────
+
                 request.session.pop("servico_id", None)
                 return redirect('listar_agendamentos')
 
@@ -648,25 +759,52 @@ def criar_agendamento(request):
     else:
         form = AgendamentoForm(initial={"data": data_selecionada})
 
-    # monta lista de horários bloqueados para o template
-    # reutiliza 'bloqueios' e 'dia_bloqueado' — sem nova query
+    # ── Monta lista de horários indisponíveis para o template ──────────
+    # Inclui: ocupados por agendamento, bloqueados manualmente,
+    # e horários anteriores que ficariam inválidos por causa do duplo.
     bloqueados = []
 
     for h in horarios:
         horario_time = datetime.strptime(h, "%H:%M").time()
 
-        horario_bloqueado = bloqueios.filter(
+        horario_bloqueado_manual = bloqueios.filter(
             horario=horario_time,
             tipo='bloqueio'
         ).exists()
 
-        horario_liberado = bloqueios.filter(
+        horario_liberado_manual = bloqueios.filter(
             horario=horario_time,
             tipo='liberado'
         ).exists()
 
-        if (dia_bloqueado and not horario_liberado) or horario_bloqueado:
+        if (dia_bloqueado and not horario_liberado_manual) or horario_bloqueado_manual:
             bloqueados.append(h)
+        elif duplo and not is_excecao_almoco(h):
+            # Se for serviço duplo: verifica se o PRÓXIMO está ocupado/bloqueado
+            # para marcar o horário ATUAL como indisponível
+            proximo = get_proximo_horario(h, horarios)
+
+            if proximo is not None:
+                proximo_time = datetime.strptime(proximo, "%H:%M").time()
+
+                proximo_bloq_manual = bloqueios.filter(
+                    horario=proximo_time,
+                    tipo='bloqueio'
+                ).exists()
+                proximo_lib_manual = bloqueios.filter(
+                    horario=proximo_time,
+                    tipo='liberado'
+                ).exists()
+                proximo_ocupado_ag = proximo in horarios_ocupados
+                proximo_indisponivel = (
+                    proximo_ocupado_ag
+                    or ((dia_bloqueado and not proximo_lib_manual) or proximo_bloq_manual)
+                )
+
+                if proximo_indisponivel:
+                    bloqueados.append(h)
+            # Se proximo is None = último horário → não bloqueia (regra do último horário)
+    # ────────────────────────────────────────────────────────────────────
 
     return render(request, 'clients/agendar.html', {
         'form': form,
@@ -675,6 +813,7 @@ def criar_agendamento(request):
         'data_selecionada': data_selecionada,
         'servico': servico,
         'bloqueados': bloqueados,
+        'duplo': duplo,
     })
 
 #Listar agendamentos
@@ -696,10 +835,25 @@ def excluir_agendamento(request, id):
     agendamento = get_object_or_404(Agendamento, id=id, cliente=cliente)
 
     if request.method == 'POST':
+        # ── Se era serviço duplo, remove o bloqueio do próximo horário ──
+        if agendamento.servico and requer_horario_duplo(agendamento.servico):
+            horario_str = agendamento.horario.strftime("%H:%M")
+            if not is_excecao_almoco(horario_str):
+                horarios_do_dia = gerar_horarios(agendamento.data)
+                proximo = get_proximo_horario(horario_str, horarios_do_dia)
+                if proximo is not None:
+                    proximo_time = datetime.strptime(proximo, "%H:%M").time()
+                    HorarioBloqueado.objects.filter(
+                        data=agendamento.data,
+                        horario=proximo_time,
+                        tipo="bloqueio"
+                    ).delete()
+        # ────────────────────────────────────────────────────────────────
+
         agendamento.delete()
         return redirect('listar_agendamentos')
     
-    return render (request, 'clients/confirmar_exclusao.html', {
+    return render(request, 'clients/confirmar_exclusao.html', {
         'agendamento': agendamento
     })
 

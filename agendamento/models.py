@@ -73,6 +73,10 @@ class Servico(models.Model):
     ativo = models.BooleanField(default=True)
     preco = models.DecimalField(max_digits=8, decimal_places=2, default=0)
     duracao_minutos = models.PositiveIntegerField(default=60)
+    horario_duplo = models.BooleanField(
+        default=False,
+        verbose_name="Ocupa dois horários consecutivos"
+    )
 
     def __str__(self):
         return f"{self.nome} - {self.preco}"
