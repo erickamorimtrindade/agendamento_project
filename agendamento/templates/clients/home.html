@@ -303,4 +303,228 @@
         </div>
     </div>
 </div>
+
+{% if notificacoes_pendentes %}
+<!-- ── Modal de notificação de exclusão de agendamento ─────────────────── -->
+<style>
+    .notif-overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(0,0,0,0.55);
+        z-index: 2000;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 16px;
+        animation: fadeInOverlay 0.25s ease;
+    }
+
+    @keyframes fadeInOverlay {
+        from { opacity: 0; }
+        to   { opacity: 1; }
+    }
+
+    .notif-modal {
+        background: #ffffff;
+        border-radius: 22px;
+        box-shadow: 0 24px 60px rgba(0,0,0,0.22);
+        padding: 32px 24px 24px;
+        max-width: 420px;
+        width: 100%;
+        text-align: center;
+        animation: slideUpModal 0.3s cubic-bezier(0.34,1.56,0.64,1);
+    }
+
+    @keyframes slideUpModal {
+        from { transform: translateY(30px); opacity: 0; }
+        to   { transform: translateY(0);    opacity: 1; }
+    }
+
+    .notif-icon-wrap {
+        width: 68px;
+        height: 68px;
+        background: #fee2e2;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 18px;
+        font-size: 2rem;
+        color: #dc2626;
+    }
+
+    .notif-title {
+        font-size: 1.25rem;
+        font-weight: 700;
+        color: #111827;
+        margin-bottom: 6px;
+    }
+
+    .notif-subtitle {
+        font-size: 0.88rem;
+        color: #6b7280;
+        margin-bottom: 20px;
+    }
+
+    .notif-detail-box {
+        background: #f9fafb;
+        border: 1px solid #e5e7eb;
+        border-radius: 14px;
+        padding: 16px;
+        margin-bottom: 20px;
+        text-align: left;
+    }
+
+    .notif-detail-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 6px 0;
+        border-bottom: 1px solid #f3f4f6;
+        font-size: 0.88rem;
+    }
+
+    .notif-detail-row:last-child {
+        border-bottom: none;
+    }
+
+    .notif-detail-label {
+        color: #9ca3af;
+        font-weight: 600;
+    }
+
+    .notif-detail-value {
+        color: #111827;
+        font-weight: 600;
+    }
+
+    .notif-counter {
+        font-size: 0.78rem;
+        color: #9ca3af;
+        margin-bottom: 16px;
+    }
+
+    .btn-notif-ok {
+        width: 100%;
+        padding: 13px;
+        border-radius: 14px;
+        border: none;
+        background: #2563eb;
+        color: #fff;
+        font-weight: 700;
+        font-size: 0.97rem;
+        cursor: pointer;
+        transition: background 0.2s;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+    }
+
+    .btn-notif-ok:hover {
+        background: #1d4ed8;
+    }
+</style>
+
+<div class="notif-overlay" id="notifOverlay">
+    <div class="notif-modal" id="notifModal">
+
+        <div class="notif-icon-wrap">
+            <i class="bi bi-calendar-x-fill"></i>
+        </div>
+
+        <h3 class="notif-title">Agendamento cancelado</h3>
+        <p class="notif-subtitle">
+            A administração removeu um dos seus agendamentos.<br>
+            Entre em contato para mais informações.
+        </p>
+
+        <!-- Notificações em JSON para o JS percorrer -->
+        <script id="notifData" type="application/json">
+            [{% for n in notificacoes_pendentes %}{"id":{{ n.id }},"servico":"{{ n.servico_nome|escapejs }}","data":"{{ n.data_agendamento|date:'d/m/Y' }}","horario":"{{ n.horario_agendamento|time:'H:i' }}"}{% if not forloop.last %},{% endif %}{% endfor %}]
+        </script>
+
+        <div class="notif-detail-box" id="notifDetailBox">
+            <div class="notif-detail-row">
+                <span class="notif-detail-label"><i class="bi bi-scissors me-1"></i>Serviço</span>
+                <span class="notif-detail-value" id="notifServico"></span>
+            </div>
+            <div class="notif-detail-row">
+                <span class="notif-detail-label"><i class="bi bi-calendar me-1"></i>Data</span>
+                <span class="notif-detail-value" id="notifDataExibir"></span>
+            </div>
+            <div class="notif-detail-row">
+                <span class="notif-detail-label"><i class="bi bi-clock me-1"></i>Horário</span>
+                <span class="notif-detail-value" id="notifHorario"></span>
+            </div>
+        </div>
+
+        <p class="notif-counter" id="notifCounter"></p>
+
+        <button class="btn-notif-ok" id="btnNotifOk">
+            <i class="bi bi-check-lg"></i> Entendi
+        </button>
+
+    </div>
+</div>
+
+<script>
+(function () {
+    const notifs   = JSON.parse(document.getElementById('notifData').textContent);
+    const overlay  = document.getElementById('notifOverlay');
+    const counter  = document.getElementById('notifCounter');
+    let current    = 0;
+
+    function mostrar(index) {
+        const n = notifs[index];
+        document.getElementById('notifServico').textContent  = n.servico;
+        document.getElementById('notifDataExibir').textContent  = n.data;
+        document.getElementById('notifHorario').textContent  = n.horario;
+
+        if (notifs.length > 1) {
+            counter.textContent = `Aviso ${index + 1} de ${notifs.length}`;
+        } else {
+            counter.textContent = '';
+        }
+    }
+
+    function marcarLida(id, callback) {
+        fetch(`/notificacao/lida/${id}/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': '{{ csrf_token }}',
+                'Content-Type': 'application/json',
+            },
+        })
+        .then(r => r.json())
+        .then(callback)
+        .catch(callback);  // mesmo em erro, avança
+    }
+
+    mostrar(current);
+
+    document.getElementById('btnNotifOk').addEventListener('click', function () {
+        const id = notifs[current].id;
+
+        // Desabilita o botão temporariamente para evitar double-click
+        this.disabled = true;
+
+        marcarLida(id, function () {
+            current++;
+            if (current < notifs.length) {
+                mostrar(current);
+                document.getElementById('btnNotifOk').disabled = false;
+            } else {
+                // Todas lidas — fecha o overlay com fade
+                overlay.style.transition = 'opacity 0.25s';
+                overlay.style.opacity    = '0';
+                setTimeout(() => overlay.remove(), 260);
+            }
+        });
+    });
+})();
+</script>
+<!-- ───────────────────────────────────────────────────────────────────── -->
+{% endif %}
+
 {% endblock %}
