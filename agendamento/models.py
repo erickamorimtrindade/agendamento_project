@@ -12,6 +12,7 @@ class Cliente(models.Model):
     )
     telefone = models.CharField(max_length=20,)
     endereco = models.CharField(max_length=60,)
+    bloqueado = models.BooleanField(default=False)
 
     def __str__(self):
         return self.id_usuario.username

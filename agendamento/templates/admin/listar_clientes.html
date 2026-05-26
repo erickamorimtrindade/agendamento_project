@@ -1,0 +1,690 @@
+{% extends 'admin/base_admin.html' %}
+
+{% block title %}Clientes — Painel Admin{% endblock %}
+
+{% block extra_css %}
+<style>
+/* ======================== RESET / BASE ======================== */
+:root {
+    --primary: #1f5b8f;
+    --primary-light: #2563eb;
+    --bg: #eef2f7;
+    --text: #1f2937;
+    --sub: #6b7280;
+    --card: #ffffff;
+    --border: #e5e7eb;
+    --soft: #f8fafc;
+    --shadow: 0 18px 40px rgba(15,23,42,0.08);
+    --danger: #ef4444;
+    --danger-light: #fee2e2;
+    --warning: #f59e0b;
+    --warning-light: #fef3c7;
+    --success: #10b981;
+    --success-light: #d1fae5;
+}
+
+* { box-sizing: border-box; }
+
+body {
+    margin: 0;
+    font-family: 'Inter', sans-serif;
+    background: linear-gradient(135deg, #eef2f7, #f8fafc);
+    color: var(--text);
+    min-height: 100vh;
+}
+
+/* ======================== SHELL ======================== */
+.page-shell {
+    max-width: 1300px;
+    margin: auto;
+    padding: 30px 20px;
+}
+
+/* ======================== TOPBAR ======================== */
+.topbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    flex-wrap: wrap;
+    gap: 16px;
+    margin-bottom: 28px;
+}
+
+.title-wrap .title {
+    font-size: 1.75rem;
+    font-weight: 900;
+    color: #0f172a;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 0;
+}
+
+.title-wrap .subtitle {
+    font-size: .875rem;
+    color: var(--sub);
+    margin-top: 4px;
+}
+
+.back-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 9px 18px;
+    border-radius: 10px;
+    border: 1.5px solid var(--border);
+    background: var(--card);
+    color: var(--text);
+    font-weight: 600;
+    font-size: .875rem;
+    text-decoration: none;
+    transition: all .2s;
+    white-space: nowrap;
+}
+
+.back-btn:hover {
+    background: var(--soft);
+    border-color: #cbd5e1;
+    color: var(--text);
+}
+
+/* ======================== ALERTS ======================== */
+.alert-strip {
+    padding: 12px 18px;
+    border-radius: 12px;
+    font-size: .9rem;
+    font-weight: 600;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.alert-strip.success { background: var(--success-light); color: #065f46; }
+.alert-strip.error   { background: var(--danger-light);  color: #991b1b; }
+
+/* ======================== SEARCH / STATS ======================== */
+.controls-row {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 14px;
+    margin-bottom: 24px;
+}
+
+.search-box {
+    position: relative;
+    flex: 1;
+    min-width: 220px;
+    max-width: 400px;
+}
+
+.search-box input {
+    width: 100%;
+    padding: 10px 14px 10px 40px;
+    border: 1.5px solid var(--border);
+    border-radius: 10px;
+    font-size: .9rem;
+    background: var(--card);
+    outline: none;
+    transition: border-color .2s;
+}
+
+.search-box input:focus { border-color: var(--primary-light); }
+
+.search-box .icon {
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--sub);
+    font-size: 1rem;
+    pointer-events: none;
+}
+
+.search-btn {
+    padding: 10px 20px;
+    border-radius: 10px;
+    border: none;
+    background: var(--primary);
+    color: #fff;
+    font-weight: 700;
+    font-size: .875rem;
+    cursor: pointer;
+    transition: background .2s;
+}
+
+.search-btn:hover { background: var(--primary-light); }
+
+.clear-btn {
+    padding: 10px 16px;
+    border-radius: 10px;
+    border: 1.5px solid var(--border);
+    background: var(--card);
+    color: var(--sub);
+    font-size: .875rem;
+    cursor: pointer;
+    text-decoration: none;
+    transition: all .2s;
+}
+
+.clear-btn:hover { border-color: #94a3b8; color: var(--text); }
+
+.stat-pill {
+    margin-left: auto;
+    background: var(--card);
+    border: 1.5px solid var(--border);
+    border-radius: 10px;
+    padding: 8px 16px;
+    font-size: .85rem;
+    color: var(--sub);
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.stat-pill span { color: var(--primary); font-weight: 800; }
+
+/* ======================== TABLE ======================== */
+.table-card {
+    background: var(--card);
+    border-radius: 18px;
+    box-shadow: var(--shadow);
+    overflow: hidden;
+}
+
+.table-responsive { overflow-x: auto; }
+
+.clients-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.clients-table thead tr {
+    background: #f1f5f9;
+    border-bottom: 2px solid var(--border);
+}
+
+.clients-table th {
+    padding: 13px 16px;
+    font-size: .78rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: .05em;
+    color: #475569;
+    white-space: nowrap;
+    text-align: left;
+}
+
+.clients-table tbody tr {
+    border-bottom: 1px solid var(--border);
+    transition: background .15s;
+}
+
+.clients-table tbody tr:last-child { border-bottom: none; }
+.clients-table tbody tr:hover { background: #f8fafc; }
+
+/* Row bloqueado */
+.clients-table tbody tr.row-bloqueado {
+    background: #fff5f5;
+}
+.clients-table tbody tr.row-bloqueado:hover { background: #fee2e2; }
+
+.clients-table td {
+    padding: 14px 16px;
+    font-size: .9rem;
+    vertical-align: middle;
+}
+
+/* ======================== AVATAR ======================== */
+.user-cell {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.avatar {
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #2563eb, #7c3aed);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    font-weight: 800;
+    font-size: .95rem;
+    flex-shrink: 0;
+}
+
+.avatar.bloqueado-avatar {
+    background: linear-gradient(135deg, #ef4444, #b91c1c);
+}
+
+.user-name {
+    font-weight: 700;
+    color: #0f172a;
+    font-size: .9rem;
+}
+
+.user-since {
+    font-size: .75rem;
+    color: var(--sub);
+}
+
+/* ======================== BADGES ======================== */
+.badge-status {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 4px 10px;
+    border-radius: 999px;
+    font-size: .75rem;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+.badge-ativo {
+    background: var(--success-light);
+    color: #065f46;
+}
+
+.badge-bloqueado {
+    background: var(--danger-light);
+    color: #991b1b;
+}
+
+/* ======================== COUNTERS ======================== */
+.count-cell {
+    text-align: center;
+}
+
+.count-num {
+    font-size: 1.1rem;
+    font-weight: 800;
+    color: #0f172a;
+}
+
+.count-num.ausencias { color: var(--warning); }
+
+/* ======================== ACTIONS ======================== */
+.actions-cell {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+}
+
+.btn-action {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 7px 13px;
+    border-radius: 8px;
+    border: none;
+    font-size: .78rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all .2s;
+    white-space: nowrap;
+}
+
+.btn-bloquear {
+    background: var(--warning-light);
+    color: #92400e;
+}
+.btn-bloquear:hover { background: #fde68a; }
+
+.btn-desbloquear {
+    background: var(--success-light);
+    color: #065f46;
+}
+.btn-desbloquear:hover { background: #a7f3d0; }
+
+.btn-excluir {
+    background: var(--danger-light);
+    color: #991b1b;
+}
+.btn-excluir:hover { background: #fecaca; }
+
+/* ======================== EMPTY STATE ======================== */
+.empty-state {
+    text-align: center;
+    padding: 60px 20px;
+    color: var(--sub);
+}
+
+.empty-state i { font-size: 3rem; opacity: .4; }
+.empty-state p { font-size: 1rem; margin-top: 12px; }
+
+/* ======================== MODAL ======================== */
+.modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(15,23,42,.55);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    pointer-events: none;
+    transition: .25s ease;
+    z-index: 9999;
+    backdrop-filter: blur(6px);
+}
+
+.modal-overlay.show {
+    opacity: 1;
+    pointer-events: all;
+}
+
+.modal-box {
+    background: #fff;
+    padding: 28px 30px;
+    border-radius: 20px;
+    width: 360px;
+    text-align: center;
+    box-shadow: 0 30px 80px rgba(0,0,0,.22);
+    transform: translateY(14px) scale(.95);
+    transition: all .25s ease;
+}
+
+.modal-overlay.show .modal-box {
+    transform: translateY(0) scale(1);
+}
+
+.modal-icon { font-size: 2.2rem; margin-bottom: 12px; }
+.modal-icon.danger  { color: var(--danger); }
+.modal-icon.warning { color: var(--warning); }
+
+.modal-title {
+    font-size: 1.05rem;
+    font-weight: 800;
+    color: #111827;
+    margin-bottom: 6px;
+}
+
+.modal-desc {
+    font-size: .875rem;
+    color: var(--sub);
+    margin-bottom: 24px;
+    line-height: 1.5;
+}
+
+.modal-desc strong { color: #0f172a; }
+
+.modal-actions {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+}
+
+.modal-actions button,
+.modal-actions a {
+    flex: 1;
+    padding: 10px;
+    border-radius: 10px;
+    font-weight: 700;
+    font-size: .875rem;
+    border: none;
+    cursor: pointer;
+    text-decoration: none;
+    display: inline-block;
+    transition: .2s;
+}
+
+.btn-modal-cancel {
+    background: var(--soft);
+    color: var(--sub);
+    border: 1.5px solid var(--border) !important;
+}
+
+.btn-modal-cancel:hover { background: #e2e8f0; color: var(--text); }
+
+.btn-modal-confirm-block {
+    background: var(--warning);
+    color: #fff;
+}
+.btn-modal-confirm-block:hover { background: #d97706; }
+
+.btn-modal-confirm-delete {
+    background: var(--danger);
+    color: #fff;
+}
+.btn-modal-confirm-delete:hover { background: #dc2626; }
+
+/* ======================== RESPONSIVE ======================== */
+@media (max-width: 768px) {
+    .page-shell { padding: 16px 12px; }
+    .stat-pill { display: none; }
+    .topbar { flex-direction: column; align-items: flex-start; }
+    .title-wrap .title { font-size: 1.35rem; }
+    .clients-table th, .clients-table td { padding: 10px 10px; }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-shell">
+
+    <!-- ── TOPBAR ───────────────────────────────────────────── -->
+    <div class="topbar">
+        <div class="title-wrap">
+            <h1 class="title"><i class="bi bi-people-fill"></i> Clientes</h1>
+            <p class="subtitle">Gerencie os clientes cadastrados no sistema.</p>
+        </div>
+        <a href="{% url 'painel_admin' %}" class="back-btn">
+            <i class="bi bi-arrow-left"></i> Voltar ao painel
+        </a>
+    </div>
+
+    <!-- ── MENSAGENS ─────────────────────────────────────────── -->
+    {% for message in messages %}
+        <div class="alert-strip {% if message.tags == 'error' %}error{% else %}success{% endif %}">
+            <i class="bi {% if message.tags == 'error' %}bi-x-circle-fill{% else %}bi-check-circle-fill{% endif %}"></i>
+            {{ message }}
+        </div>
+    {% endfor %}
+
+    <!-- ── BUSCA + STATS ─────────────────────────────────────── -->
+    <div class="controls-row">
+        <form method="get" class="search-box">
+            <i class="bi bi-search icon"></i>
+            <input type="text" name="q" value="{{ q }}" placeholder="Buscar por nome…" autocomplete="off">
+        </form>
+        <button type="submit" form="" onclick="this.closest('.controls-row').querySelector('form').submit()" class="search-btn">
+            Buscar
+        </button>
+        {% if q %}
+            <a href="{% url 'listar_clientes' %}" class="clear-btn">
+                <i class="bi bi-x"></i> Limpar
+            </a>
+        {% endif %}
+        <div class="stat-pill">
+            Total: <span>{{ total_clientes }}</span> cliente{{ total_clientes|pluralize }}
+        </div>
+    </div>
+
+    <!-- ── TABELA ─────────────────────────────────────────────── -->
+    <div class="table-card">
+        <div class="table-responsive">
+            <table class="clients-table">
+                <thead>
+                    <tr>
+                        <th>Cliente</th>
+                        <th>Telefone</th>
+                        <th style="text-align:center">Agendamentos</th>
+                        <th style="text-align:center">Ausências</th>
+                        <th>Status</th>
+                        <th>Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in clientes_data %}
+                    {% with cliente=item.cliente user=item.cliente.id_usuario %}
+                    <tr class="{% if cliente.bloqueado %}row-bloqueado{% endif %}">
+
+                        <!-- Nome -->
+                        <td>
+                            <div class="user-cell">
+                                <div class="avatar {% if cliente.bloqueado %}bloqueado-avatar{% endif %}">
+                                    {{ user.username|slice:":1"|upper }}
+                                </div>
+                                <div>
+                                    <div class="user-name">{{ user.username }}</div>
+                                    <div class="user-since">
+                                        {% if user.date_joined %}
+                                            Desde {{ user.date_joined|date:"d/m/Y" }}
+                                        {% else %}
+                                            —
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        </td>
+
+                        <!-- Telefone -->
+                        <td>{{ cliente.telefone|default:"—" }}</td>
+
+                        <!-- Agendamentos -->
+                        <td class="count-cell">
+                            <span class="count-num">{{ item.total_agendamentos }}</span>
+                        </td>
+
+                        <!-- Ausências -->
+                        <td class="count-cell">
+                            <span class="count-num ausencias">{{ item.total_ausencias }}</span>
+                        </td>
+
+                        <!-- Status -->
+                        <td>
+                            {% if cliente.bloqueado %}
+                                <span class="badge-status badge-bloqueado">
+                                    <i class="bi bi-lock-fill"></i> Bloqueado
+                                </span>
+                            {% else %}
+                                <span class="badge-status badge-ativo">
+                                    <i class="bi bi-check-circle-fill"></i> Ativo
+                                </span>
+                            {% endif %}
+                        </td>
+
+                        <!-- Ações -->
+                        <td>
+                            <div class="actions-cell">
+                                {% if cliente.bloqueado %}
+                                    <!-- Desbloquear -->
+                                    <button
+                                        class="btn-action btn-desbloquear"
+                                        onclick="abrirModalDesbloquear('{{ user.id }}', '{{ user.username }}')"
+                                        title="Desbloquear cliente">
+                                        <i class="bi bi-unlock-fill"></i> Desbloquear
+                                    </button>
+                                {% else %}
+                                    <!-- Bloquear -->
+                                    <button
+                                        class="btn-action btn-bloquear"
+                                        onclick="abrirModalBloquear('{{ user.id }}', '{{ user.username }}')"
+                                        title="Bloquear cliente">
+                                        <i class="bi bi-lock-fill"></i> Bloquear
+                                    </button>
+                                {% endif %}
+
+                                <!-- Excluir -->
+                                <a
+                                    href="{% url 'excluir_cliente' user.id %}"
+                                    class="btn-action btn-excluir"
+                                    title="Excluir conta">
+                                    <i class="bi bi-trash-fill"></i> Excluir
+                                </a>
+                            </div>
+                        </td>
+
+                    </tr>
+                    {% endwith %}
+                    {% empty %}
+                    <tr>
+                        <td colspan="6">
+                            <div class="empty-state">
+                                <i class="bi bi-person-x"></i>
+                                <p>
+                                    {% if q %}
+                                        Nenhum cliente encontrado para "<strong>{{ q }}</strong>".
+                                    {% else %}
+                                        Nenhum cliente cadastrado ainda.
+                                    {% endif %}
+                                </p>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</div>
+
+<!-- ──────────── MODAL: BLOQUEAR ──────────── -->
+<div class="modal-overlay" id="modalBloquear">
+    <div class="modal-box">
+        <div class="modal-icon warning"><i class="bi bi-lock-fill"></i></div>
+        <div class="modal-title">Bloquear cliente?</div>
+        <div class="modal-desc">
+            <strong id="nomeBloquear"></strong> não poderá criar novos agendamentos enquanto estiver bloqueado.
+        </div>
+        <div class="modal-actions">
+            <button class="btn-modal-cancel" onclick="fecharModal('modalBloquear')">Cancelar</button>
+            <form id="formBloquear" method="post" style="flex:1; margin:0;">
+                {% csrf_token %}
+                <button type="submit" class="btn-modal-confirm-block" style="width:100%">
+                    Bloquear
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- ──────────── MODAL: DESBLOQUEAR ──────────── -->
+<div class="modal-overlay" id="modalDesbloquear">
+    <div class="modal-box">
+        <div class="modal-icon" style="color:var(--success)"><i class="bi bi-unlock-fill"></i></div>
+        <div class="modal-title">Desbloquear cliente?</div>
+        <div class="modal-desc">
+            <strong id="nomeDesbloquear"></strong> poderá criar agendamentos normalmente após o desbloqueio.
+        </div>
+        <div class="modal-actions">
+            <button class="btn-modal-cancel" onclick="fecharModal('modalDesbloquear')">Cancelar</button>
+            <form id="formDesbloquear" method="post" style="flex:1; margin:0;">
+                {% csrf_token %}
+                <button type="submit" class="btn-modal-confirm-block" style="width:100%; background:var(--success)">
+                    Desbloquear
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+function abrirModalBloquear(userId, nome) {
+    document.getElementById('nomeBloquear').textContent = nome;
+    document.getElementById('formBloquear').action = '/painel/clientes/bloquear/' + userId + '/';
+    document.getElementById('modalBloquear').classList.add('show');
+}
+
+function abrirModalDesbloquear(userId, nome) {
+    document.getElementById('nomeDesbloquear').textContent = nome;
+    document.getElementById('formDesbloquear').action = '/painel/clientes/desbloquear/' + userId + '/';
+    document.getElementById('modalDesbloquear').classList.add('show');
+}
+
+function fecharModal(id) {
+    document.getElementById(id).classList.remove('show');
+}
+
+// Fecha modal ao clicar fora
+document.querySelectorAll('.modal-overlay').forEach(overlay => {
+    overlay.addEventListener('click', function(e) {
+        if (e.target === this) fecharModal(this.id);
+    });
+});
+</script>
+{% endblock %}
