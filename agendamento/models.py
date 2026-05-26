@@ -83,6 +83,22 @@ class Servico(models.Model):
         return f"{self.nome} - {self.preco}"
     
 
+class NotificacaoExclusao(models.Model):
+    """
+    Armazena o aviso de exclusão de agendamento pelo ADM.
+    Exibido como pop-up uma única vez ao cliente na próxima vez que entrar.
+    """
+    cliente = models.ForeignKey(Cliente, on_delete=models.CASCADE, related_name='notificacoes_exclusao')
+    servico_nome = models.CharField(max_length=100)
+    data_agendamento = models.DateField()
+    horario_agendamento = models.TimeField()
+    criado_em = models.DateTimeField(auto_now_add=True)
+    visualizado = models.BooleanField(default=False)
+
+    def __str__(self):
+        return f"Notif. exclusão p/ {self.cliente} — {self.data_agendamento} {self.horario_agendamento}"
+
+
 class HorarioBloqueado(models.Model):
     data = models.DateField()
     horario = models.TimeField(null=True, blank=True)

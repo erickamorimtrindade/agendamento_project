@@ -1,0 +1,209 @@
+{% extends 'admin/base_admin.html' %}
+
+{% block title %}Confirmar Exclusão de Agendamento{% endblock %}
+
+{% block extra_css %}
+<style>
+    body {
+        background: #d9d9d9;
+        margin: 0;
+        font-family: Arial, Helvetica, sans-serif;
+    }
+
+    .page-wrapper {
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 24px 16px;
+    }
+
+    .confirm-card {
+        background: #f8f8f8;
+        border-radius: 24px;
+        box-shadow: 0 20px 45px rgba(0,0,0,0.15);
+        padding: 36px 28px;
+        max-width: 500px;
+        width: 100%;
+        text-align: center;
+    }
+
+    .danger-icon {
+        width: 72px;
+        height: 72px;
+        background: #fee2e2;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 20px;
+        font-size: 2rem;
+        color: #dc2626;
+    }
+
+    .confirm-title {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: #111827;
+        margin-bottom: 8px;
+    }
+
+    .confirm-subtitle {
+        font-size: 0.95rem;
+        color: #6b7280;
+        margin-bottom: 24px;
+    }
+
+    .info-box {
+        background: #fff;
+        border: 1px solid #e5e7eb;
+        border-radius: 16px;
+        padding: 20px;
+        margin-bottom: 28px;
+        text-align: left;
+    }
+
+    .info-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 8px 0;
+        border-bottom: 1px solid #f3f4f6;
+        font-size: 0.92rem;
+    }
+
+    .info-row:last-child {
+        border-bottom: none;
+    }
+
+    .info-label {
+        color: #6b7280;
+        font-weight: 600;
+    }
+
+    .info-value {
+        color: #111827;
+        font-weight: 500;
+    }
+
+    .notif-notice {
+        background: #eff6ff;
+        border: 1px solid #bfdbfe;
+        border-radius: 12px;
+        padding: 14px 16px;
+        font-size: 0.88rem;
+        color: #1d4ed8;
+        margin-bottom: 24px;
+        display: flex;
+        align-items: flex-start;
+        gap: 10px;
+        text-align: left;
+    }
+
+    .btn-group-confirm {
+        display: flex;
+        gap: 12px;
+        justify-content: center;
+        flex-wrap: wrap;
+    }
+
+    .btn-cancel {
+        flex: 1;
+        min-width: 130px;
+        padding: 12px 20px;
+        border-radius: 12px;
+        font-weight: 600;
+        font-size: 0.95rem;
+        border: 1.5px solid #d1d5db;
+        background: #fff;
+        color: #374151;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        transition: background 0.2s;
+    }
+
+    .btn-cancel:hover {
+        background: #f3f4f6;
+        color: #111827;
+    }
+
+    .btn-confirm-delete {
+        flex: 1;
+        min-width: 130px;
+        padding: 12px 20px;
+        border-radius: 12px;
+        font-weight: 600;
+        font-size: 0.95rem;
+        border: none;
+        background: #dc2626;
+        color: #fff;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        transition: background 0.2s;
+    }
+
+    .btn-confirm-delete:hover {
+        background: #b91c1c;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-wrapper">
+    <div class="confirm-card">
+
+        <div class="danger-icon">
+            <i class="bi bi-calendar-x-fill"></i>
+        </div>
+
+        <h2 class="confirm-title">Excluir agendamento?</h2>
+        <p class="confirm-subtitle">Esta ação não pode ser desfeita. A cliente será notificada automaticamente.</p>
+
+        <div class="info-box">
+            <div class="info-row">
+                <span class="info-label"><i class="bi bi-person me-1"></i>Cliente</span>
+                <span class="info-value">{{ agendamento.cliente.id_usuario.username }}</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label"><i class="bi bi-scissors me-1"></i>Serviço</span>
+                <span class="info-value">{{ agendamento.servico.nome|default:"—" }}</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label"><i class="bi bi-calendar me-1"></i>Data</span>
+                <span class="info-value">{{ agendamento.data|date:"d/m/Y" }}</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label"><i class="bi bi-clock me-1"></i>Horário</span>
+                <span class="info-value">{{ agendamento.horario|time:"H:i" }}</span>
+            </div>
+        </div>
+
+        <div class="notif-notice">
+            <i class="bi bi-bell-fill mt-1"></i>
+            <span>
+                Um aviso será enviado para <strong>{{ agendamento.cliente.id_usuario.username }}</strong> informando
+                a exclusão. O aviso aparecerá automaticamente no próximo acesso da cliente.
+            </span>
+        </div>
+
+        <div class="btn-group-confirm">
+            <a href="{% url 'proximos_agendamentos' %}" class="btn-cancel">
+                <i class="bi bi-x-lg"></i> Cancelar
+            </a>
+            <form method="post" action="{% url 'excluir_agendamento_admin' agendamento.id %}" style="flex:1;min-width:130px;">
+                {% csrf_token %}
+                <button type="submit" class="btn-confirm-delete" style="width:100%;">
+                    <i class="bi bi-trash3-fill"></i> Confirmar exclusão
+                </button>
+            </form>
+        </div>
+
+    </div>
+</div>
+{% endblock %}

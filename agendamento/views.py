@@ -2,7 +2,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.models import User
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
-from .models import Cliente, Agendamento, Servico
+from .models import Cliente, Agendamento, Servico, NotificacaoExclusao
 from .forms import AgendamentoForm, IdentificarUsuarioForm , RedefinirSenhaForm
 from datetime import datetime, timedelta, date
 from django.db import IntegrityError
@@ -301,6 +301,73 @@ def proximos_agendamentos(request):
         'agendamentos': agendamentos,
         'data': data
     })
+
+
+@staff_member_required
+def excluir_agendamento_admin(request, id):
+    """
+    Exclusão de agendamento pelo administrador.
+    Cria uma NotificacaoExclusao para a cliente afetada.
+    Só aceita POST para evitar exclusões acidentais via GET.
+    """
+    agendamento = get_object_or_404(Agendamento, id=id)
+
+    if request.method == 'POST':
+        cliente = agendamento.cliente
+        servico_nome = agendamento.servico.nome if agendamento.servico else 'Serviço não informado'
+        data_ag = agendamento.data
+        horario_ag = agendamento.horario
+
+        # Remove bloqueio do horário duplo, se houver
+        if agendamento.servico and requer_horario_duplo(agendamento.servico):
+            horario_str = agendamento.horario.strftime("%H:%M")
+            if not is_excecao_almoco(horario_str):
+                horarios_do_dia = gerar_horarios(agendamento.data)
+                proximo = get_proximo_horario(horario_str, horarios_do_dia)
+                if proximo is not None:
+                    proximo_time = datetime.strptime(proximo, "%H:%M").time()
+                    HorarioBloqueado.objects.filter(
+                        data=agendamento.data,
+                        horario=proximo_time,
+                        tipo="bloqueio"
+                    ).delete()
+
+        # Salva os dados ANTES de deletar
+        agendamento.delete()
+
+        # Cria a notificação para a cliente
+        NotificacaoExclusao.objects.create(
+            cliente=cliente,
+            servico_nome=servico_nome,
+            data_agendamento=data_ag,
+            horario_agendamento=horario_ag,
+        )
+
+        messages.success(request, 'Agendamento excluído e cliente notificada.')
+        return redirect('proximos_agendamentos')
+
+    # GET — exibe confirmação
+    return render(request, 'admin/confirmar_exclusao_agendamento.html', {
+        'agendamento': agendamento
+    })
+
+
+@login_required
+def marcar_notificacao_lida(request, notif_id):
+    """
+    Marca uma NotificacaoExclusao como visualizada (chamada via POST/AJAX).
+    Só o próprio cliente dono da notificação pode marcá-la.
+    """
+    if request.method == 'POST':
+        cliente = get_object_or_404(Cliente, id_usuario=request.user)
+        notif = get_object_or_404(NotificacaoExclusao, id=notif_id, cliente=cliente)
+        notif.visualizado = True
+        notif.save()
+        from django.http import JsonResponse
+        return JsonResponse({'ok': True})
+    from django.http import JsonResponse
+    return JsonResponse({'ok': False}, status=405)
+
 
 def converter_data(data):
     if not data:
@@ -607,7 +674,20 @@ def home(request):
     if request.user.is_staff:
         return redirect('painel_admin')  # admin vai pro painel
 
-    return render(request, 'clients/home.html')  # cliente normal
+    notificacoes_pendentes = []
+    if request.user.is_authenticated:
+        try:
+            cliente = Cliente.objects.get(id_usuario=request.user)
+            notificacoes_pendentes = list(
+                NotificacaoExclusao.objects.filter(cliente=cliente, visualizado=False)
+                .order_by('criado_em')
+            )
+        except Cliente.DoesNotExist:
+            pass
+
+    return render(request, 'clients/home.html', {
+        'notificacoes_pendentes': notificacoes_pendentes
+    })
 
 #Criar agendamentos
 @login_required
