@@ -1,0 +1,86 @@
+{% extends 'clients/base_clients.html' %}
+
+{% block title %}Acesso bloqueado{% endblock %}
+
+{% block extra_css %}
+<style>
+body {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    background: linear-gradient(135deg, #fef2f2, #fff5f5);
+    font-family: 'Inter', sans-serif;
+    padding: 20px;
+}
+
+.blocked-card {
+    background: #fff;
+    border-radius: 22px;
+    box-shadow: 0 24px 60px rgba(239,68,68,.12);
+    padding: 48px 40px;
+    max-width: 440px;
+    width: 100%;
+    text-align: center;
+}
+
+.lock-icon {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    background: #fee2e2;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 24px;
+    font-size: 2.2rem;
+    color: #ef4444;
+}
+
+.blocked-title {
+    font-size: 1.5rem;
+    font-weight: 900;
+    color: #0f172a;
+    margin-bottom: 10px;
+}
+
+.blocked-desc {
+    font-size: .9rem;
+    color: #6b7280;
+    line-height: 1.65;
+    margin-bottom: 32px;
+}
+
+.back-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 24px;
+    border-radius: 12px;
+    background: #0f172a;
+    color: #fff;
+    font-weight: 700;
+    font-size: .9rem;
+    text-decoration: none;
+    transition: background .2s;
+}
+
+.back-link:hover { background: #1e293b; color: #fff; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="blocked-card">
+    <div class="lock-icon">
+        <i class="bi bi-ban"></i>
+    </div>
+    <h1 class="blocked-title">Ops Algo deu Errado!</h1>
+    <p class="blocked-desc">
+        Falha ao processar seu agendamento. Ocorreu uma instabilidade ao processar seu agendamento no momento.
+        Por favor, tente novamente mais tarde ou entre em contato com o <strong>suporte</strong> para mais informações.
+    </p>
+    <a href="{% url 'suporte' %}" class="back-link">
+        <i class="bi bi-headset"></i> Falar com suporte
+    </a>
+</div>
+{% endblock %}

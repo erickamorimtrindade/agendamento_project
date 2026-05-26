@@ -618,6 +618,11 @@ def criar_agendamento(request):
 
     cliente, _ = Cliente.objects.get_or_create(id_usuario=request.user)
 
+    # ── Bloqueio de cliente ─────────────────────────────────────────────
+    if cliente.bloqueado:
+        return render(request, 'clients/cliente_bloqueado.html')
+    # ───────────────────────────────────────────────────────────────────
+
     servico_id = request.session.get("servico_id")
 
     if not servico_id:
@@ -861,6 +866,11 @@ def excluir_agendamento(request, id):
 def escolher_servico(request):
     servicos = Servico.objects.filter(ativo=True)
     erro = None
+
+    # Bloqueia cliente impedido de agendar
+    cliente, _ = Cliente.objects.get_or_create(id_usuario=request.user)
+    if cliente.bloqueado:
+        return render(request, 'clients/cliente_bloqueado.html')
     
     if request.method == "POST":
         servico_id = request.POST.get("servico")
@@ -875,6 +885,101 @@ def escolher_servico(request):
         "servicos": servicos,
         "erro": erro,
     })
+
+# ── GESTÃO DE CLIENTES (admin) ────────────────────────────────────────────────
+
+@staff_member_required
+def listar_clientes(request):
+    """
+    Painel administrativo de clientes.
+    Exibe nome, telefone, total de agendamentos, total de ausências,
+    status de bloqueio e data de cadastro.
+    Suporta busca por nome via query string ?q=.
+    """
+    q = request.GET.get('q', '').strip()
+
+    clientes_qs = Cliente.objects.select_related('id_usuario').all()
+
+    if q:
+        clientes_qs = clientes_qs.filter(id_usuario__username__icontains=q)
+
+    clientes_qs = clientes_qs.order_by('id_usuario__username')
+
+    clientes_data = []
+    for cliente in clientes_qs:
+        total_agendamentos = Agendamento.objects.filter(cliente=cliente).count()
+        total_ausencias = Agendamento.objects.filter(cliente=cliente, status='ausente').count()
+        clientes_data.append({
+            'cliente': cliente,
+            'total_agendamentos': total_agendamentos,
+            'total_ausencias': total_ausencias,
+        })
+
+    return render(request, 'admin/listar_clientes.html', {
+        'clientes_data': clientes_data,
+        'q': q,
+        'total_clientes': clientes_qs.count(),
+    })
+
+
+@staff_member_required
+def bloquear_cliente(request, user_id):
+    """Bloqueia um cliente, impedindo novos agendamentos."""
+    if request.method == 'POST':
+        cliente = get_object_or_404(Cliente, id_usuario__id=user_id)
+        # Nunca bloqueia staff/admin
+        if not cliente.id_usuario.is_staff:
+            cliente.bloqueado = True
+            cliente.save()
+            messages.success(
+                request,
+                f'Cliente "{cliente.id_usuario.username}" foi bloqueado com sucesso.'
+            )
+        else:
+            messages.error(request, 'Não é possível bloquear um administrador.')
+    return redirect('listar_clientes')
+
+
+@staff_member_required
+def desbloquear_cliente(request, user_id):
+    """Desbloqueia um cliente previamente bloqueado."""
+    if request.method == 'POST':
+        cliente = get_object_or_404(Cliente, id_usuario__id=user_id)
+        cliente.bloqueado = False
+        cliente.save()
+        messages.success(
+            request,
+            f'Cliente "{cliente.id_usuario.username}" foi desbloqueado com sucesso.'
+        )
+    return redirect('listar_clientes')
+
+
+@staff_member_required
+def excluir_cliente(request, user_id):
+    """
+    Exclui um cliente e sua conta de usuário.
+    Todos os agendamentos são removidos em cascata pelo ORM (CASCADE no FK).
+    Exige confirmação via POST para evitar exclusões acidentais.
+    """
+    user = get_object_or_404(User, id=user_id, is_staff=False)
+
+    if request.method == 'POST':
+        username = user.username
+        # Deleta o User — o Cliente e os Agendamentos são removidos em cascata
+        user.delete()
+        messages.success(request, f'Conta de "{username}" foi excluída com sucesso.')
+        return redirect('listar_clientes')
+
+    # GET → página de confirmação
+    cliente = get_object_or_404(Cliente, id_usuario=user)
+    total_agendamentos = Agendamento.objects.filter(cliente=cliente).count()
+    return render(request, 'admin/confirmar_exclusao_cliente.html', {
+        'user': user,
+        'cliente': cliente,
+        'total_agendamentos': total_agendamentos,
+    })
+
+# ──────────────────────────────────────────────────────────────────────────────
 
 @login_required
 def perfil(request):
