@@ -47,20 +47,43 @@ class Agendamento(models.Model):
 
         now = timezone.localtime()
 
-
         if self.data and self.data < now.date():
             errors['data'] = 'Não é permitido agendar em datas passadas.'
 
-
         if self.horario:
-            if self.horario < time(8,0) or self.horario > time(22,0):
+            if self.horario < time(8, 0) or self.horario > time(22, 0):
                 errors['horario'] = 'Horário permitido apenas entre 08:00 e 22:00.'
-
 
         if self.data == now.date() and self.horario:
             if self.horario <= now.time():
                 errors['horario'] = 'Não é possível agendar horários anteriores ao horário atual.'
-        
+
+        # ── Regra de antecedência mínima de 24 horas ──────────────────────
+        # Só executa se data e horário estão presentes e ainda não houve erro neles.
+        if 'data' not in errors and 'horario' not in errors:
+            if self.data and self.horario:
+                from datetime import datetime as dt
+                from zoneinfo import ZoneInfo
+
+                tz = ZoneInfo('America/Sao_Paulo')
+
+                # Monta o datetime do agendamento com timezone
+                agendamento_naive = dt.combine(self.data, self.horario)
+                agendamento_dt = agendamento_naive.replace(tzinfo=tz)
+
+                # Momento atual com timezone
+                agora = timezone.localtime()
+
+                diferenca = agendamento_dt - agora
+
+                if diferenca.total_seconds() < 86400:  # 86400 s = 24 horas exatas
+                    errors['horario'] = (
+                        'Agendamentos devem ser feitos com pelo menos 24 horas de antecedência. '
+                        'Escolha uma data e horário a partir de '
+                        f'{(agora + __import__("datetime").timedelta(hours=24)).strftime("%d/%m/%Y às %H:%M")}.'
+                    )
+        # ──────────────────────────────────────────────────────────────────
+
         if errors:
             raise ValidationError(errors)
 

@@ -17,6 +17,7 @@ from .utils import (
     requer_horario_duplo,
     get_proximo_horario,
     is_excecao_almoco,
+    is_horario_dentro_24h,
 )
 from django.contrib import messages
 from decimal import Decimal
@@ -810,7 +811,16 @@ def criar_agendamento(request):
             form.add_error("horario", "Esse horário já está ocupado para essa data.")
         elif erro_duplo:
             form.add_error("horario", erro_duplo)
-        elif form.is_valid():
+        elif data_convertida and horario_selecionado and is_horario_dentro_24h(data_convertida, horario_selecionado):
+            # ── Validação de antecedência mínima (24h) — camada da view ──
+            from datetime import timedelta
+            limite = timezone.localtime() + timedelta(hours=24)
+            form.add_error(
+                "horario",
+                f"Agendamentos devem ser feitos com pelo menos 24 horas de antecedência. "
+                f"O horário mais cedo disponível é {limite.strftime('%d/%m/%Y às %H:%M')}."
+            )
+            # ─────────────────────────────────────────────────────────────        elif form.is_valid():
             agendamento = form.save(commit=False)
             agendamento.cliente = cliente
             agendamento.servico = servico
@@ -846,11 +856,19 @@ def criar_agendamento(request):
 
     # ── Monta lista de horários indisponíveis para o template ──────────
     # Inclui: ocupados por agendamento, bloqueados manualmente,
+    # dentro das próximas 24h (regra de antecedência mínima),
     # e horários anteriores que ficariam inválidos por causa do duplo.
     bloqueados = []
+    horarios_menos_24h = []
 
     for h in horarios:
         horario_time = datetime.strptime(h, "%H:%M").time()
+
+        # ── Regra de antecedência mínima de 24h ──
+        if data_convertida and is_horario_dentro_24h(data_convertida, h):
+            horarios_menos_24h.append(h)
+            continue
+        # ─────────────────────────────────────────
 
         horario_bloqueado_manual = bloqueios.filter(
             horario=horario_time,
@@ -899,6 +917,7 @@ def criar_agendamento(request):
         'servico': servico,
         'bloqueados': bloqueados,
         'duplo': duplo,
+        'horarios_menos_24h': horarios_menos_24h,
     })
 
 #Listar agendamentos
