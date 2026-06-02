@@ -481,8 +481,8 @@ textarea {
 
 .legend-dot,
 .legend-box {
-    width: 13px;
-    height: 13px;
+    width: 20px;
+    height: 20px;
     border-radius: 4px;
     flex-shrink: 0;
 }
@@ -659,6 +659,38 @@ textarea {
 
 .horario-card.ocupado .slot-meta {
     color: #a5b1c0;
+}
+
+.horario-card.antecedencia {
+    cursor: not-allowed;
+}
+
+.horario-card.antecedencia span {
+    background:
+        repeating-linear-gradient(
+            45deg,
+            #fff9e6,
+            #fff9e6 8px,
+            #fff3cd 8px,
+            #fff3cd 16px
+        );
+    border: 1px dashed #ffc107;
+    color: #856404;
+    box-shadow: none;
+}
+
+.horario-card.antecedencia span::before {
+    display: none;
+}
+
+.horario-card.antecedencia:hover span {
+    transform: none;
+    border-color: #ffc107;
+    box-shadow: none;
+}
+
+.horario-card.antecedencia .slot-meta {
+    color: #b08a20;
 }
 
 
@@ -1389,7 +1421,7 @@ span.flatpickr-weekday {
                             </div>
 
                             <div>
-                                <div class="error-title">Horário não selecionado</div>
+                                <div class="error-title">Horário não disponível</div>
                                 <p class="error-text">
                                     {% for error in form.horario.errors %}
                                         {{ error }}
@@ -1466,30 +1498,46 @@ span.flatpickr-weekday {
                                     <span class="legend-box busy"></span>
                                     Ocupado
                                 </span>
+
+                                <span class="legend-chip">
+                                    <span class="legend-box busy" style="background: repeating-linear-gradient(45deg,#fff3cd,#fff3cd 5px,#ffe69c 5px,#ffe69c 10px); border-color:#ffc107;"></span>
+                                    Menos de 24h
+                                    
+                                </span>
                             </div>
 
                             <div class="horarios-grid">
                                 {% for horario in horarios %}
-                                    <label class="horario-card {% if horario in horarios_ocupados or horario in bloqueados %}ocupado{% endif %}">
-                                        <input
-                                            type="radio"
-                                            name="horario"
-                                            value="{{ horario }}"
-                                            {% if horario in horarios_ocupados or horario in bloqueados %}disabled{% endif %}
-                                        >
-
-                                        <span>
-                                            <strong class="slot-time">{{ horario }}</strong>
-
-                                            {% if horario in horarios_ocupados or horario in bloqueados %}
+                                    {% if horario in horarios_menos_24h %}
+                                        <label class="horario-card antecedencia">
+                                            <input type="radio" name="horario" value="{{ horario }}" disabled>
+                                            <span>
+                                                <strong class="slot-time">{{ horario }}</strong>
+                                                <small class="slot-meta">
+                                                    <i class="bi bi-clock-history"></i>
+                                                    Menos de 24h
+                                                </small>
+                                            </span>
+                                        </label>
+                                    {% elif horario in horarios_ocupados or horario in bloqueados %}
+                                        <label class="horario-card ocupado">
+                                            <input type="radio" name="horario" value="{{ horario }}" disabled>
+                                            <span>
+                                                <strong class="slot-time">{{ horario }}</strong>
                                                 <small class="slot-meta">
                                                     <i class="bi bi-lock"></i>
                                                     Ocupado
                                                 </small>
-                                                
-                                            {% endif %}
-                                        </span>
-                                    </label>
+                                            </span>
+                                        </label>
+                                    {% else %}
+                                        <label class="horario-card">
+                                            <input type="radio" name="horario" value="{{ horario }}">
+                                            <span>
+                                                <strong class="slot-time">{{ horario }}</strong>
+                                            </span>
+                                        </label>
+                                    {% endif %}
                                 {% endfor %}
                             </div>
                         </div>

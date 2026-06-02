@@ -1,4 +1,5 @@
 from datetime import datetime, time
+from django.utils import timezone
 
 HORARIOS_POR_DIA = {
     0: [  # Segunda
@@ -104,3 +105,21 @@ def is_excecao_almoco(horario_str):
         return h == HORARIO_EXCECAO_ALMOCO
     except (ValueError, TypeError):
         return False
+
+def is_horario_dentro_24h(data, horario_str):
+    """
+    Retorna True se o horário (data + horario_str "HH:MM") estiver
+    dentro das próximas 24 horas a partir de agora (servidor).
+    Usa timezone via django.utils.timezone, que respeita TIME_ZONE do settings.py.
+    """
+    try:
+        from zoneinfo import ZoneInfo
+        horario_time = datetime.strptime(horario_str, "%H:%M").time()
+        agendamento_naive = datetime.combine(data, horario_time)
+        agendamento_dt = agendamento_naive.replace(tzinfo=ZoneInfo('America/Sao_Paulo'))
+        agora = timezone.localtime()
+        diferenca = agendamento_dt - agora
+        return diferenca.total_seconds() < 86400
+    except (ValueError, TypeError):
+        # Se não conseguir calcular, considera inválido (seguro por padrão)
+        return True
