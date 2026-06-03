@@ -3,9 +3,6 @@ from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
 from .models import Agendamento
 from datetime import date, time, datetime
-from django.utils import timezone as tz_utils
-from zoneinfo import ZoneInfo
-from datetime import datetime as dt, timedelta
 
 class AgendamentoForm(forms.ModelForm):
     class Meta:
@@ -60,21 +57,6 @@ class AgendamentoForm(forms.ModelForm):
         if horario:
             if horario < time(8, 0) or horario > time(22, 0):
                 raise forms.ValidationError("Horário permitido apenas entre 08:00 e 22:00.")
-
-        # ── Regra de antecedência mínima de 24 horas ──────────────────────
-        if data and horario:
-            agendamento_naive = dt.combine(data, horario)
-            agendamento_dt = agendamento_naive.replace(tzinfo=ZoneInfo('America/Sao_Paulo'))
-            agora = tz_utils.localtime()
-            diferenca = agendamento_dt - agora
-
-            if diferenca.total_seconds() < 86400:
-                limite = agora + timedelta(hours=24)
-                raise forms.ValidationError(
-                    f"Agendamentos devem ser feitos com pelo menos 24 horas de antecedência. "
-                    f"O horário mais cedo disponível é {limite.strftime('%d/%m/%Y às %H:%M')}."
-                )
-        # ──────────────────────────────────────────────────────────────────
 
         if data and horario and Agendamento.objects.filter(data=data, horario=horario).exists():
             raise forms.ValidationError("Este horário já está ocupado.")
