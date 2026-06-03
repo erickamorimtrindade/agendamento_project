@@ -804,7 +804,6 @@ def criar_agendamento(request):
                         )
                 # Se proximo is None = último horário do dia → pode agendar normalmente
         # ────────────────────────────────────────────────────────────────
-
         if bloqueado:
             form.add_error("horario", "Este horário está bloqueado.")
         elif ja_existe:
@@ -820,7 +819,8 @@ def criar_agendamento(request):
                 f"Agendamentos devem ser feitos com pelo menos 24 horas de antecedência. "
                 f"O horário mais cedo disponível é {limite.strftime('%d/%m/%Y às %H:%M')}."
             )
-            # ─────────────────────────────────────────────────────────────        elif form.is_valid():
+            # ─────────────────────────────────────────────────────────────        
+        elif form.is_valid():
             agendamento = form.save(commit=False)
             agendamento.cliente = cliente
             agendamento.servico = servico
@@ -844,7 +844,7 @@ def criar_agendamento(request):
                 request.session.pop("servico_id", None)
                 return redirect('listar_agendamentos')
 
-            except ValidationError as e:
+            except ValidationError as e: 
                 for field, errors in e.message_dict.items():
                     for error in errors:
                         form.add_error(field, error)
