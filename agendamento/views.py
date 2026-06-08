@@ -21,6 +21,8 @@ from .utils import (
 )
 from django.contrib import messages
 from decimal import Decimal
+import calendar
+from django.http import JsonResponse
 
 STATUS_VALIDOS = {'presente', 'ausente', 'pendente'}
 #painel do adm --------
@@ -151,6 +153,145 @@ def agendamentos_hoje(request):
 
     return render(request, "admin/relatorio_hoje.html", {
         "agendamentos": agendamentos
+    })
+
+@staff_member_required
+def calendario_admin(request):
+    """
+    Página principal do Calendário Administrativo.
+    Renderiza a estrutura base; os dados vêm via AJAX (api_calendario_dados).
+    """
+    hoje = date.today()
+    return render(request, 'admin/calendario_admin.html', {
+        'hoje': hoje.isoformat(),
+    })
+
+
+@staff_member_required
+def api_calendario_dados(request):
+    """
+    Endpoint JSON — retorna dados do mês solicitado.
+    Parâmetros GET: ano (int), mes (int)
+
+    Resposta:
+    {
+        "dias": {
+            "2025-06-10": {
+                "total": 3,
+                "agendamentos": [...],
+                "horarios": [
+                    {"horario": "08:00", "status": "livre|ocupado|bloqueado", "agendamento": {...}|null},
+                    ...
+                ]
+            }
+        }
+    }
+    """
+    try:
+        ano = int(request.GET.get('ano', date.today().year))
+        mes = int(request.GET.get('mes', date.today().month))
+    except (ValueError, TypeError):
+        return JsonResponse({'erro': 'Parâmetros inválidos'}, status=400)
+
+    # Primeiro e último dia do mês
+    primeiro_dia = date(ano, mes, 1)
+    ultimo_dia = date(ano, mes, calendar.monthrange(ano, mes)[1])
+
+    # ── Busca todos os agendamentos do mês em uma única query ──
+    agendamentos_mes = (
+        Agendamento.objects
+        .filter(data__gte=primeiro_dia, data__lte=ultimo_dia)
+        .select_related('cliente__id_usuario', 'servico')
+        .order_by('data', 'horario')
+    )
+
+    # ── Busca todos os bloqueios do mês em uma única query ──
+    bloqueios_mes = (
+        HorarioBloqueado.objects
+        .filter(data__gte=primeiro_dia, data__lte=ultimo_dia)
+    )
+
+    # Indexa agendamentos por (data, horario)
+    agenda_idx = {}  # key: (data_str, horario_str) → agendamento_dict
+    contagem_por_dia = defaultdict(int)
+
+    for ag in agendamentos_mes:
+        data_str = ag.data.isoformat()
+        hora_str = ag.horario.strftime('%H:%M')
+        contagem_por_dia[data_str] += 1
+        agenda_idx[(data_str, hora_str)] = {
+            'id': ag.id,
+            'cliente': ag.cliente.id_usuario.get_full_name() or ag.cliente.id_usuario.username,
+            'telefone': ag.cliente.telefone,
+            'servico': ag.servico.nome if ag.servico else '—',
+            'status': ag.status,
+            'descricao': ag.descricao,
+        }
+
+    # Indexa bloqueios por (data, horario)  — horario None = dia inteiro bloqueado
+    bloqueio_idx = {}  # key: (data_str, horario_str|None) → tipo
+    dias_bloqueados = set()  # dias com bloqueio de dia inteiro
+
+    for b in bloqueios_mes:
+        data_str = b.data.isoformat()
+        if b.horario is None:
+            if b.tipo == 'bloqueio':
+                dias_bloqueados.add(data_str)
+        else:
+            hora_str = b.horario.strftime('%H:%M')
+            bloqueio_idx[(data_str, hora_str)] = b.tipo  # 'bloqueio' ou 'liberado'
+
+    # ── Monta a estrutura de resposta dia a dia ──
+    dias = {}
+    delta = timedelta(days=1)
+    dia_cursor = primeiro_dia
+
+    while dia_cursor <= ultimo_dia:
+        data_str = dia_cursor.isoformat()
+        horarios_do_dia = gerar_horarios(dia_cursor)  # lista ["08:00", ...]
+        dia_bloqueado = data_str in dias_bloqueados
+
+        slots = []
+        for hora_str in horarios_do_dia:
+            ag = agenda_idx.get((data_str, hora_str))
+            tipo_bloqueio = bloqueio_idx.get((data_str, hora_str))
+
+            if ag:
+                status_slot = 'ocupado'
+            elif dia_bloqueado:
+                # Se o dia está bloqueado mas existe uma exceção (liberado), fica livre
+                if tipo_bloqueio == 'liberado':
+                    status_slot = 'livre'
+                else:
+                    status_slot = 'bloqueado'
+            elif tipo_bloqueio == 'bloqueio':
+                status_slot = 'bloqueado'
+            else:
+                status_slot = 'livre'
+
+            slots.append({
+                'horario': hora_str,
+                'status': status_slot,
+                'agendamento': ag,
+            })
+
+        total_agendamentos = contagem_por_dia.get(data_str, 0)
+        total_horarios = len(horarios_do_dia)
+
+        dias[data_str] = {
+            'total': total_agendamentos,
+            'total_horarios': total_horarios,
+            'fechado': total_horarios == 0,
+            'dia_bloqueado': dia_bloqueado,
+            'horarios': slots,
+        }
+
+        dia_cursor += delta
+
+    return JsonResponse({
+        'ano': ano,
+        'mes': mes,
+        'dias': dias,
     })
 
 @staff_member_required

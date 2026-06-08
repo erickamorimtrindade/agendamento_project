@@ -38,5 +38,6 @@ urlpatterns = [
     path('suporte/', views.suporte, name='suporte'),
     path("esqueci-minha-senha/", views.esqueci_senha, name="esqueci_senha"),
     path("redefinir-senha/",views.redefinir_senha, name="redefinir_senha"),
-
+    path('painel/calendario/', views.calendario_admin, name='calendario_admin'),
+    path('painel/calendario/dados/', views.api_calendario_dados, name='api_calendario_dados'),
 ]

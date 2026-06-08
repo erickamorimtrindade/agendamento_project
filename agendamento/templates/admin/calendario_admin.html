@@ -1,0 +1,1222 @@
+{% extends 'admin/base_admin.html' %}
+{% load static %}
+
+{% block title %}Calendário Administrativo{% endblock %}
+
+{% block extra_css %}
+<style>
+/* ─── Variáveis ─────────────────────────────────────────────── */
+:root {
+    --primary: #1f5b8f;
+    --primary-light: #2563eb;
+    --bg: #eef2f7;
+    --text: #1f2937;
+    --sub: #6b7280;
+    --card: #ffffff;
+    --border: #e5e7eb;
+    --soft: #f8fafc;
+    --shadow: 0 18px 40px rgba(15,23,42,0.08);
+    --shadow-soft: 0 10px 24px rgba(15,23,42,0.05);
+
+    --cor-livre: #d1fae5;
+    --cor-livre-text: #065f46;
+    --cor-ocupado: #fee2e2;
+    --cor-ocupado-text: #991b1b;
+    --cor-bloqueado: #f3f4f6;
+    --cor-bloqueado-text: #6b7280;
+    --cor-hoje: #eff6ff;
+    --cor-hoje-border: #2563eb;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+    font-family: 'Inter', sans-serif;
+    background: linear-gradient(135deg, #eef2f7, #f8fafc);
+    color: var(--text);
+}
+
+/* ─── Layout base (sidebar + main) ─────────────────────────── */
+.layout { display: flex; min-height: 100vh; }
+
+.sidebar {
+    width: 250px;
+    background: #fff;
+    border-right: 1px solid var(--border);
+    padding: 20px 15px;
+    display: flex;
+    flex-direction: column;
+    flex-shrink: 0;
+}
+
+.logo {
+    font-weight: 800;
+    font-size: 1.3rem;
+    margin-bottom: 25px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+.logo i { color: var(--primary); }
+
+.section-title {
+    font-size: 0.75rem;
+    color: #9ca3af;
+    margin: 15px 10px 8px;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+    font-weight: 700;
+}
+
+.menu a, .sidebar-footer a {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px;
+    border-radius: 10px;
+    text-decoration: none;
+    color: var(--text);
+    transition: .2s;
+    font-weight: 500;
+}
+.menu a:hover, .sidebar-footer a:hover { background: #d7dbdf; }
+.menu a.active { background: var(--primary); color: #fff; }
+
+.sidebar-footer { margin-top: auto; }
+
+.main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+
+.header {
+    height: 70px;
+    background: var(--primary);
+    color: #fff;
+    display: flex;
+    align-items: center;
+    padding: 0 25px;
+    font-weight: 700;
+    font-size: 1.1rem;
+    gap: 12px;
+    flex-shrink: 0;
+}
+
+/* ─── Área do calendário ────────────────────────────────────── */
+.cal-wrapper {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    padding: 24px;
+    gap: 18px;
+    overflow: auto;
+}
+
+/* ─── Barra de controles ────────────────────────────────────── */
+.cal-controls {
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: 18px;
+    padding: 16px 24px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+    box-shadow: var(--shadow-soft);
+}
+
+.cal-nav-btn {
+    width: 38px; height: 38px;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    background: var(--soft);
+    color: var(--text);
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1rem;
+    transition: .18s;
+    flex-shrink: 0;
+}
+.cal-nav-btn:hover { background: var(--primary); color: #fff; border-color: var(--primary); }
+
+.cal-period-label {
+    font-size: 1.2rem;
+    font-weight: 800;
+    color: var(--text);
+    min-width: 220px;
+    text-align: center;
+}
+
+.cal-today-btn {
+    padding: 8px 18px;
+    border-radius: 10px;
+    border: 1px solid var(--primary-light);
+    background: #eff6ff;
+    color: var(--primary-light);
+    font-weight: 700;
+    cursor: pointer;
+    font-size: 0.85rem;
+    transition: .18s;
+}
+.cal-today-btn:hover { background: var(--primary-light); color: #fff; }
+
+.view-toggle {
+    display: flex;
+    gap: 4px;
+    margin-left: auto;
+    background: var(--soft);
+    border-radius: 10px;
+    padding: 4px;
+    border: 1px solid var(--border);
+}
+.view-btn {
+    padding: 7px 16px;
+    border-radius: 8px;
+    border: none;
+    background: transparent;
+    font-size: 0.83rem;
+    font-weight: 600;
+    color: var(--sub);
+    cursor: pointer;
+    transition: .15s;
+}
+.view-btn.active { background: #fff; color: var(--primary); box-shadow: 0 2px 8px rgba(0,0,0,.07); }
+
+/* ─── Legenda ───────────────────────────────────────────────── */
+.cal-legend {
+    display: flex;
+    gap: 16px;
+    flex-wrap: wrap;
+    align-items: center;
+}
+.legend-item {
+    display: flex; align-items: center; gap: 6px;
+    font-size: 0.8rem; font-weight: 600; color: var(--sub);
+}
+.legend-dot {
+    width: 12px; height: 12px; border-radius: 50%;
+}
+.legend-dot.livre    { background: #10b981; }
+.legend-dot.ocupado  { background: #ef4444; }
+.legend-dot.bloqueado{ background: #9ca3af; }
+.legend-dot.fechado  { background: #e5e7eb; border: 1px solid #d1d5db; }
+
+/* ─── Calendário mensal ─────────────────────────────────────── */
+.cal-grid-wrap {
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    overflow: hidden;
+    box-shadow: var(--shadow-soft);
+}
+
+.cal-weekdays {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    background: var(--soft);
+    border-bottom: 1px solid var(--border);
+}
+.cal-weekday {
+    padding: 12px 0;
+    text-align: center;
+    font-size: 0.78rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+    color: var(--sub);
+}
+.cal-weekday.fim-semana { color: #dc2626; }
+
+.cal-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+}
+
+.cal-day {
+    border-right: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+    min-height: 110px;
+    padding: 10px;
+    cursor: pointer;
+    transition: background .15s;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+.cal-day:nth-child(7n) { border-right: none; }
+.cal-day:hover { background: #f0f7ff; }
+
+.cal-day.outro-mes { background: #fafafa; cursor: default; }
+.cal-day.outro-mes .day-num { color: #d1d5db; }
+.cal-day.outro-mes:hover { background: #fafafa; }
+
+.cal-day.hoje-atual {
+    background: var(--cor-hoje);
+    border: 2px solid var(--cor-hoje-border);
+}
+
+.cal-day.fechado-dia {
+    background: repeating-linear-gradient(
+        45deg,
+        #f9fafb,
+        #f9fafb 5px,
+        #f3f4f6 5px,
+        #f3f4f6 10px
+    );
+    cursor: default;
+}
+.cal-day.fechado-dia:hover { background: repeating-linear-gradient(45deg, #f9fafb, #f9fafb 5px, #f3f4f6 5px, #f3f4f6 10px); }
+
+.day-num {
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: var(--text);
+    line-height: 1;
+}
+.hoje-atual .day-num {
+    background: var(--primary);
+    color: #fff;
+    width: 28px; height: 28px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.85rem;
+}
+
+.day-agend-count {
+    font-size: 0.72rem;
+    font-weight: 600;
+    color: var(--sub);
+}
+
+.day-slots-preview {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 3px;
+    margin-top: 2px;
+}
+
+.slot-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+.slot-dot.livre     { background: #10b981; }
+.slot-dot.ocupado   { background: #ef4444; }
+.slot-dot.bloqueado { background: #9ca3af; }
+
+.day-tag-bloqueado {
+    font-size: 0.65rem;
+    font-weight: 700;
+    color: #6b7280;
+    background: #f3f4f6;
+    border-radius: 6px;
+    padding: 2px 6px;
+    margin-top: auto;
+    align-self: flex-start;
+    text-transform: uppercase;
+    letter-spacing: .03em;
+}
+.day-tag-fechado {
+    font-size: 0.65rem;
+    font-weight: 700;
+    color: #9ca3af;
+    margin-top: auto;
+}
+
+/* ─── Calendário semanal ────────────────────────────────────── */
+.week-grid-wrap {
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    overflow: hidden;
+    box-shadow: var(--shadow-soft);
+}
+
+.week-header {
+    display: grid;
+    grid-template-columns: 70px repeat(7, 1fr);
+    background: var(--soft);
+    border-bottom: 1px solid var(--border);
+}
+
+.week-header-cell {
+    padding: 12px 6px;
+    text-align: center;
+    font-size: 0.78rem;
+    font-weight: 700;
+}
+
+.week-header-cell .wh-dia-nome {
+    text-transform: uppercase;
+    letter-spacing: .04em;
+    color: var(--sub);
+}
+.week-header-cell .wh-dia-num {
+    font-size: 1.2rem;
+    font-weight: 800;
+    color: var(--text);
+    display: block;
+    margin-top: 2px;
+}
+.week-header-cell.wh-hoje .wh-dia-num {
+    background: var(--primary);
+    color: #fff;
+    width: 34px; height: 34px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1rem;
+    margin: 4px auto 0;
+}
+.week-header-cell.fim-semana .wh-dia-nome { color: #dc2626; }
+
+.week-body {
+    display: grid;
+    grid-template-columns: 70px repeat(7, 1fr);
+}
+
+.week-time-col {
+    border-right: 1px solid var(--border);
+    padding: 0;
+}
+
+.week-slot-row {
+    display: contents;
+}
+
+.week-time-label {
+    height: 64px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.72rem;
+    color: var(--sub);
+    font-weight: 600;
+    border-bottom: 1px solid var(--border);
+    padding: 0 8px;
+    text-align: center;
+}
+
+.week-cell {
+    height: 64px;
+    border-right: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+    padding: 6px;
+    cursor: pointer;
+    transition: background .12s;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+.week-cell:nth-child(7n + 2) {}
+.week-cell:hover { background: #f0f7ff; }
+.week-cell.fechado-cell { background: repeating-linear-gradient(45deg,#f9fafb,#f9fafb 5px,#f3f4f6 5px,#f3f4f6 10px); cursor: default; }
+.week-cell.fechado-cell:hover { background: repeating-linear-gradient(45deg,#f9fafb,#f9fafb 5px,#f3f4f6 5px,#f3f4f6 10px); }
+.week-cell.cel-hoje { background: var(--cor-hoje); }
+.week-cell.cel-hoje:hover { background: #dbeafe; }
+
+.slot-pill {
+    border-radius: 6px;
+    font-size: 0.7rem;
+    font-weight: 600;
+    padding: 3px 7px;
+    line-height: 1.3;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    max-width: 100%;
+}
+.slot-pill.livre     { background: var(--cor-livre); color: var(--cor-livre-text); }
+.slot-pill.ocupado   { background: var(--cor-ocupado); color: var(--cor-ocupado-text); }
+.slot-pill.bloqueado { background: var(--cor-bloqueado); color: var(--cor-bloqueado-text); }
+
+/* ─── Painel lateral (drawer) ───────────────────────────────── */
+.drawer-overlay {
+    position: fixed; inset: 0;
+    background: rgba(15,23,42,0.4);
+    z-index: 1000;
+    opacity: 0; pointer-events: none;
+    transition: opacity .25s;
+    backdrop-filter: blur(4px);
+}
+.drawer-overlay.show { opacity: 1; pointer-events: all; }
+
+.drawer {
+    position: fixed; top: 0; right: -440px; bottom: 0;
+    width: 420px;
+    background: #fff;
+    z-index: 1001;
+    box-shadow: -20px 0 60px rgba(0,0,0,.15);
+    transition: right .3s cubic-bezier(.4,0,.2,1);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+.drawer.open { right: 0; }
+
+.drawer-header {
+    padding: 22px 24px 16px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    flex-shrink: 0;
+}
+.drawer-date-badge {
+    background: var(--primary);
+    color: #fff;
+    border-radius: 14px;
+    padding: 8px 14px;
+    font-weight: 800;
+    font-size: 1.1rem;
+    line-height: 1;
+    text-align: center;
+    min-width: 56px;
+}
+.drawer-date-badge .dd-dia { font-size: 1.6rem; display: block; }
+.drawer-date-badge .dd-mes { font-size: 0.72rem; text-transform: uppercase; letter-spacing: .05em; }
+
+.drawer-date-info { flex: 1; }
+.drawer-date-info h3 { font-size: 1rem; font-weight: 800; }
+.drawer-date-info p  { font-size: 0.83rem; color: var(--sub); margin-top: 2px; }
+
+.drawer-close {
+    width: 32px; height: 32px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: var(--soft);
+    color: var(--sub);
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.1rem;
+    flex-shrink: 0;
+    transition: .15s;
+}
+.drawer-close:hover { background: #fee2e2; color: #dc2626; border-color: #fca5a5; }
+
+.drawer-body {
+    flex: 1;
+    overflow-y: auto;
+    padding: 20px 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+/* ─── Cards de slot no drawer ───────────────────────────────── */
+.slot-card {
+    border-radius: 14px;
+    border: 1.5px solid var(--border);
+    padding: 14px;
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+    transition: box-shadow .15s;
+}
+.slot-card:hover { box-shadow: 0 4px 16px rgba(0,0,0,.08); }
+.slot-card.livre     { border-color: #a7f3d0; background: #f0fdf4; }
+.slot-card.ocupado   { border-color: #fca5a5; background: #fff5f5; }
+.slot-card.bloqueado { border-color: #e5e7eb; background: #f9fafb; }
+
+.slot-hora {
+    min-width: 52px;
+    font-size: 0.9rem;
+    font-weight: 800;
+    padding: 6px 10px;
+    border-radius: 10px;
+    text-align: center;
+    line-height: 1;
+    flex-shrink: 0;
+}
+.slot-hora.livre     { background: #d1fae5; color: #065f46; }
+.slot-hora.ocupado   { background: #fee2e2; color: #991b1b; }
+.slot-hora.bloqueado { background: #f3f4f6; color: #6b7280; }
+
+.slot-info { flex: 1; min-width: 0; }
+.slot-status-label {
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+    margin-bottom: 4px;
+}
+.slot-status-label.livre     { color: #059669; }
+.slot-status-label.ocupado   { color: #dc2626; }
+.slot-status-label.bloqueado { color: #9ca3af; }
+
+.slot-cliente {
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: var(--text);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.slot-servico, .slot-extra {
+    font-size: 0.8rem;
+    color: var(--sub);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.slot-badge-status {
+    font-size: 0.68rem;
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: 20px;
+    margin-top: 4px;
+    display: inline-block;
+}
+.slot-badge-status.pendente  { background: #fef9c3; color: #92400e; }
+.slot-badge-status.presente  { background: #d1fae5; color: #065f46; }
+.slot-badge-status.ausente   { background: #fee2e2; color: #991b1b; }
+
+.drawer-empty {
+    text-align: center;
+    color: var(--sub);
+    font-size: 0.9rem;
+    padding: 40px 0;
+}
+.drawer-empty i { font-size: 2.5rem; display: block; margin-bottom: 10px; opacity: .4; }
+
+/* ─── Loading spinner ───────────────────────────────────────── */
+.cal-loading {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 14px;
+    padding: 60px;
+    color: var(--sub);
+    font-size: 0.9rem;
+}
+.spinner {
+    width: 38px; height: 38px;
+    border: 3px solid var(--border);
+    border-top-color: var(--primary);
+    border-radius: 50%;
+    animation: spin .7s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ─── Modal de logout ───────────────────────────────────────── */
+.modal-logout {
+    position: fixed; inset: 0;
+    background: rgba(15,23,42,0.55);
+    display: flex; align-items: center; justify-content: center;
+    opacity: 0; pointer-events: none;
+    transition: .25s ease;
+    z-index: 9999;
+    backdrop-filter: blur(8px);
+}
+.modal-logout.show { opacity: 1; pointer-events: all; }
+.modal-box {
+    background: #fff; padding: 28px; border-radius: 20px; width: 360px;
+    text-align: center; box-shadow: 0 30px 80px rgba(0,0,0,.25);
+    transform: translateY(15px) scale(.94); transition: all .25s ease;
+}
+.modal-logout.show .modal-box { transform: translateY(0) scale(1); }
+.modal-title { font-size: 1.1rem; font-weight: 700; color: #111827; }
+.modal-actions { display: flex; justify-content: center; gap: 12px; margin-top: 18px; }
+.btn-confirm {
+    background: linear-gradient(135deg,#ef4444,#dc2626); color:#fff;
+    padding: 10px 20px; border-radius: 12px; font-weight: 600; border: none; cursor: pointer;
+    transition: .2s;
+}
+.btn-confirm:hover { transform: translateY(-2px); box-shadow: 0 10px 20px rgba(220,38,38,.3); }
+.btn-cancel {
+    background: #f3f4f6; color: #374151;
+    padding: 10px 20px; border-radius: 12px; font-weight: 600; border: none; cursor: pointer;
+    transition: .2s;
+}
+.btn-cancel:hover { background: #e5e7eb; }
+
+/* ─── Responsivo ────────────────────────────────────────────── */
+@media (max-width: 900px) {
+    .drawer { width: 100%; right: -100%; }
+    .sidebar { width: 100%; border-right: none; border-bottom: 1px solid var(--border); }
+    .layout { flex-direction: column; }
+    .cal-period-label { min-width: 160px; font-size: 1rem; }
+}
+@media (max-width: 640px) {
+    .cal-day { min-height: 70px; padding: 6px; }
+    .week-grid-wrap { overflow-x: auto; }
+    .week-header, .week-body { min-width: 600px; }
+    .cal-controls { padding: 12px 16px; }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="layout">
+
+    <!-- ── Sidebar ── -->
+    <div class="sidebar">
+        <div class="logo">
+            <i class="bi bi-star-fill"></i> Wanessa
+        </div>
+
+        <div class="section-title">Principal</div>
+        <div class="menu">
+            <a href="{% url 'painel_admin' %}"><i class="bi bi-house"></i> Home</a>
+        </div>
+
+        <div class="section-title">Gestão</div>
+        <div class="menu">
+            <a href="{% url 'listar_servicos' %}"><i class="bi bi-card-text"></i> Gerenciar serviços</a>
+            <a href="{% url 'listar_clientes' %}"><i class="bi bi-people-fill"></i> Lista clientes</a>
+            <a href="{% url 'agendamentos_hoje' %}"><i class="bi bi-calendar-day"></i> Agendamentos de hoje</a>
+            <a href="{% url 'proximos_agendamentos' %}"><i class="bi bi-calendar-week"></i> Agenda</a>
+            <a href="{% url 'calendario_admin' %}" class="active"><i class="bi bi-calendar3"></i> Calendário</a>
+            <a href="{% url 'gerenciar_horarios' %}"><i class="bi bi-clock"></i> Gerenciar horários</a>
+        </div>
+
+        <div class="section-title">Relatórios</div>
+        <div class="menu">
+            <a href="{% url 'relatorio_31_dias' %}"><i class="bi bi-bar-chart"></i> Dashboard financeiro</a>
+        </div>
+
+        <div class="section-title">Conta</div>
+        <div class="menu">
+            <a href="{% url 'perfil' %}"><i class="bi bi-person-circle"></i> Perfil</a>
+            <a href="{% url 'logout' %}" class="btn-sair"><i class="bi bi-box-arrow-right"></i> Sair</a>
+        </div>
+    </div>
+
+    <!-- ── Main ── -->
+    <div class="main">
+        <div class="header">
+            <i class="bi bi-calendar3"></i>
+            Calendário Administrativo
+        </div>
+
+        <div class="cal-wrapper">
+
+            <!-- Controles -->
+            <div class="cal-controls">
+                <button class="cal-nav-btn" id="btnAnterior" title="Período anterior">
+                    <i class="bi bi-chevron-left"></i>
+                </button>
+                <div class="cal-period-label" id="labelPeriodo">Carregando...</div>
+                <button class="cal-nav-btn" id="btnProximo" title="Próximo período">
+                    <i class="bi bi-chevron-right"></i>
+                </button>
+                <button class="cal-today-btn" id="btnHoje">Hoje</button>
+
+                <div class="cal-legend">
+                    <div class="legend-item"><div class="legend-dot livre"></div> Livre</div>
+                    <div class="legend-item"><div class="legend-dot ocupado"></div> Ocupado</div>
+                    <div class="legend-item"><div class="legend-dot bloqueado"></div> Bloqueado</div>
+                    <div class="legend-item"><div class="legend-dot fechado"></div> Fechado</div>
+                </div>
+
+                <div class="view-toggle">
+                    <button class="view-btn active" data-view="mes" id="btnViewMes">Mês</button>
+                    <button class="view-btn" data-view="semana" id="btnViewSemana">Semana</button>
+                </div>
+            </div>
+
+            <!-- Área do calendário -->
+            <div id="calArea"></div>
+
+        </div><!-- /cal-wrapper -->
+    </div><!-- /main -->
+</div><!-- /layout -->
+
+<!-- ── Drawer de detalhe do dia ── -->
+<div class="drawer-overlay" id="drawerOverlay"></div>
+<div class="drawer" id="drawer">
+    <div class="drawer-header">
+        <div class="drawer-date-badge" id="drawerBadge">
+            <span class="dd-dia" id="drawerDia">–</span>
+            <span class="dd-mes" id="drawerMes">–</span>
+        </div>
+        <div class="drawer-date-info">
+            <h3 id="drawerTitulo">–</h3>
+            <p id="drawerSubtitulo">–</p>
+        </div>
+        <button class="drawer-close" id="drawerClose"><i class="bi bi-x-lg"></i></button>
+    </div>
+    <div class="drawer-body" id="drawerBody"></div>
+</div>
+
+<!-- ── Modal de logout ── -->
+<div id="logoutModal" class="modal-logout">
+    <div class="modal-box">
+        <p class="modal-title">Tem certeza que deseja sair da conta?</p>
+        <div class="modal-actions">
+            <button id="confirmLogout" class="btn-confirm">Sair</button>
+            <button id="cancelLogout" class="btn-cancel">Cancelar</button>
+        </div>
+    </div>
+</div>
+
+<script>
+/* ═══════════════════════════════════════════════════════════════
+   Calendário Administrativo — JavaScript
+   ═══════════════════════════════════════════════════════════════ */
+
+const API_URL      = "{% url 'api_calendario_dados' %}";
+const HOJE_ISO     = "{{ hoje }}";   // ex: "2025-06-08"
+
+const MESES_PT = [
+    'Janeiro','Fevereiro','Março','Abril','Maio','Junho',
+    'Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'
+];
+const DIAS_PT     = ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
+const DIAS_LONGO  = ['Domingo','Segunda','Terça','Quarta','Quinta','Sexta','Sábado'];
+
+/* Estado global */
+let state = {
+    view: 'mes',          // 'mes' | 'semana'
+    ano: 0,
+    mes: 0,              // 1-12
+    semanaOffset: 0,     // quantas semanas a partir de hoje
+    dados: {},           // cache: "YYYY-M" -> resposta JSON
+    carregando: false,
+};
+
+/* ── Helpers de data ───────────────────────────────────────── */
+function parseHoje() {
+    const [a, m, d] = HOJE_ISO.split('-').map(Number);
+    return { ano: a, mes: m, dia: d };
+}
+
+function hojeObj() {
+    // Usa HOJE_ISO como fonte canônica para evitar fuso no browser
+    return parseHoje();
+}
+
+function isoToDate(iso) {
+    const [a, m, d] = iso.split('-').map(Number);
+    return new Date(a, m - 1, d);
+}
+
+function dateToIso(d) {
+    const mm = String(d.getMonth() + 1).padStart(2, '0');
+    const dd = String(d.getDate()).padStart(2, '0');
+    return `${d.getFullYear()}-${mm}-${dd}`;
+}
+
+/* ── Fetch com cache ───────────────────────────────────────── */
+async function fetchMes(ano, mes) {
+    const key = `${ano}-${mes}`;
+    if (state.dados[key]) return state.dados[key];
+
+    const resp = await fetch(`${API_URL}?ano=${ano}&mes=${mes}`);
+    if (!resp.ok) throw new Error('Falha ao carregar dados');
+    const json = await resp.json();
+    state.dados[key] = json;
+    return json;
+}
+
+/* ── Renderiza loading ─────────────────────────────────────── */
+function renderLoading() {
+    document.getElementById('calArea').innerHTML = `
+        <div class="cal-loading">
+            <div class="spinner"></div>
+            Carregando agenda...
+        </div>`;
+}
+
+/* ════════════════════════════════════════════════════════════
+   VISÃO MENSAL
+   ════════════════════════════════════════════════════════════ */
+async function renderMes() {
+    renderLoading();
+    const h = hojeObj();
+
+    let dados;
+    try {
+        dados = await fetchMes(state.ano, state.mes);
+    } catch(e) {
+        document.getElementById('calArea').innerHTML =
+            `<div class="cal-loading" style="color:#dc2626"><i class="bi bi-exclamation-circle" style="font-size:2rem"></i><br>Erro ao carregar dados. Tente novamente.</div>`;
+        return;
+    }
+
+    // Label do período
+    document.getElementById('labelPeriodo').textContent =
+        `${MESES_PT[state.mes - 1]} ${state.ano}`;
+
+    // Calendário: primeiro dia da semana = domingo
+    const primeiroDia = new Date(state.ano, state.mes - 1, 1);
+    const ultimoDia   = new Date(state.ano, state.mes, 0);
+    const inicioSemana = primeiroDia.getDay(); // 0=dom
+    const totalCelulas = Math.ceil((inicioSemana + ultimoDia.getDate()) / 7) * 7;
+
+    let htmlCabecalho = DIAS_PT.map((d, i) =>
+        `<div class="cal-weekday ${i === 0 || i === 6 ? 'fim-semana' : ''}">${d}</div>`
+    ).join('');
+
+    let htmlDias = '';
+    for (let i = 0; i < totalCelulas; i++) {
+        const numDia = i - inicioSemana + 1;
+        const diaSemana = i % 7;
+
+        if (numDia < 1 || numDia > ultimoDia.getDate()) {
+            htmlDias += `<div class="cal-day outro-mes"><span class="day-num">${numDia < 1 ? '' : numDia}</span></div>`;
+            continue;
+        }
+
+        const mm = String(state.mes).padStart(2,'0');
+        const dd = String(numDia).padStart(2,'0');
+        const iso = `${state.ano}-${mm}-${dd}`;
+        const info = dados.dias[iso] || { total: 0, total_horarios: 0, fechado: true, horarios: [] };
+
+        const isHoje = iso === HOJE_ISO;
+        const isFechado = info.fechado;
+        const isBloqueadoDia = info.dia_bloqueado;
+        const isFinSem = diaSemana === 0 || diaSemana === 6;
+
+        // Dots de preview (máx 14)
+        const slots = (info.horarios || []).slice(0, 14);
+        const dots = slots.map(s =>
+            `<div class="slot-dot ${s.status}" title="${s.horario} - ${s.status}"></div>`
+        ).join('');
+
+        let classesExtra = '';
+        if (isHoje)           classesExtra += ' hoje-atual';
+        if (isFechado && !isHoje) classesExtra += ' fechado-dia';
+
+        let tagExtra = '';
+        if (isFechado)       tagExtra = `<span class="day-tag-fechado">Fechado</span>`;
+        else if (isBloqueadoDia) tagExtra = `<span class="day-tag-bloqueado"><i class="bi bi-lock-fill"></i> Bloqueado</span>`;
+
+        let countLabel = '';
+        if (!isFechado && info.total > 0) {
+            countLabel = `<div class="day-agend-count">${info.total} agend.</div>`;
+        }
+
+        const clickable = !isFechado;
+
+        htmlDias += `
+        <div class="cal-day${classesExtra}"
+             ${clickable ? `data-iso="${iso}" onclick="abrirDrawer('${iso}')"` : ''}
+             ${isFinSem && !isFechado ? 'style="background:#fffbeb"' : ''}>
+            <span class="day-num">${numDia}</span>
+            ${countLabel}
+            <div class="day-slots-preview">${dots}</div>
+            ${tagExtra}
+        </div>`;
+    }
+
+    document.getElementById('calArea').innerHTML = `
+        <div class="cal-grid-wrap">
+            <div class="cal-weekdays">${htmlCabecalho}</div>
+            <div class="cal-grid">${htmlDias}</div>
+        </div>`;
+}
+
+/* ════════════════════════════════════════════════════════════
+   VISÃO SEMANAL
+   ════════════════════════════════════════════════════════════ */
+async function renderSemana() {
+    renderLoading();
+    const h = hojeObj();
+
+    // Dia de hoje como Date
+    const hojeDate = new Date(h.ano, h.mes - 1, h.dia);
+    // Domingo da semana atual
+    const diaDaSemana = hojeDate.getDay();
+    const domingoBase = new Date(hojeDate);
+    domingoBase.setDate(hojeDate.getDate() - diaDaSemana + (state.semanaOffset * 7));
+
+    // 7 dias da semana
+    const diasDaSemana = Array.from({length: 7}, (_, i) => {
+        const d = new Date(domingoBase);
+        d.setDate(domingoBase.getDate() + i);
+        return d;
+    });
+
+    // Busca os meses necessários (pode cobrir 2 meses)
+    const mesesNecessarios = new Set(diasDaSemana.map(d => `${d.getFullYear()}-${d.getMonth() + 1}`));
+    const buscas = [...mesesNecessarios].map(k => {
+        const [a, m] = k.split('-').map(Number);
+        return fetchMes(a, m);
+    });
+
+    let todosDados;
+    try {
+        await Promise.all(buscas);
+        // Monta índice unificado
+        todosDados = {};
+        for (const k of mesesNecessarios) {
+            const [a, m] = k.split('-').map(Number);
+            const d = state.dados[`${a}-${m}`];
+            if (d) Object.assign(todosDados, d.dias);
+        }
+    } catch(e) {
+        document.getElementById('calArea').innerHTML =
+            `<div class="cal-loading" style="color:#dc2626">Erro ao carregar. Tente novamente.</div>`;
+        return;
+    }
+
+    // Label do período
+    const inicio = diasDaSemana[0];
+    const fim    = diasDaSemana[6];
+    let label;
+    if (inicio.getMonth() === fim.getMonth()) {
+        label = `${inicio.getDate()} – ${fim.getDate()} de ${MESES_PT[inicio.getMonth()]} ${inicio.getFullYear()}`;
+    } else {
+        label = `${inicio.getDate()} ${MESES_PT[inicio.getMonth()]} – ${fim.getDate()} ${MESES_PT[fim.getMonth()]} ${fim.getFullYear()}`;
+    }
+    document.getElementById('labelPeriodo').textContent = label;
+
+    // Coleta todos os horários únicos desta semana (union)
+    const todosHorarios = new Set();
+    diasDaSemana.forEach(d => {
+        const iso = dateToIso(d);
+        const info = todosDados[iso];
+        if (info) info.horarios.forEach(s => todosHorarios.add(s.horario));
+    });
+    const horariosOrdenados = [...todosHorarios].sort();
+
+    if (horariosOrdenados.length === 0) {
+        // Semana totalmente fechada
+        document.getElementById('calArea').innerHTML = `
+            <div class="week-grid-wrap">
+                <div class="cal-loading" style="padding:40px">
+                    <i class="bi bi-moon-stars" style="font-size:2rem;opacity:.3"></i>
+                    <br>Nenhum horário disponível nesta semana.
+                </div>
+            </div>`;
+        return;
+    }
+
+    // Cabeçalho
+    let htmlHeader = `<div class="week-header">
+        <div class="week-header-cell" style="border-right:1px solid var(--border)"></div>`;
+    diasDaSemana.forEach((d, i) => {
+        const iso = dateToIso(d);
+        const isHojeCell = iso === HOJE_ISO;
+        const isFinSem = i === 0 || i === 6;
+        htmlHeader += `
+        <div class="week-header-cell ${isHojeCell ? 'wh-hoje' : ''} ${isFinSem ? 'fim-semana' : ''}">
+            <div class="wh-dia-nome">${DIAS_PT[i]}</div>
+            <div class="wh-dia-num">${d.getDate()}</div>
+        </div>`;
+    });
+    htmlHeader += `</div>`;
+
+    // Body
+    let htmlBody = `<div class="week-body">`;
+
+    horariosOrdenados.forEach(hora => {
+        // Label de tempo
+        htmlBody += `<div class="week-time-label">${hora}</div>`;
+
+        diasDaSemana.forEach((d, i) => {
+            const iso = dateToIso(d);
+            const isHojeCell = iso === HOJE_ISO;
+            const info = todosDados[iso];
+
+            if (!info || info.fechado) {
+                htmlBody += `<div class="week-cell fechado-cell" title="Fechado"></div>`;
+                return;
+            }
+
+            const slot = info.horarios.find(s => s.horario === hora);
+            if (!slot) {
+                htmlBody += `<div class="week-cell fechado-cell" title="Sem horário"></div>`;
+                return;
+            }
+
+            let pillContent = '';
+            if (slot.status === 'ocupado' && slot.agendamento) {
+                pillContent = `<div class="slot-pill ocupado">${slot.agendamento.cliente}</div>
+                               <div class="slot-pill ocupado" style="font-weight:400">${slot.agendamento.servico}</div>`;
+            } else if (slot.status === 'livre') {
+                pillContent = `<div class="slot-pill livre">Livre</div>`;
+            } else {
+                pillContent = `<div class="slot-pill bloqueado">Bloqueado</div>`;
+            }
+
+            htmlBody += `
+            <div class="week-cell ${isHojeCell ? 'cel-hoje' : ''}"
+                 onclick="abrirDrawer('${iso}')" title="${hora} — ${slot.status}">
+                ${pillContent}
+            </div>`;
+        });
+    });
+
+    htmlBody += `</div>`;
+
+    document.getElementById('calArea').innerHTML = `
+        <div class="week-grid-wrap">
+            ${htmlHeader}
+            ${htmlBody}
+        </div>`;
+}
+
+/* ════════════════════════════════════════════════════════════
+   DRAWER
+   ════════════════════════════════════════════════════════════ */
+async function abrirDrawer(iso) {
+    const [ano, mes, dia] = iso.split('-').map(Number);
+    const d = new Date(ano, mes - 1, dia);
+    const diaSemana = DIAS_LONGO[d.getDay()];
+
+    document.getElementById('drawerDia').textContent = dia;
+    document.getElementById('drawerMes').textContent = MESES_PT[mes - 1].substring(0, 3).toUpperCase();
+    document.getElementById('drawerTitulo').textContent = `${diaSemana}, ${dia} de ${MESES_PT[mes - 1]}`;
+
+    document.getElementById('drawerBody').innerHTML = `
+        <div class="cal-loading" style="padding:30px">
+            <div class="spinner"></div> Carregando horários...
+        </div>`;
+
+    document.getElementById('drawerOverlay').classList.add('show');
+    document.getElementById('drawer').classList.add('open');
+
+    let dados;
+    try {
+        dados = await fetchMes(ano, mes);
+    } catch(e) {
+        document.getElementById('drawerBody').innerHTML =
+            `<div class="drawer-empty"><i class="bi bi-wifi-off"></i>Erro ao carregar. Tente novamente.</div>`;
+        return;
+    }
+
+    const info = dados.dias[iso];
+    if (!info || info.fechado) {
+        document.getElementById('drawerSubtitulo').textContent = 'Sem atendimentos neste dia';
+        document.getElementById('drawerBody').innerHTML =
+            `<div class="drawer-empty"><i class="bi bi-moon-stars"></i>Salão fechado neste dia.</div>`;
+        return;
+    }
+
+    const total = info.total;
+    const totalSlots = info.horarios.length;
+    document.getElementById('drawerSubtitulo').textContent =
+        `${total} agendamento${total !== 1 ? 's' : ''} · ${totalSlots} horário${totalSlots !== 1 ? 's' : ''}`;
+
+    let html = '';
+    if (info.horarios.length === 0) {
+        html = `<div class="drawer-empty"><i class="bi bi-calendar-x"></i>Nenhum horário disponível.</div>`;
+    } else {
+        info.horarios.forEach(slot => {
+            let infoInterna = '';
+            if (slot.status === 'ocupado' && slot.agendamento) {
+                const ag = slot.agendamento;
+                const badgeClass = ag.status; // pendente|presente|ausente
+                const badgeLabel = {pendente:'Pendente', presente:'Presente', ausente:'Ausente'}[ag.status] || ag.status;
+                infoInterna = `
+                    <div class="slot-status-label ocupado">Ocupado</div>
+                    <div class="slot-cliente">${ag.cliente}</div>
+                    <div class="slot-servico"><i class="bi bi-scissors" style="font-size:.75rem"></i> ${ag.servico}</div>
+                    ${ag.telefone ? `<div class="slot-extra"><i class="bi bi-telephone" style="font-size:.75rem"></i> ${ag.telefone}</div>` : ''}
+                    ${ag.descricao ? `<div class="slot-extra"><i class="bi bi-chat-text" style="font-size:.75rem"></i> ${ag.descricao}</div>` : ''}
+                    <span class="slot-badge-status ${badgeClass}">${badgeLabel}</span>`;
+            } else if (slot.status === 'livre') {
+                infoInterna = `<div class="slot-status-label livre">Disponível</div>`;
+            } else {
+                infoInterna = `<div class="slot-status-label bloqueado">Bloqueado</div>`;
+            }
+
+            html += `
+            <div class="slot-card ${slot.status}">
+                <div class="slot-hora ${slot.status}">${slot.horario}</div>
+                <div class="slot-info">${infoInterna}</div>
+            </div>`;
+        });
+    }
+
+    document.getElementById('drawerBody').innerHTML = html;
+}
+
+function fecharDrawer() {
+    document.getElementById('drawerOverlay').classList.remove('show');
+    document.getElementById('drawer').classList.remove('open');
+}
+
+/* ════════════════════════════════════════════════════════════
+   NAVEGAÇÃO E INICIALIZAÇÃO
+   ════════════════════════════════════════════════════════════ */
+function render() {
+    if (state.view === 'mes') renderMes();
+    else renderSemana();
+}
+
+function irAnterior() {
+    if (state.view === 'mes') {
+        state.mes--;
+        if (state.mes < 1) { state.mes = 12; state.ano--; }
+    } else {
+        state.semanaOffset--;
+    }
+    render();
+}
+
+function irProximo() {
+    if (state.view === 'mes') {
+        state.mes++;
+        if (state.mes > 12) { state.mes = 1; state.ano++; }
+    } else {
+        state.semanaOffset++;
+    }
+    render();
+}
+
+function irHoje() {
+    const h = hojeObj();
+    state.ano = h.ano;
+    state.mes = h.mes;
+    state.semanaOffset = 0;
+    render();
+}
+
+function trocarView(v) {
+    state.view = v;
+    document.querySelectorAll('.view-btn').forEach(b => b.classList.toggle('active', b.dataset.view === v));
+
+    // Na troca para semana, reposiciona no mês atual
+    if (v === 'semana') {
+        state.semanaOffset = 0;
+    } else {
+        const h = hojeObj();
+        // Mantém o mês atual da semana visível
+    }
+    render();
+}
+
+/* ── Bootstrap ─────────────────────────────────────────────── */
+document.addEventListener('DOMContentLoaded', () => {
+    const h = hojeObj();
+    state.ano = h.ano;
+    state.mes = h.mes;
+
+    document.getElementById('btnAnterior').addEventListener('click', irAnterior);
+    document.getElementById('btnProximo').addEventListener('click', irProximo);
+    document.getElementById('btnHoje').addEventListener('click', irHoje);
+
+    document.querySelectorAll('.view-btn').forEach(btn => {
+        btn.addEventListener('click', () => trocarView(btn.dataset.view));
+    });
+
+    document.getElementById('drawerClose').addEventListener('click', fecharDrawer);
+    document.getElementById('drawerOverlay').addEventListener('click', fecharDrawer);
+
+    // Fechar drawer com ESC
+    document.addEventListener('keydown', e => { if (e.key === 'Escape') fecharDrawer(); });
+
+    // Modal de logout
+    let logoutUrl = null;
+    const modal = document.getElementById('logoutModal');
+    document.querySelectorAll('.btn-sair').forEach(btn => {
+        btn.addEventListener('click', e => {
+            e.preventDefault();
+            logoutUrl = btn.href;
+            modal.classList.add('show');
+        });
+    });
+    document.getElementById('confirmLogout').addEventListener('click', () => {
+        if (logoutUrl) window.location.href = logoutUrl;
+    });
+    document.getElementById('cancelLogout').addEventListener('click', () => {
+        modal.classList.remove('show');
+    });
+
+    render();
+});
+</script>
+{% endblock %}
