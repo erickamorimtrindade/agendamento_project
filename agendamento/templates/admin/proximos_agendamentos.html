@@ -299,10 +299,16 @@
                 Próximos 30 Dias
             </h2>
 
-            <a href="{% url 'painel_admin' %}" class="btn btn-secondary btn-back">
-                <i class="bi bi-arrow-left"></i>
-                Voltar
-            </a>
+            <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+                <a href="{% url 'agendamento_manual' %}" class="btn btn-primary btn-back">
+                    <i class="bi bi-pencil-square"></i>
+                    Novo agendamento manual
+                </a>
+                <a href="{% url 'painel_admin' %}" class="btn btn-secondary btn-back">
+                    <i class="bi bi-arrow-left"></i>
+                    Voltar
+                </a>
+            </div>
         </div>
 
         <div class="filter-card">
@@ -353,11 +359,16 @@
                             {% for ag in agendamentos %}
                             <tr>
                                 <td>
-                                    <span class="user-badge">{{ ag.cliente.id_usuario.username }}</span>
+                                    <span class="user-badge">{{ ag.nome_cliente }}</span>
+                                    {% if ag.is_manual %}
+                                        <span style="display:inline-flex;align-items:center;gap:4px;background:#fff3cd;color:#856404;border:1px solid #ffc107;border-radius:20px;padding:1px 9px;font-size:0.72rem;font-weight:700;margin-left:4px;">
+                                            <i class="bi bi-person-fill-gear"></i> Manual
+                                        </span>
+                                    {% endif %}
                                 </td>
 
                                 <td>
-                                    <span class="phone-badge">{{ ag.cliente.telefone }}</span>
+                                    <span class="phone-badge">{{ ag.telefone_cliente }}</span>
                                 </td>
 
                                 <td>

@@ -192,10 +192,16 @@
                 Agendamentos de Hoje
             </h2>
 
-            <a href="{% url 'painel_admin' %}" class="btn btn-secondary btn-back">
-                <i class="bi bi-arrow-left"></i>
-                Voltar
-            </a>
+            <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+                <a href="{% url 'agendamento_manual' %}" class="btn btn-primary btn-back">
+                    <i class="bi bi-pencil-square"></i>
+                    Novo agendamento manual
+                </a>
+                <a href="{% url 'painel_admin' %}" class="btn btn-secondary btn-back">
+                    <i class="bi bi-arrow-left"></i>
+                    Voltar
+                </a>
+            </div>
         </div>
 
         {% if agendamentos %}
@@ -205,8 +211,15 @@
                     <div class="col-12 col-lg-6">
                         <div class="card-agendamento">
 
-                            <div class="info-item"><strong>Cliente:</strong> {{ ag.cliente.id_usuario.username }}</div>
-                            <div class="info-item"><strong>Telefone:</strong> {{ ag.cliente.telefone }}</div>
+                            <div class="info-item">
+                                <strong>Cliente:</strong> {{ ag.nome_cliente }}
+                                {% if ag.is_manual %}
+                                    <span style="display:inline-flex;align-items:center;gap:4px;background:#fff3cd;color:#856404;border:1px solid #ffc107;border-radius:20px;padding:1px 9px;font-size:0.72rem;font-weight:700;margin-left:6px;">
+                                        <i class="bi bi-person-fill-gear"></i> Manual
+                                    </span>
+                                {% endif %}
+                            </div>
+                            <div class="info-item"><strong>Telefone:</strong> {{ ag.telefone_cliente }}</div>
                             <div class="info-item"><strong>Serviço:</strong> {{ ag.servico.nome }}</div>
                             <div class="info-item"><strong>Valor:</strong> R$ {{ ag.servico.preco }}</div>
                             <div class="info-item"><strong>Horário:</strong> {{ ag.horario }}</div>

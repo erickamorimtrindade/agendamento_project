@@ -668,6 +668,7 @@ body {
             <a href="{% url 'proximos_agendamentos' %}"><i class="bi bi-calendar-week"></i> Agenda</a>
             <a href="{% url 'calendario_admin' %}" class="active"><i class="bi bi-calendar3"></i> Calendário</a>
             <a href="{% url 'gerenciar_horarios' %}"><i class="bi bi-clock"></i> Gerenciar horários</a>
+            <a href="{% url 'agendamento_manual' %}"><i class="bi bi-pencil-square"></i> Agendamento manual</a>
         </div>
 
         <div class="section-title">Relatórios</div>
@@ -1102,7 +1103,10 @@ async function abrirDrawer(iso) {
                 const badgeLabel = {pendente:'Pendente', presente:'Presente', ausente:'Ausente'}[ag.status] || ag.status;
                 infoInterna = `
                     <div class="slot-status-label ocupado">Ocupado</div>
-                    <div class="slot-cliente">${ag.cliente}</div>
+                    <div class="slot-cliente">
+                        ${ag.cliente}
+                        ${ag.origem === 'manual' ? '<span style="display:inline-flex;align-items:center;gap:3px;background:#fff3cd;color:#856404;border:1px solid #ffc107;border-radius:20px;padding:0 7px;font-size:0.7rem;font-weight:700;margin-left:5px;"><i class=\'bi bi-person-fill-gear\'></i> Manual</span>' : ''}
+                    </div>
                     <div class="slot-servico"><i class="bi bi-scissors" style="font-size:.75rem"></i> ${ag.servico}</div>
                     ${ag.telefone ? `<div class="slot-extra"><i class="bi bi-telephone" style="font-size:.75rem"></i> ${ag.telefone}</div>` : ''}
                     ${ag.descricao ? `<div class="slot-extra"><i class="bi bi-chat-text" style="font-size:.75rem"></i> ${ag.descricao}</div>` : ''}
