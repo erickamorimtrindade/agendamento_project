@@ -116,3 +116,64 @@ class RedefinirSenhaForm(forms.Form):
             )
 
         return cleaned_data
+    
+class AgendamentoManualForm(forms.Form):
+    """
+    Formulário para criação de agendamentos manuais pelo administrador.
+    Não cria conta de usuário nem exige cadastro de cliente.
+    """
+    nome = forms.CharField(
+        label='Nome da cliente',
+        max_length=40,
+        widget=forms.TextInput(attrs={
+            'class': 'form-control',
+            'placeholder': 'Nome completo',
+            'autofocus': True,
+        }),
+    )
+    telefone = forms.CharField(
+        label='Telefone',
+        max_length=15,
+        widget=forms.TextInput(attrs={
+            'class': 'form-control',
+            'placeholder': '(83) 90000-0000',
+        }),
+    )
+    servico = forms.ModelChoiceField(
+        label='Serviço',
+        queryset=None,
+        empty_label='— Selecione um serviço —',
+        widget=forms.Select(attrs={'class': 'form-select'}),
+    )
+    data = forms.DateField(
+        label='Data',
+        widget=forms.DateInput(attrs={
+            'class': 'form-control',
+            'type': 'date',
+            'min': date.today().isoformat(),
+        }),
+    )
+    horario = forms.TimeField(
+        label='Horário',
+        widget=forms.Select(attrs={'class': 'form-select'}),
+        input_formats=['%H:%M'],
+    )
+    descricao = forms.CharField(
+        label='Observações (opcional)',
+        required=False,
+        widget=forms.Textarea(attrs={
+            'class': 'form-control',
+            'rows': 3,
+            'placeholder': 'Anotações sobre o atendimento…',
+        }),
+    )
+
+    def __init__(self, *args, horarios_disponiveis=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        from .models import Servico as ServicoModel
+        self.fields['servico'].queryset = ServicoModel.objects.filter(ativo=True)
+
+        choices = [('', '— Selecione a data primeiro —')]
+        if horarios_disponiveis:
+            choices = [(h, h) for h in horarios_disponiveis]
+        self.fields['horario'].widget.choices = choices

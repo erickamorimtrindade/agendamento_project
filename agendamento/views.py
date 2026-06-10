@@ -3,7 +3,7 @@ from django.contrib.auth.models import User
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 from .models import Cliente, Agendamento, Servico, NotificacaoExclusao
-from .forms import AgendamentoForm, IdentificarUsuarioForm , RedefinirSenhaForm
+from .forms import AgendamentoForm, IdentificarUsuarioForm , RedefinirSenhaForm, AgendamentoManualForm
 from datetime import datetime, timedelta, date
 from django.db import IntegrityError
 from django.core.exceptions import ValidationError
@@ -221,11 +221,12 @@ def api_calendario_dados(request):
         contagem_por_dia[data_str] += 1
         agenda_idx[(data_str, hora_str)] = {
             'id': ag.id,
-            'cliente': ag.cliente.id_usuario.get_full_name() or ag.cliente.id_usuario.username,
-            'telefone': ag.cliente.telefone,
+            'cliente': ag.nome_cliente,
+            'telefone': ag.telefone_cliente,
             'servico': ag.servico.nome if ag.servico else '—',
             'status': ag.status,
             'descricao': ag.descricao,
+            'origem': ag.origem,
         }
 
     # Indexa bloqueios por (data, horario)  — horario None = dia inteiro bloqueado
@@ -477,13 +478,14 @@ def excluir_agendamento_admin(request, id):
         # Salva os dados ANTES de deletar
         agendamento.delete()
 
-        # Cria a notificação para a cliente
-        NotificacaoExclusao.objects.create(
-            cliente=cliente,
-            servico_nome=servico_nome,
-            data_agendamento=data_ag,
-            horario_agendamento=horario_ag,
-        )
+        # Cria notificação apenas para agendamentos com cliente cadastrado
+        if cliente:
+            NotificacaoExclusao.objects.create(
+                cliente=cliente,
+                servico_nome=servico_nome,
+                data_agendamento=data_ag,
+                horario_agendamento=horario_ag,
+            )
 
         messages.success(request, 'Agendamento excluído e cliente notificada.')
         return redirect('proximos_agendamentos')
@@ -1235,3 +1237,175 @@ def suporte(request):
 
 def tutorial(request):
     return render(request, 'clients/tutorial.html')
+
+# ── AGENDAMENTO MANUAL (admin) ────────────────────────────────────────────────
+
+@staff_member_required
+def agendamento_manual(request):
+    """
+    Permite ao administrador registrar um agendamento sem criar conta de cliente.
+    Respeita todas as regras de negócio: conflito de horário, bloqueios,
+    serviço duplo. A regra de 24h é dispensada para agendamentos manuais.
+    """
+    data_str = request.GET.get('data') or request.POST.get('data') or ''
+    data_convertida = converter_data(data_str) if data_str else None
+
+    horarios_do_dia = gerar_horarios(data_convertida)
+
+    # ── Calcula horários indisponíveis para o dia selecionado ──
+    horarios_ocupados = []
+    bloqueados_lista = []
+
+    bloqueios = (
+        HorarioBloqueado.objects.filter(data=data_convertida)
+        if data_convertida
+        else HorarioBloqueado.objects.none()
+    )
+
+    dia_bloqueado = bloqueios.filter(horario__isnull=True, tipo='bloqueio').exists()
+
+    if data_convertida:
+        horarios_ocupados = list(
+            Agendamento.objects.filter(data=data_convertida)
+            .values_list('horario', flat=True)
+        )
+        horarios_ocupados = [h.strftime('%H:%M') for h in horarios_ocupados]
+
+    for h in horarios_do_dia:
+        horario_time = datetime.strptime(h, '%H:%M').time()
+
+        bloq_manual = bloqueios.filter(horario=horario_time, tipo='bloqueio').exists()
+        lib_manual  = bloqueios.filter(horario=horario_time, tipo='liberado').exists()
+
+        if (dia_bloqueado and not lib_manual) or bloq_manual or h in horarios_ocupados:
+            bloqueados_lista.append(h)
+
+    horarios_disponiveis = [h for h in horarios_do_dia if h not in bloqueados_lista]
+
+    if request.method == 'POST':
+        form = AgendamentoManualForm(
+            request.POST,
+            horarios_disponiveis=horarios_do_dia,
+        )
+
+        if form.is_valid():
+            nome     = form.cleaned_data['nome'].strip()
+            telefone = form.cleaned_data['telefone'].strip()
+            servico  = form.cleaned_data['servico']
+            data     = form.cleaned_data['data']
+            horario  = form.cleaned_data['horario']
+            descricao = form.cleaned_data.get('descricao', '')
+
+            # ── Verifica conflito de horário ──
+            if Agendamento.objects.filter(data=data, horario=horario).exists():
+                form.add_error('horario', 'Esse horário já está ocupado.')
+
+            # ── Verifica bloqueio ──
+            elif _horario_esta_bloqueado(data, horario):
+                form.add_error('horario', 'Este horário está bloqueado na agenda.')
+
+            # ── Verifica duplo (próximo horário) ──
+            else:
+                duplo = requer_horario_duplo(servico)
+                if duplo:
+                    horario_str = horario.strftime('%H:%M')
+                    if not is_excecao_almoco(horario_str):
+                        proximo = get_proximo_horario(horario_str, horarios_do_dia)
+                        if proximo is not None:
+                            proximo_time = datetime.strptime(proximo, '%H:%M').time()
+                            proximo_ocupado = (
+                                Agendamento.objects.filter(data=data, horario=proximo_time).exists()
+                                or _horario_esta_bloqueado(data, proximo_time)
+                            )
+                            if proximo_ocupado:
+                                form.add_error(
+                                    'horario',
+                                    f'Este serviço ocupa dois horários consecutivos '
+                                    f'({horario_str} e {proximo}), '
+                                    f'mas {proximo} já está ocupado. Escolha outro horário.',
+                                )
+
+            if not form.errors:
+                ag = Agendamento(
+                    cliente=None,
+                    servico=servico,
+                    data=data,
+                    horario=horario,
+                    descricao=descricao,
+                    origem=Agendamento.ORIGEM_MANUAL,
+                    nome_manual=nome,
+                    telefone_manual=telefone,
+                )
+
+                try:
+                    ag.full_clean()
+                    ag.save()
+
+                    # Bloqueia próximo horário se serviço duplo
+                    if requer_horario_duplo(servico):
+                        horario_str = horario.strftime('%H:%M')
+                        if not is_excecao_almoco(horario_str):
+                            proximo = get_proximo_horario(horario_str, horarios_do_dia)
+                            if proximo is not None:
+                                proximo_time = datetime.strptime(proximo, '%H:%M').time()
+                                HorarioBloqueado.objects.update_or_create(
+                                    data=data,
+                                    horario=proximo_time,
+                                    defaults={'tipo': 'bloqueio'},
+                                )
+
+                    messages.success(
+                        request,
+                        f'Agendamento manual de {nome} registrado com sucesso '
+                        f'para {data.strftime("%d/%m/%Y")} às {horario.strftime("%H:%M")}.',
+                    )
+                    return redirect('proximos_agendamentos')
+
+                except ValidationError as e:
+                    for field, errs in e.message_dict.items():
+                        for err in errs:
+                            form.add_error(None, err)
+
+                except IntegrityError:
+                    form.add_error('horario', 'Esse horário acabou de ser ocupado. Tente outro.')
+
+    else:
+        # Preserva dados digitados antes do reload de data (vêm via GET)
+        initial = {
+            'data':      data_str,
+            'nome':      request.GET.get('nome', ''),
+            'telefone':  request.GET.get('telefone', ''),
+            'servico':   request.GET.get('servico', ''),
+            'descricao': request.GET.get('descricao', ''),
+        }
+        form = AgendamentoManualForm(
+            initial=initial,
+            horarios_disponiveis=horarios_do_dia,
+        )
+
+    return render(request, 'admin/agendamento_manual.html', {
+        'form': form,
+        'data_str': data_str,
+        'horarios_do_dia': horarios_do_dia,
+        'horarios_ocupados': horarios_ocupados,
+        'bloqueados': bloqueados_lista,
+        'horarios_disponiveis': horarios_disponiveis,
+    })
+
+
+def _horario_esta_bloqueado(data, horario):
+    """
+    Utilitário interno: retorna True se o horário (time ou str 'HH:MM')
+    estiver bloqueado na data informada, considerando bloqueio de dia inteiro.
+    """
+    if isinstance(horario, str):
+        horario = datetime.strptime(horario, '%H:%M').time()
+
+    bloqueios = HorarioBloqueado.objects.filter(data=data)
+    dia_bloqueado = bloqueios.filter(horario__isnull=True, tipo='bloqueio').exists()
+    bloq_manual   = bloqueios.filter(horario=horario, tipo='bloqueio').exists()
+    lib_manual    = bloqueios.filter(horario=horario, tipo='liberado').exists()
+
+    return (dia_bloqueado and not lib_manual) or bloq_manual
+
+# ─────────────────────────────────────────────────────────────────────────────

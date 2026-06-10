@@ -1,0 +1,460 @@
+{% extends 'admin/base_admin.html' %}
+
+{% block title %}Agendamento Manual{% endblock %}
+
+{% block extra_css %}
+<style>
+body {
+    background: #d9d9d9;
+    margin: 0;
+    font-family: Arial, Helvetica, sans-serif;
+}
+
+.page-wrapper {
+    min-height: 100vh;
+    padding: 16px;
+}
+
+.main-card {
+    width: 100%;
+    max-width: 620px;
+    margin: 0 auto;
+    background: #f8f8f8;
+    border-radius: 24px;
+    padding: 28px 24px;
+    box-shadow: 0 20px 45px rgba(0, 0, 0, 0.15);
+}
+
+.page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 28px;
+}
+
+.page-title {
+    margin: 0;
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #111827;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.page-title i { color: #0d6efd; }
+
+.badge-manual {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: #fff3cd;
+    color: #856404;
+    border: 1px solid #ffc107;
+    border-radius: 30px;
+    padding: 4px 14px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    margin-bottom: 20px;
+}
+
+.section-label {
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #6b7280;
+    margin: 0 0 10px;
+}
+
+.form-group {
+    margin-bottom: 18px;
+}
+
+.form-group label {
+    display: block;
+    font-weight: 600;
+    font-size: 0.9rem;
+    color: #374151;
+    margin-bottom: 6px;
+}
+
+.form-control,
+.form-select {
+    border-radius: 10px;
+    border: 1px solid #d1d5db;
+    padding: 10px 14px;
+    font-size: 0.95rem;
+    width: 100%;
+    background: #fff;
+    transition: border-color 0.2s;
+}
+
+.form-control:focus,
+.form-select:focus {
+    border-color: #0d6efd;
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(13, 110, 253, 0.12);
+}
+
+.form-control.is-invalid,
+.form-select.is-invalid {
+    border-color: #dc3545;
+}
+
+.invalid-feedback {
+    display: block;
+    color: #dc3545;
+    font-size: 0.82rem;
+    margin-top: 4px;
+}
+
+
+
+.horario-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(86px, 1fr));
+    gap: 8px;
+    margin-top: 6px;
+}
+
+.horario-btn {
+    padding: 10px 6px;
+    border-radius: 10px;
+    border: 2px solid #e5e7eb;
+    background: #fff;
+    font-weight: 600;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: all 0.15s;
+    text-align: center;
+}
+
+.horario-btn:hover:not(:disabled) {
+    border-color: #0d6efd;
+    color: #0d6efd;
+}
+
+.horario-btn.selecionado {
+    border-color: #0d6efd;
+    background: #0d6efd;
+    color: #fff;
+}
+
+.horario-btn.bloqueado {
+    background: #f3f4f6;
+    border-color: #d1d5db;
+    color: #9ca3af;
+    cursor: not-allowed;
+    opacity: 0.5;
+}
+
+.horario-vazio {
+    color: #9ca3af;
+    font-size: 0.9rem;
+    font-style: italic;
+}
+
+.btn-submit {
+    width: 100%;
+    padding: 14px;
+    border-radius: 12px;
+    border: none;
+    background: linear-gradient(135deg, #0d6efd, #0a58ca);
+    color: #fff;
+    font-size: 1rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s;
+    margin-top: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.btn-submit:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 8px 20px rgba(13, 110, 253, 0.3);
+}
+
+.btn-submit:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+}
+
+.btn-back {
+    border-radius: 12px;
+    font-weight: 600;
+    padding: 10px 16px;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    text-decoration: none;
+}
+
+.alert-err {
+    background: #fee2e2;
+    border: 1px solid #fca5a5;
+    border-radius: 12px;
+    padding: 12px 16px;
+    color: #b91c1c;
+    font-size: 0.9rem;
+    margin-bottom: 16px;
+}
+
+.divider {
+    border: none;
+    border-top: 1px solid #e5e7eb;
+    margin: 22px 0;
+}
+
+.hint {
+    font-size: 0.8rem;
+    color: #9ca3af;
+    margin-top: 4px;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-wrapper">
+    <div class="main-card">
+
+        <div class="page-header">
+            <h1 class="page-title">
+                <i class="bi bi-pencil-square"></i> Agendamento Manual
+            </h1>
+            <a href="{% url 'proximos_agendamentos' %}" class="btn btn-outline-secondary btn-back">
+                <i class="bi bi-arrow-left"></i> Voltar
+            </a>
+        </div>
+
+        <div class="badge-manual">
+            <i class="bi bi-person-fill-gear"></i>
+            Criado pelo administrador — sem necessidade de cadastro
+        </div>
+
+        {% if form.non_field_errors %}
+        <div class="alert-err">
+            {% for err in form.non_field_errors %}<p style="margin:0">{{ err }}</p>{% endfor %}
+        </div>
+        {% endif %}
+
+        <form method="post" id="formManual" autocomplete="off">
+            {% csrf_token %}
+            {# data real enviada no POST — preenchida pelo flatpickr em formato Y-m-d #}
+            <input type="hidden" name="data" id="hiddenData" value="{{ data_str }}">
+            <input type="hidden" name="horario" id="hiddenHorario">
+
+            <!-- ① DATA — PRIMEIRO, pois trocar a data recarrega a página -->
+            <p class="section-label">Data</p>
+
+            <div class="form-group">
+                <label for="inputDataVisual">Data *</label>
+                <input
+                    type="date"
+                    id="inputData"
+                    class="form-control {% if form.data.errors %}is-invalid{% endif %}"
+                    value="{{ data_str }}"
+                    min="{% now 'Y-m-d' %}"
+                >
+                <p class="hint">Selecione a data — os horários serão carregados automaticamente.</p>
+                {% if form.data.errors %}
+                    <span class="invalid-feedback">{{ form.data.errors|join:', ' }}</span>
+                {% endif %}
+            </div>
+
+            <hr class="divider">
+
+            <!-- ② DADOS DA CLIENTE -->
+            <p class="section-label">Dados da cliente</p>
+
+            <div class="form-group">
+                <label for="id_nome">Nome *</label>
+                <input
+                    type="text"
+                    id="id_nome"
+                    name="nome"
+                    class="form-control {% if form.nome.errors %}is-invalid{% endif %}"
+                    value="{{ form.nome.value|default:'' }}"
+                    placeholder="Nome completo"
+                    maxlength="40"
+                    required
+                >
+                {% if form.nome.errors %}
+                    <span class="invalid-feedback">{{ form.nome.errors|join:', ' }}</span>
+                {% endif %}
+            </div>
+
+            <div class="form-group">
+                <label for="id_telefone">Telefone *</label>
+                <input
+                    type="text"
+                    id="id_telefone"
+                    name="telefone"
+                    class="form-control {% if form.telefone.errors %}is-invalid{% endif %}"
+                    value="{{ form.telefone.value|default:'' }}"
+                    placeholder="(83) 90000-0000"
+                    maxlength="16"
+                    required
+                >
+                {% if form.telefone.errors %}
+                    <span class="invalid-feedback">{{ form.telefone.errors|join:', ' }}</span>
+                {% endif %}
+            </div>
+
+            <hr class="divider">
+
+            <!-- ③ SERVIÇO -->
+            <p class="section-label">Serviço</p>
+
+            <div class="form-group">
+                <label for="id_servico">Serviço *</label>
+                <select
+                    id="id_servico"
+                    name="servico"
+                    class="form-select {% if form.servico.errors %}is-invalid{% endif %}"
+                    required
+                >
+                    <option value="">— Selecione um serviço —</option>
+                    {% for s in form.servico.field.queryset %}
+                        <option value="{{ s.id }}"
+                            {% if form.servico.value == s.id|stringformat:"s" %}selected{% endif %}>
+                            {{ s.nome }} — R$ {{ s.preco }}
+                        </option>
+                    {% endfor %}
+                </select>
+                {% if form.servico.errors %}
+                    <span class="invalid-feedback">{{ form.servico.errors|join:', ' }}</span>
+                {% endif %}
+            </div>
+
+            <hr class="divider">
+
+            <!-- ④ HORÁRIO -->
+            <p class="section-label">Horário</p>
+
+            {% if form.horario.errors %}
+                <div class="alert-err" style="margin-bottom:12px">{{ form.horario.errors|join:', ' }}</div>
+            {% endif %}
+
+            {% if not data_str %}
+                <p class="horario-vazio">Selecione uma data acima para ver os horários disponíveis.</p>
+            {% elif not horarios_do_dia %}
+                <p class="horario-vazio">Sem horários disponíveis para este dia (estabelecimento fechado).</p>
+            {% else %}
+                <div class="horario-grid" id="horarioGrid">
+                    {% for h in horarios_do_dia %}
+                        {% if h in bloqueados %}
+                            <button type="button" class="horario-btn bloqueado" disabled title="Horário bloqueado">
+                                🔒 {{ h }}
+                            </button>
+                        {% else %}
+                            <button
+                                type="button"
+                                class="horario-btn {% if form.horario.value == h %}selecionado{% endif %}"
+                                data-horario="{{ h }}"
+                                onclick="selecionarHorario(this, '{{ h }}')"
+                            >
+                                {{ h }}
+                            </button>
+                        {% endif %}
+                    {% endfor %}
+                </div>
+            {% endif %}
+
+            <hr class="divider">
+
+            <!-- ⑤ OBSERVAÇÕES -->
+            <div class="form-group">
+                <label for="id_descricao">Observações (opcional)</label>
+                <textarea
+                    id="id_descricao"
+                    name="descricao"
+                    class="form-control"
+                    rows="3"
+                    placeholder="Ex.: pedido específico, cor, referência…"
+                >{{ form.descricao.value|default:'' }}</textarea>
+            </div>
+
+            <button type="submit" class="btn-submit" id="btnSubmit" disabled>
+                <i class="bi bi-check2-circle"></i>
+                Registrar agendamento
+            </button>
+        </form>
+
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+
+    // ── Campo de data: ao mudar, redireciona preservando os outros campos ──
+    const inputData = document.getElementById('inputData');
+
+    inputData.addEventListener('change', function () {
+        const novaData = this.value;
+        if (!novaData) return;
+
+        const nome      = document.getElementById('id_nome').value;
+        const telefone  = document.getElementById('id_telefone').value;
+        const servico   = document.getElementById('id_servico').value;
+        const descricao = document.getElementById('id_descricao').value;
+
+        const params = new URLSearchParams();
+        params.set('data', novaData);
+        if (nome)      params.set('nome', nome);
+        if (telefone)  params.set('telefone', telefone);
+        if (servico)   params.set('servico', servico);
+        if (descricao) params.set('descricao', descricao);
+
+        window.location.href = '{{ request.path }}?' + params.toString();
+    });
+
+    // ── Selecionar horário ───────────────────────────────────────────────────
+    const horarioAtual = '{{ form.horario.value|default:"" }}';
+    if (horarioAtual) {
+        const btn = document.querySelector('[data-horario="' + horarioAtual + '"]');
+        if (btn) {
+            btn.classList.add('selecionado');
+            document.getElementById('hiddenHorario').value = horarioAtual;
+        }
+    }
+    verificarBotao();
+});
+
+function selecionarHorario(btn, horario) {
+    document.querySelectorAll('.horario-btn').forEach(b => b.classList.remove('selecionado'));
+    btn.classList.add('selecionado');
+    document.getElementById('hiddenHorario').value = horario;
+    verificarBotao();
+}
+
+function verificarBotao() {
+    const h = document.getElementById('hiddenHorario').value;
+    document.getElementById('btnSubmit').disabled = !h;
+}
+
+// ── Máscara de telefone — idêntica ao register.html ─────────────────────────
+const telefoneInput = document.getElementById('id_telefone');
+if (telefoneInput) {
+    telefoneInput.addEventListener('input', function (e) {
+        let value = e.target.value.replace(/\D/g, '');
+
+        if (value.length > 11) value = value.slice(0, 11);
+
+        if (value.length > 6) {
+            value = value.replace(/(\d{2})(\d{5})(\d+)/, '($1) $2-$3');
+        } else if (value.length > 2) {
+            value = value.replace(/(\d{2})(\d+)/, '($1) $2');
+        }
+
+        e.target.value = value;
+    });
+}
+</script>
+{% endblock %}
